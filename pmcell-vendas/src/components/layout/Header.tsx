@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Search, ShoppingCart, Menu, X } from "lucide-react"
 import { useCartStore } from "@/stores/useCartStore"
-import { useSessionStore } from "@/stores/useSessionStore"
 import { cn } from "@/lib/utils"
 
 export function Header() {
@@ -12,10 +11,15 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [lastScrollY, setLastScrollY] = useState(0)
   const [showSearch, setShowSearch] = useState(true)
+  const [mounted, setMounted] = useState(false)
   
   const itemsCount = useCartStore((state) => state.getItemsCount())
   const toggleCart = useCartStore((state) => state.toggleCart)
-  const isUnlocked = useSessionStore((state) => state.isUnlocked)
+  
+  // Evitar problemas de hidratação
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   
   useEffect(() => {
     const handleScroll = () => {
@@ -68,12 +72,6 @@ export function Header() {
           
           {/* Actions */}
           <div className="flex items-center space-x-4">
-            {/* Status de preços */}
-            {isUnlocked && (
-              <span className="hidden sm:inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700">
-                Preços Liberados
-              </span>
-            )}
             
             {/* Carrinho */}
             <button
@@ -81,7 +79,7 @@ export function Header() {
               className="relative rounded-lg p-2 hover:bg-gray-100 transition-colors"
             >
               <ShoppingCart className="h-6 w-6 text-gray-700" />
-              {itemsCount > 0 && (
+              {mounted && itemsCount > 0 && (
                 <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#FC6D36] text-xs font-bold text-white">
                   {itemsCount}
                 </span>

@@ -70,6 +70,7 @@ model Product {
   name              String
   subname           String?           // Variação ou detalhe (ex: tipo de saída do cabo)
   description       String?
+  brand             String?           // Marca do produto
   categoryId        String
   category          Category          @relation(fields: [categoryId], references: [id])
   

@@ -9,6 +9,7 @@ interface Product {
   name: string
   subname?: string
   description: string
+  brand?: string
   price: number
   superWholesalePrice?: number
   superWholesaleQuantity?: number
@@ -41,11 +42,14 @@ export default function AdminDashboard() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [showEditForm, setShowEditForm] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [selectedImages, setSelectedImages] = useState<File[]>([])
   const [newProduct, setNewProduct] = useState({
     name: '',
     subname: '',
     description: '',
+    brand: '',
     price: '',
     superWholesalePrice: '',
     superWholesaleQuantity: '',
@@ -74,7 +78,7 @@ export default function AdminDashboard() {
       const response = await fetch('/api/products')
       if (response.ok) {
         const data = await response.json()
-        setProducts(Array.isArray(data) ? data : [])
+        setProducts(data.products || [])
       } else {
         console.error('Erro ao buscar produtos:', response.status)
         setProducts([])
@@ -143,6 +147,7 @@ export default function AdminDashboard() {
       formData.append('name', newProduct.name)
       formData.append('subname', newProduct.subname)
       formData.append('description', newProduct.description)
+      formData.append('brand', newProduct.brand)
       formData.append('price', newProduct.price)
       formData.append('superWholesalePrice', newProduct.superWholesalePrice)
       formData.append('superWholesaleQuantity', newProduct.superWholesaleQuantity)
@@ -173,6 +178,7 @@ export default function AdminDashboard() {
           name: '',
           subname: '',
           description: '',
+          brand: '',
           price: '',
           superWholesalePrice: '',
           superWholesaleQuantity: '',
@@ -189,6 +195,88 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Erro ao adicionar produto:', error)
       alert('Erro ao adicionar produto')
+    }
+  }
+
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product)
+    setNewProduct({
+      name: product.name,
+      subname: product.subname || '',
+      description: product.description || '',
+      brand: product.brand || '',
+      price: product.price.toString(),
+      superWholesalePrice: product.superWholesalePrice?.toString() || '',
+      superWholesaleQuantity: product.superWholesaleQuantity?.toString() || '',
+      cost: product.cost?.toString() || '',
+      categoryId: product.categoryId,
+      supplierId: '',
+      supplierName: product.suppliers[0]?.supplier.name || '',
+      supplierPhone: product.suppliers[0]?.supplier.phone || ''
+    })
+    setSelectedImages([])
+    setShowEditForm(true)
+  }
+
+  const handleUpdateProduct = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!editingProduct) return
+    
+    try {
+      const formData = new FormData()
+      
+      // Adicionar dados do produto
+      formData.append('name', newProduct.name)
+      formData.append('subname', newProduct.subname)
+      formData.append('description', newProduct.description)
+      formData.append('brand', newProduct.brand)
+      formData.append('price', newProduct.price)
+      formData.append('superWholesalePrice', newProduct.superWholesalePrice)
+      formData.append('superWholesaleQuantity', newProduct.superWholesaleQuantity)
+      formData.append('cost', newProduct.cost)
+      formData.append('categoryId', newProduct.categoryId)
+      formData.append('supplierName', newProduct.supplierName)
+      formData.append('supplierPhone', newProduct.supplierPhone)
+      
+      // Adicionar novas imagens se houver
+      selectedImages.forEach((file, index) => {
+        formData.append('images', file)
+        if (index === 0) formData.append('mainImageIndex', '0')
+      })
+
+      const response = await fetch(`/api/products/${editingProduct.id}`, {
+        method: 'PUT',
+        body: formData,
+      })
+
+      if (response.ok) {
+        alert('Produto atualizado com sucesso!')
+        await fetchProducts()
+        setShowEditForm(false)
+        setEditingProduct(null)
+        setSelectedImages([])
+        setNewProduct({
+          name: '',
+          subname: '',
+          description: '',
+          brand: '',
+          price: '',
+          superWholesalePrice: '',
+          superWholesaleQuantity: '',
+          cost: '',
+          categoryId: '',
+          supplierId: '',
+          supplierName: '',
+          supplierPhone: ''
+        })
+      } else {
+        const errorData = await response.json()
+        alert(`Erro ao atualizar produto: ${errorData.error || 'Erro desconhecido'}`)
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar produto:', error)
+      alert('Erro ao atualizar produto')
     }
   }
 
@@ -279,12 +367,20 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleDeleteProduct(product.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      Excluir
-                    </button>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleEditProduct(product)}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProduct(product.id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Excluir
+                      </button>
+                    </div>
                   </div>
                 </li>
               ))}
@@ -342,6 +438,20 @@ export default function AdminDashboard() {
                   onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
                   rows={3}
+                />
+              </div>
+
+              {/* Marca */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Marca
+                </label>
+                <input
+                  type="text"
+                  value={newProduct.brand}
+                  onChange={(e) => setNewProduct({ ...newProduct, brand: e.target.value })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                  placeholder="Ex: Samsung, Apple, Xiaomi..."
                 />
               </div>
 
@@ -511,6 +621,7 @@ export default function AdminDashboard() {
                       name: '',
                       subname: '',
                       description: '',
+                      brand: '',
                       price: '',
                       superWholesalePrice: '',
                       superWholesaleQuantity: '',
@@ -531,6 +642,259 @@ export default function AdminDashboard() {
                   style={{ backgroundColor: '#FC6D36' }}
                 >
                   Adicionar Produto
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para editar produto */}
+      {showEditForm && editingProduct && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
+              Editar Produto: {editingProduct.name}
+            </h3>
+            <form onSubmit={handleUpdateProduct} className="max-h-screen overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Nome do Produto */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Nome do Produto *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newProduct.name}
+                    onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                  />
+                </div>
+
+                {/* Subnome */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Subnome (tipo de saída, etc.)
+                  </label>
+                  <input
+                    type="text"
+                    value={newProduct.subname}
+                    onChange={(e) => setNewProduct({ ...newProduct, subname: e.target.value })}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                    placeholder="Ex: USB-C, Lightning, P2..."
+                  />
+                </div>
+              </div>
+              
+              {/* Descrição */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Descrição *
+                </label>
+                <textarea
+                  required
+                  value={newProduct.description}
+                  onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                  rows={3}
+                />
+              </div>
+
+              {/* Marca */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Marca
+                </label>
+                <input
+                  type="text"
+                  value={newProduct.brand}
+                  onChange={(e) => setNewProduct({ ...newProduct, brand: e.target.value })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                  placeholder="Ex: Samsung, Apple, Xiaomi..."
+                />
+              </div>
+
+              {/* Preços */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Preço Atacado *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    value={newProduct.price}
+                    onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Preço Super Atacado
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newProduct.superWholesalePrice}
+                    onChange={(e) => setNewProduct({ ...newProduct, superWholesalePrice: e.target.value })}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Qtd. Mín. Super Atacado
+                  </label>
+                  <input
+                    type="number"
+                    value={newProduct.superWholesaleQuantity}
+                    onChange={(e) => setNewProduct({ ...newProduct, superWholesaleQuantity: e.target.value })}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                  />
+                </div>
+              </div>
+
+              {/* Informações Internas */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Valor de Custo (interno)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newProduct.cost}
+                    onChange={(e) => setNewProduct({ ...newProduct, cost: e.target.value })}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Categoria *
+                  </label>
+                  <select
+                    required
+                    value={newProduct.categoryId}
+                    onChange={(e) => setNewProduct({ ...newProduct, categoryId: e.target.value })}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                  >
+                    <option value="">Selecione uma categoria</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Imagens Atuais */}
+              {editingProduct.images && editingProduct.images.length > 0 && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Imagens Atuais
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {editingProduct.images.map((image, index) => (
+                      <div key={image.id} className="relative">
+                        <img
+                          src={image.url}
+                          alt={`Imagem ${index}`}
+                          className="w-full h-20 object-cover rounded border"
+                        />
+                        {image.isMain && (
+                          <span className="absolute bottom-0 left-0 bg-green-500 text-white text-xs px-1 rounded-tr">
+                            Principal
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Upload de Novas Imagens */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Adicionar Novas Imagens (opcional)
+                </label>
+                <div className="mt-1 space-y-2">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Selecione novas imagens se desejar adicionar mais. Elas serão adicionadas às imagens existentes.
+                  </p>
+                </div>
+                
+                {/* Preview das novas imagens */}
+                {selectedImages.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-600 mb-2">
+                      {selectedImages.length} nova{selectedImages.length !== 1 ? 's' : ''} imagem{selectedImages.length !== 1 ? 'ns' : ''} a ser{selectedImages.length !== 1 ? 'em' : ''} adicionada{selectedImages.length !== 1 ? 's' : ''}:
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {selectedImages.map((file, index) => (
+                        <div key={index} className="relative">
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={`Nova imagem ${index}`}
+                            className="w-full h-20 object-cover rounded border border-blue-300"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs hover:bg-red-600 flex items-center justify-center"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditForm(false)
+                    setEditingProduct(null)
+                    setSelectedImages([])
+                    setNewProduct({
+                      name: '',
+                      subname: '',
+                      description: '',
+                      brand: '',
+                      price: '',
+                      superWholesalePrice: '',
+                      superWholesaleQuantity: '',
+                      cost: '',
+                      categoryId: '',
+                      supplierId: '',
+                      supplierName: '',
+                      supplierPhone: ''
+                    })
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700"
+                  style={{ backgroundColor: '#FC6D36' }}
+                >
+                  Atualizar Produto
                 </button>
               </div>
             </form>

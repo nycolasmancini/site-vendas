@@ -27,8 +27,7 @@ export async function GET(request: NextRequest) {
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-        { brand: { contains: search, mode: 'insensitive' } }
+        { description: { contains: search, mode: 'insensitive' } }
       ]
     }
 
@@ -86,7 +85,6 @@ export async function POST(request: NextRequest) {
     const name = formData.get('name') as string
     const subname = formData.get('subname') as string || null
     const description = formData.get('description') as string
-    const brand = formData.get('brand') as string || null
     const price = parseFloat(formData.get('price') as string)
     const superWholesalePrice = formData.get('superWholesalePrice') ? 
       parseFloat(formData.get('superWholesalePrice') as string) : null
@@ -98,50 +96,39 @@ export async function POST(request: NextRequest) {
     const supplierName = formData.get('supplierName') as string || null
     const supplierPhone = formData.get('supplierPhone') as string || null
 
-    // Processar imagens - Solução usando Buffer (Node.js)
+    // Upload das imagens para Supabase
     const imageFiles = formData.getAll('images') as File[]
     const uploadedImages: { url: string; fileName: string; isMain: boolean }[] = []
 
-    console.log(`Processando ${imageFiles.length} imagens`)
-
-    // Processar cada imagem
     for (let i = 0; i < imageFiles.length; i++) {
       const file = imageFiles[i]
-      console.log(`Arquivo ${i}: nome=${file.name}, tamanho=${file.size}, tipo=${file.type}`)
-      
       if (file.size > 0) {
-        try {
-          // Verificar tamanho do arquivo (máximo 5MB)
-          if (file.size > 5242880) {
-            console.error(`Arquivo ${file.name} é muito grande (${file.size} bytes)`)
-            continue
-          }
+        const fileName = `products/${Date.now()}-${i}-${file.name}`
+        
+        const { data, error } = await supabase.storage
+          .from('product-images')
+          .upload(fileName, file)
 
-          // Converter File para ArrayBuffer e depois para Base64
-          const arrayBuffer = await file.arrayBuffer()
-          const buffer = Buffer.from(arrayBuffer)
-          const base64 = `data:${file.type};base64,${buffer.toString('base64')}`
-          
-          uploadedImages.push({
-            url: base64,
-            fileName: file.name,
-            isMain: i === 0 // Primeira imagem é a principal
-          })
-          console.log(`Imagem ${i} processada com sucesso: ${file.name}`)
-        } catch (error) {
-          console.error('Erro ao processar imagem:', error)
+        if (error) {
+          console.error('Erro no upload da imagem:', error)
           continue
         }
-      } else {
-        console.log(`Arquivo ${i} tem tamanho 0, ignorando`)
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(fileName)
+
+        uploadedImages.push({
+          url: publicUrl,
+          fileName: file.name,
+          isMain: i === 0 // Primeira imagem é a principal
+        })
       }
     }
 
-    console.log(`Total de imagens processadas: ${uploadedImages.length}`)
-
     if (uploadedImages.length === 0) {
       return NextResponse.json(
-        { error: 'Nenhuma imagem válida foi enviada. Verifique se os arquivos não estão corrompidos.' },
+        { error: 'Pelo menos uma imagem é obrigatória' },
         { status: 400 }
       )
     }
@@ -152,7 +139,6 @@ export async function POST(request: NextRequest) {
         name,
         subname,
         description,
-        brand,
         price,
         superWholesalePrice,
         superWholesaleQuantity,

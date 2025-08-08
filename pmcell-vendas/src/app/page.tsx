@@ -4,10 +4,72 @@ import { useState, useEffect } from 'react'
 import ProductCard from '@/components/products/ProductCard'
 import UnlockPricesModal from '@/components/ui/UnlockPricesModal'
 import { useSession } from '@/contexts/SessionContext'
+import { useCartStore } from '@/stores/useCartStore'
 import { formatPrice } from '@/lib/utils'
+import { 
+  PhoneIcon, 
+  StoreIcon, 
+  BoxIcon, 
+  ShoppingCartIcon,
+  CaseIcon,
+  ScreenProtectorIcon,
+  WiredHeadphonesIcon,
+  BluetoothHeadphonesIcon,
+  SpeakerIcon,
+  CableIcon,
+  ChargerIcon,
+  CarChargerIcon,
+  SmartwatchIcon,
+  CarHolderIcon,
+  AdapterIcon
+} from '@/components/ui/Icons'
+
+// Função para obter o ícone correto para cada categoria
+const getCategoryIcon = (categoryName: string, size: number = 18) => {
+  const name = categoryName.toLowerCase()
+  
+  if (name.includes('capa') || name.includes('case') || name.includes('capinha')) {
+    return <CaseIcon size={size} />
+  }
+  if (name.includes('película') || name.includes('protetor') || name.includes('vidro')) {
+    return <ScreenProtectorIcon size={size} />
+  }
+  if (name.includes('fone') && name.includes('bluetooth')) {
+    return <BluetoothHeadphonesIcon size={size} />
+  }
+  if (name.includes('fone')) {
+    return <WiredHeadphonesIcon size={size} />
+  }
+  if (name.includes('caixa') && name.includes('som')) {
+    return <SpeakerIcon size={size} />
+  }
+  if (name.includes('cabo') || name.includes('usb')) {
+    return <CableIcon size={size} />
+  }
+  if (name.includes('carregador') && (name.includes('veicular') || name.includes('carro'))) {
+    return <CarChargerIcon size={size} />
+  }
+  if (name.includes('carregador')) {
+    return <ChargerIcon size={size} />
+  }
+  if (name.includes('suporte') && (name.includes('veicular') || name.includes('carro'))) {
+    return <CarHolderIcon size={size} />
+  }
+  if (name.includes('suporte')) {
+    return <SmartwatchIcon size={size} />
+  }
+  if (name.includes('adaptador')) {
+    return <AdapterIcon size={size} />
+  }
+  
+  // Ícone padrão
+  return <BoxIcon size={size} />
+}
 
 export default function Home() {
   const { unlocked } = useSession()
+  const toggleCart = useCartStore((state) => state.toggleCart)
+  const itemsCount = useCartStore((state) => state.getItemsCount())
   const [showUnlockModal, setShowUnlockModal] = useState(false)
   const [products, setProducts] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
@@ -15,6 +77,12 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // Evitar problemas de hidratação
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Carregar categorias
   useEffect(() => {
@@ -54,86 +122,140 @@ export default function Home() {
   }, [unlocked, products])
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: 'var(--background)' }}>
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="sticky top-0 z-40 border-b" style={{ 
+        background: 'var(--surface)', 
+        borderColor: 'var(--border)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)'
+      }}>
+        <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center">
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                className="lg:hidden p-2 rounded-lg interactive" 
+                style={{ color: 'var(--muted-foreground)' }}
               >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
-              <h1 className="text-2xl font-bold text-orange-600 ml-2 lg:ml-0" style={{ color: '#FC6D36' }}>
-                PMCELL São Paulo
-              </h1>
+              <div className="ml-3 lg:ml-0">
+                <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
+                  PMCELL
+                </h1>
+                <p className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>
+                  Atacado • São Paulo
+                </p>
+              </div>
             </div>
 
             {/* Search */}
-            <div className="flex-1 max-w-lg mx-4">
+            <div className="flex-1 max-w-md mx-6">
               <div className="relative">
                 <input
                   type="text"
                   placeholder="Buscar produtos..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-4 py-2 pl-10 pr-4 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500"
+                  className="input w-full pl-10 text-sm"
+                  style={{ 
+                    background: 'var(--surface)',
+                    borderColor: 'var(--border)',
+                    color: 'var(--foreground)'
+                  }}
                 />
-                <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <svg 
+                  className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                  style={{ color: 'var(--muted-foreground)' }}
+                >
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="M21 21l-4.35-4.35"/>
                 </svg>
               </div>
             </div>
 
             {/* Cart */}
-            <button className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 relative">
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              <span className="absolute -top-1 -right-1 h-5 w-5 bg-orange-600 text-white text-xs rounded-full flex items-center justify-center">
-                0
-              </span>
+            <button 
+              onClick={toggleCart}
+              className="relative btn-primary interactive flex items-center gap-2"
+            >
+              <ShoppingCartIcon size={20} />
+              <span className="hidden sm:inline text-sm font-medium">Carrinho</span>
+              {mounted && itemsCount > 0 && (
+                <span 
+                  className="absolute -top-1 -right-1 h-5 w-5 text-xs font-bold rounded-full flex items-center justify-center"
+                  style={{ 
+                    background: 'var(--orange)',
+                    color: 'var(--surface)'
+                  }}
+                >
+                  {itemsCount}
+                </span>
+              )}
             </button>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex gap-8">
           {/* Sidebar Categories - Desktop */}
           <aside className="hidden lg:block w-64 flex-shrink-0">
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <h2 className="font-semibold text-gray-900 mb-4">Categorias</h2>
+            <div className="card p-6 animate-slide-up">
+              <div className="flex items-center gap-3 mb-6">
+                <PhoneIcon size={24} style={{ color: 'var(--orange)' }} />
+                <h2 className="text-lg font-semibold" style={{ color: 'var(--foreground)' }}>
+                  Categorias
+                </h2>
+              </div>
               <nav className="space-y-1">
                 <button
                   onClick={() => setSelectedCategory(null)}
-                  className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`interactive w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-3 ${
                     !selectedCategory
-                      ? 'bg-orange-100 text-orange-600'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      ? 'text-white'
+                      : 'hover:bg-gray-50'
                   }`}
+                  style={!selectedCategory ? {
+                    background: 'var(--primary)',
+                    color: 'var(--primary-foreground)'
+                  } : {
+                    color: 'var(--muted-foreground)'
+                  }}
                 >
-                  Todos os Produtos
+                  <StoreIcon size={16} />
+                  <span>Todos os Produtos</span>
                 </button>
                 {categories.map((category) => (
                   <button
                     key={category.id}
                     onClick={() => setSelectedCategory(category.id)}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`interactive w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${
                       selectedCategory === category.id
-                        ? 'bg-orange-100 text-orange-600'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        ? 'text-white'
+                        : 'hover:bg-gray-50'
                     }`}
+                    style={selectedCategory === category.id ? {
+                      background: 'var(--primary)',
+                      color: 'var(--primary-foreground)'
+                    } : {
+                      color: 'var(--muted-foreground)'
+                    }}
                   >
-                    {category.name}
+                    <div className="flex items-center gap-3">
+                      {getCategoryIcon(category.name, 16)}
+                      <span>{category.name}</span>
+                    </div>
                     {category._count?.products > 0 && (
-                      <span className="ml-2 text-xs text-gray-400">
-                        ({category._count.products})
+                      <span className="badge text-xs">
+                        {category._count.products}
                       </span>
                     )}
                   </button>
@@ -143,22 +265,56 @@ export default function Home() {
 
             {/* Unlock Prices CTA */}
             {!unlocked && (
-              <div className="mt-6 bg-orange-50 border border-orange-200 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-2">
-                  Preços Exclusivos!
+              <div className="card mt-6 p-6 text-center animate-fade-in">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto mb-4" style={{ color: 'var(--orange)' }}>
+                  <rect x="3" y="11" width="18" height="10" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
+                  Preços Exclusivos
                 </h3>
-                <p className="text-sm text-gray-600 mb-3">
-                  Libere os melhores preços de atacado agora
+                <p className="text-sm mb-4" style={{ color: 'var(--muted-foreground)' }}>
+                  Libere os melhores preços de atacado
                 </p>
                 <button
                   onClick={() => setShowUnlockModal(true)}
-                  className="w-full bg-orange-600 text-white py-2 px-4 rounded-md hover:bg-orange-700 transition-colors text-sm font-medium"
-                  style={{ backgroundColor: '#FC6D36' }}
+                  className="btn-primary w-full interactive"
+                  style={{ background: 'var(--orange)', color: 'var(--surface)' }}
                 >
                   Liberar Preços
                 </button>
+                <p className="text-xs mt-3" style={{ color: 'var(--muted-foreground)' }}>
+                  Pedido mínimo: 30 peças
+                </p>
               </div>
             )}
+
+            {/* B2B Benefits */}
+            <div className="card mt-6 p-6 animate-fade-in">
+              <h3 className="font-semibold text-base mb-4" style={{ color: 'var(--foreground)' }}>
+                Por que PMCELL?
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full" style={{ background: 'var(--orange)' }}></div>
+                  <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                    Preços imbatíveis no atacado
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full" style={{ background: 'var(--green)' }}></div>
+                  <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                    Entrega rápida em SP
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full" style={{ background: 'var(--blue)' }}></div>
+                  <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                    Produtos originais garantidos
+                  </p>
+                </div>
+              </div>
+            </div>
           </aside>
 
           {/* Mobile Menu */}
@@ -221,31 +377,53 @@ export default function Home() {
 
           {/* Products Grid */}
           <main className="flex-1">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
-                {selectedCategory
-                  ? categories.find(c => c.id === selectedCategory)?.name
-                  : 'Todos os Produtos'}
-              </h2>
-              <p className="text-gray-600 mt-1">
-                {products.length} produtos encontrados
-              </p>
+            <div className="card mb-8 p-6 animate-slide-up">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-4 mb-2">
+                    {selectedCategory ? (
+                      <div style={{ color: 'var(--orange)' }}>
+                        {getCategoryIcon(categories.find(c => c.id === selectedCategory)?.name || '', 28)}
+                      </div>
+                    ) : (
+                      <StoreIcon size={28} style={{ color: 'var(--orange)' }} />
+                    )}
+                    <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
+                      {selectedCategory
+                        ? categories.find(c => c.id === selectedCategory)?.name
+                        : 'Catálogo Completo'}
+                    </h1>
+                  </div>
+                  <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                    {products.length} produtos disponíveis
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs font-medium mb-1" style={{ color: 'var(--muted-foreground)' }}>
+                    Pedido mínimo
+                  </div>
+                  <div className="text-xl font-bold" style={{ color: 'var(--orange)' }}>
+                    30 peças
+                  </div>
+                </div>
+              </div>
             </div>
 
             {loading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {[...Array(8)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-lg shadow-sm animate-pulse">
-                    <div className="aspect-square bg-gray-200" />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="card animate-pulse">
+                    <div className="aspect-square rounded-t-xl" style={{ background: 'var(--muted)' }} />
                     <div className="p-4">
-                      <div className="h-4 bg-gray-200 rounded mb-2" />
-                      <div className="h-4 bg-gray-200 rounded w-2/3" />
+                      <div className="h-4 rounded mb-3" style={{ background: 'var(--muted)' }} />
+                      <div className="h-3 rounded w-2/3 mb-4" style={{ background: 'var(--muted)' }} />
+                      <div className="h-10 rounded" style={{ background: 'var(--muted)' }} />
                     </div>
                   </div>
                 ))}
               </div>
             ) : products.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {products.map((product) => (
                   <ProductCard
                     key={product.id}
@@ -258,14 +436,30 @@ export default function Home() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                </svg>
-                <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhum produto encontrado</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Tente ajustar os filtros ou buscar por outro termo
-                </p>
+              <div className="text-center py-16">
+                <div className="card p-8 max-w-md mx-auto">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto mb-4" style={{ color: 'var(--muted-foreground)' }}>
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                  </svg>
+                  <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--foreground)' }}>
+                    Nenhum produto encontrado
+                  </h3>
+                  <p className="text-sm mb-6" style={{ color: 'var(--muted-foreground)' }}>
+                    Tente ajustar os filtros ou buscar por outro termo
+                  </p>
+                  <button
+                    onClick={() => {
+                      setSelectedCategory(null)
+                      setSearchTerm('')
+                    }}
+                    className="btn-primary interactive flex items-center gap-2 mx-auto"
+                    style={{ background: 'var(--orange)', color: 'var(--surface)' }}
+                  >
+                    <StoreIcon size={16} />
+                    Ver Todos os Produtos
+                  </button>
+                </div>
               </div>
             )}
           </main>
