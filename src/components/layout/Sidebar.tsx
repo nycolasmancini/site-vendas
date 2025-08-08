@@ -61,10 +61,10 @@ export function Sidebar() {
               <Link
                 href="/produtos"
                 className={cn(
-                  "flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  "flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-all duration-300 ease-out transform hover:scale-[1.02]",
                   pathname === "/produtos"
-                    ? "bg-[#FC6D36] text-white"
-                    : "text-gray-700 hover:bg-gray-100"
+                    ? "bg-[#FC6D36] text-white shadow-md"
+                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                 )}
               >
                 <span>Todos os Produtos</span>
@@ -75,10 +75,10 @@ export function Sidebar() {
               <Link
                 href="/kits"
                 className={cn(
-                  "flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors mt-1",
+                  "flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-all duration-300 ease-out transform hover:scale-[1.02] mt-1",
                   pathname === "/kits"
-                    ? "bg-[#FC6D36] text-white"
-                    : "text-gray-700 hover:bg-gray-100"
+                    ? "bg-[#FC6D36] text-white shadow-md"
+                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                 )}
               >
                 <span className="flex items-center">
@@ -96,16 +96,16 @@ export function Sidebar() {
                   key={category.id}
                   href={`/categoria/${category.slug}`}
                   className={cn(
-                    "flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                    "flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-all duration-300 ease-out transform hover:scale-[1.02]",
                     pathname === `/categoria/${category.slug}`
-                      ? "bg-[#FC6D36] text-white"
-                      : "text-gray-700 hover:bg-gray-100"
+                      ? "bg-[#FC6D36] text-white shadow-md"
+                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                   )}
                 >
                   <span>{category.name}</span>
                   {category.productCount && category.productCount > 0 && (
                     <span className={cn(
-                      "text-xs",
+                      "text-xs transition-colors duration-300 ease-out",
                       pathname === `/categoria/${category.slug}`
                         ? "text-white/80"
                         : "text-gray-500"

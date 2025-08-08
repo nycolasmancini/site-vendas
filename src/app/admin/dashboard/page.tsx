@@ -15,6 +15,7 @@ interface Product {
   superWholesaleQuantity?: number
   cost?: number
   categoryId: string
+  isActive: boolean
   category: {
     name: string
   }
@@ -78,7 +79,7 @@ export default function AdminDashboard() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch('/api/products')
+      const response = await fetch('/api/products?admin=true')
       if (response.ok) {
         const data = await response.json()
         setProducts(data.products || [])
@@ -346,6 +347,29 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleToggleAvailability = async (id: string, currentStatus: boolean) => {
+    try {
+      const response = await fetch(`/api/products/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isActive: !currentStatus }),
+      })
+
+      if (response.ok) {
+        await fetchProducts()
+        const newStatus = !currentStatus ? 'disponível' : 'indisponível'
+        alert(`Produto marcado como ${newStatus}`)
+      } else {
+        alert('Erro ao alterar disponibilidade do produto')
+      }
+    } catch (error) {
+      console.error('Erro ao alterar disponibilidade do produto:', error)
+      alert('Erro ao alterar disponibilidade do produto')
+    }
+  }
+
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -487,18 +511,37 @@ export default function AdminDashboard() {
                             <span> • Super Atacado: R$ {product.superWholesalePrice.toFixed(2)} ({product.superWholesaleQuantity}+ unid.)</span>
                           )}
                         </div>
+                        <div className="flex items-center mt-1">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            product.isActive 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {product.isActive ? 'Disponível' : 'Indisponível'}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-2">
+                      <button
+                        onClick={() => handleToggleAvailability(product.id, product.isActive)}
+                        className={`text-xs px-3 py-1 rounded-md font-medium ${
+                          product.isActive
+                            ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                            : 'bg-green-100 text-green-700 hover:bg-green-200'
+                        }`}
+                      >
+                        {product.isActive ? 'Marcar Indisponível' : 'Marcar Disponível'}
+                      </button>
                       <button
                         onClick={() => handleEditProduct(product)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-600 hover:text-blue-900 text-sm"
                       >
                         Editar
                       </button>
                       <button
                         onClick={() => handleDeleteProduct(product.id)}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-600 hover:text-red-900 text-sm"
                       >
                         Excluir
                       </button>

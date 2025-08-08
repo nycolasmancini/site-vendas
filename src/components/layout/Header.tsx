@@ -11,13 +11,15 @@ interface HeaderProps {
   onSearchChange?: (term: string) => void
   onMenuToggle?: () => void
   showMenuButton?: boolean
+  onLogoClick?: () => void
 }
 
 export function Header({ 
   searchTerm = '', 
   onSearchChange, 
   onMenuToggle, 
-  showMenuButton = false 
+  showMenuButton = false,
+  onLogoClick
 }: HeaderProps = {}) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -104,7 +106,11 @@ export function Header({
               </button>
             )}
             
-            <Link href="/" className="flex items-center space-x-3">
+            <Link 
+              href="/" 
+              className="flex items-center space-x-3"
+              onClick={() => onLogoClick?.()}
+            >
               {logo && (
                 <img 
                   src={logo} 

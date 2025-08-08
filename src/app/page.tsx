@@ -95,8 +95,12 @@ export default function Home() {
   useEffect(() => {
     setLoading(true)
     const params = new URLSearchParams()
-    if (selectedCategory) params.append('categoryId', selectedCategory)
-    if (searchTerm) params.append('search', searchTerm)
+    // Se há um termo de busca, pesquisar em todos os produtos (ignorar categoria selecionada)
+    if (searchTerm) {
+      params.append('search', searchTerm)
+    } else if (selectedCategory) {
+      params.append('categoryId', selectedCategory)
+    }
 
     fetch(`/api/products?${params}`)
       .then(res => res.json())
@@ -128,6 +132,10 @@ export default function Home() {
         onSearchChange={setSearchTerm}
         onMenuToggle={() => setMenuOpen(!menuOpen)}
         showMenuButton={true}
+        onLogoClick={() => {
+          setSelectedCategory(null)
+          setSearchTerm('')
+        }}
       />
 
       <div className="max-w-7xl mx-auto px-6 py-8">

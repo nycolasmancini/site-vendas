@@ -55,12 +55,15 @@ export async function POST(request: NextRequest) {
 
     for (const item of items) {
       const product = await prisma.product.findUnique({
-        where: { id: item.productId }
+        where: { 
+          id: item.productId,
+          isActive: true
+        }
       })
 
       if (!product) {
         return NextResponse.json(
-          { error: `Produto ${item.productId} não encontrado` },
+          { error: `Produto ${item.productId} não encontrado ou indisponível` },
           { status: 400 }
         )
       }

@@ -230,17 +230,6 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
           </div>
         )}
         
-        {product.superWholesalePrice && (
-          <div 
-            className="absolute top-3 right-3 px-2 py-1 rounded-md text-xs font-medium"
-            style={{ 
-              background: 'var(--green)', 
-              color: 'var(--surface)' 
-            }}
-          >
-            Atacado
-          </div>
-        )}
       </div>
 
       <div className="p-4">

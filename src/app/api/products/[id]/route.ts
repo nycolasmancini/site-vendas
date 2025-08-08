@@ -204,6 +204,52 @@ export async function PUT(
   }
 }
 
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+  try {
+    const body = await request.json()
+    const { isActive } = body
+
+    // Verificar se o produto existe
+    const existingProduct = await prisma.product.findUnique({
+      where: { id }
+    })
+
+    if (!existingProduct) {
+      return NextResponse.json({ error: 'Produto não encontrado' }, { status: 404 })
+    }
+
+    // Atualizar apenas o status de disponibilidade
+    const updatedProduct = await prisma.product.update({
+      where: { id },
+      data: { isActive },
+      include: {
+        category: true,
+        images: {
+          orderBy: { order: 'asc' }
+        },
+        suppliers: {
+          where: { isActive: true },
+          include: {
+            supplier: true
+          }
+        }
+      }
+    })
+
+    return NextResponse.json(updatedProduct)
+  } catch (error) {
+    console.error('Erro ao atualizar disponibilidade do produto:', error)
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

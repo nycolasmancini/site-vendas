@@ -12,6 +12,7 @@ export function CartSidebar() {
   const [showEconomizerModal, setShowEconomizerModal] = useState(false)
   const [previousUpgradesLength, setPreviousUpgradesLength] = useState(-1) // Start with -1 to detect initial state
   const [buttonState, setButtonState] = useState<'hidden' | 'entering' | 'visible' | 'exiting'>('hidden')
+  const [removingItems, setRemovingItems] = useState<Set<string>>(new Set())
   const { 
     items, 
     isOpen, 
@@ -47,6 +48,22 @@ export function CartSidebar() {
       setTimeout(() => setButtonState('hidden'), 600)
     }
   }, [upgradesLength, mounted, buttonState])
+
+  // Handle animated item removal
+  const handleRemoveItem = useCallback((itemId: string) => {
+    // Add item to removing set
+    setRemovingItems(prev => new Set([...prev, itemId]))
+    
+    // After animation completes, actually remove the item
+    setTimeout(() => {
+      removeItem(itemId)
+      setRemovingItems(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(itemId)
+        return newSet
+      })
+    }, 500) // Match animation duration
+  }, [removeItem])
 
   // Simple button styling
   const getButtonClasses = () => {
@@ -122,12 +139,18 @@ export function CartSidebar() {
                   ? item.specialPrice
                   : item.unitPrice
 
+                const isRemoving = removingItems.has(item.id)
+                
                 return (
                   <div 
                     key={item.id} 
-                    className="flex gap-4 p-3 bg-gray-50 rounded-lg transition-all duration-300 hover:bg-gray-100 hover:shadow-md transform hover:scale-[1.02] animate-in slide-in-from-right duration-300"
+                    className={`flex gap-4 bg-gray-50 rounded-lg transition-all duration-300 ${
+                      isRemoving 
+                        ? 'cart-item-removing px-3' 
+                        : 'p-3 hover:bg-gray-100 hover:shadow-md transform hover:scale-[1.02] animate-in slide-in-from-right duration-300'
+                    }`}
                     style={{
-                      animationDelay: `${index * 50}ms`
+                      animationDelay: isRemoving ? '0ms' : `${index * 50}ms`
                     }}
                   >
                     {/* Image */}
@@ -163,22 +186,39 @@ export function CartSidebar() {
                         <div className="flex items-center space-x-1">
                           <button
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            className="w-7 h-7 rounded flex items-center justify-center border hover:bg-gray-100 transition-all duration-200 hover:scale-110 active:scale-95"
+                            disabled={isRemoving}
+                            className={`w-7 h-7 rounded flex items-center justify-center border transition-all duration-200 ${
+                              isRemoving 
+                                ? 'opacity-50 cursor-not-allowed' 
+                                : 'hover:bg-gray-100 hover:scale-110 active:scale-95'
+                            }`}
                           >
                             <Minus className="w-3 h-3" />
                           </button>
-                          <span className="w-8 text-center text-sm font-medium transition-all duration-200">{item.quantity}</span>
+                          <span className={`w-8 text-center text-sm font-medium transition-all duration-200 ${
+                            isRemoving ? 'opacity-50' : ''
+                          }`}>{item.quantity}</span>
                           <button
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            className="w-7 h-7 rounded flex items-center justify-center border hover:bg-gray-100 transition-all duration-200 hover:scale-110 active:scale-95"
+                            disabled={isRemoving}
+                            className={`w-7 h-7 rounded flex items-center justify-center border transition-all duration-200 ${
+                              isRemoving 
+                                ? 'opacity-50 cursor-not-allowed' 
+                                : 'hover:bg-gray-100 hover:scale-110 active:scale-95'
+                            }`}
                           >
                             <Plus className="w-3 h-3" />
                           </button>
                         </div>
                         
                         <button
-                          onClick={() => removeItem(item.id)}
-                          className="p-1 text-red-500 hover:bg-red-50 rounded transition-all duration-200 hover:scale-110 active:scale-95"
+                          onClick={() => handleRemoveItem(item.id)}
+                          disabled={isRemoving}
+                          className={`p-1 rounded transition-all duration-200 ${
+                            isRemoving 
+                              ? 'text-gray-400 cursor-not-allowed' 
+                              : 'text-red-500 hover:bg-red-50 hover:scale-110 active:scale-95'
+                          }`}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
