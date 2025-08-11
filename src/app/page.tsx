@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import ProductCard from '@/components/products/ProductCard'
+import ProductVariationModal from '@/components/products/ProductVariationModal'
 import UnlockPricesModal from '@/components/ui/UnlockPricesModal'
 import { Header } from '@/components/layout/Header'
 import { useSession } from '@/contexts/SessionContext'
@@ -77,6 +78,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [selectedProductForVariation, setSelectedProductForVariation] = useState<any>(null)
+  const [showVariationModal, setShowVariationModal] = useState(false)
 
   // Evitar problemas de hidratação
   useEffect(() => {
@@ -363,8 +366,8 @@ export default function Home() {
                     key={product.id}
                     product={product}
                     onSelectModels={() => {
-                      // TODO: Implement model selection modal
-                      console.log('Select models for', product.id)
+                      setSelectedProductForVariation(product)
+                      setShowVariationModal(true)
                     }}
                     onUnlockPrices={() => setShowUnlockModal(true)}
                   />
@@ -406,6 +409,18 @@ export default function Home() {
         isOpen={showUnlockModal}
         onClose={() => setShowUnlockModal(false)}
       />
+
+      {/* Product Variation Modal */}
+      {selectedProductForVariation && (
+        <ProductVariationModal
+          product={selectedProductForVariation}
+          isOpen={showVariationModal}
+          onClose={() => {
+            setShowVariationModal(false)
+            setSelectedProductForVariation(null)
+          }}
+        />
+      )}
     </div>
   )
 }

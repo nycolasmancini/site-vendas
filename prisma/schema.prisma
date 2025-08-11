@@ -74,6 +74,10 @@ model Product {
   categoryId        String
   category          Category          @relation(fields: [categoryId], references: [id])
   
+  // Tipo de produto
+  isModalProduct    Boolean           @default(false) // Indica se é produto de modal (capas/películas)
+  quickAddIncrement Int?              // Incremento para adição rápida (25, 50, 100, etc.)
+  
   // Preços
   price             Float             // Preço atacado normal
   specialPrice      Float?            // Preço especial para quantidade (mantido)
@@ -130,13 +134,17 @@ model ProductSupplier {
 
 // Relação produto-modelo (para capas e películas)
 model ProductModel {
-  id        String   @id @default(cuid())
-  productId String
-  product   Product  @relation(fields: [productId], references: [id])
-  modelId   String
-  model     Model    @relation(fields: [modelId], references: [id])
-  price     Float?   // Preço específico para este modelo
-  createdAt DateTime @default(now())
+  id                    String   @id @default(cuid())
+  productId             String
+  product               Product  @relation(fields: [productId], references: [id])
+  modelId               String
+  model                 Model    @relation(fields: [modelId], references: [id])
+  
+  // Preços específicos para este modelo
+  price                 Float?   // Preço atacado para este modelo
+  superWholesalePrice   Float?   // Preço super atacado para este modelo
+  
+  createdAt             DateTime @default(now())
 
   @@unique([productId, modelId])
 }

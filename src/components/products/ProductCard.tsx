@@ -101,6 +101,13 @@ interface ProductCardProps {
     specialQuantity?: number
     boxQuantity?: number
     hasModels?: boolean
+    isModalProduct?: boolean
+    priceRange?: {
+      min: number
+      max: number
+      superWholesaleMin?: number
+      superWholesaleMax?: number
+    }
   }
   onSelectModels?: () => void
   onUnlockPrices?: () => void
@@ -135,7 +142,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
   }
 
   const handleAddToCart = (event: React.MouseEvent<HTMLButtonElement>) => {
-    if (product.hasModels) {
+    if (product.hasModels || product.isModalProduct) {
       onSelectModels?.()
       return
     }
@@ -245,146 +252,198 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
         {unlocked ? (
           <div className="mt-3">
             <div className="mb-4">
-              <div className="flex items-baseline gap-2 mb-2">
-                <AnimatedPrice
-                  price={currentPrice}
-                  className="text-xl font-bold"
-                  style={{ color: 'var(--foreground)' }}
-                />
-                <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                  unidade
-                </span>
-              </div>
-              
-              {product.superWholesalePrice && product.superWholesaleQuantity && (
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--green)' }}></div>
-                  <p className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>
-                    {product.superWholesaleQuantity}+ un: {formatPrice(product.superWholesalePrice)}
-                  </p>
+              {product.isModalProduct && product.priceRange ? (
+                <div>
+                  {/* Range de preços atacado */}
+                  <div className="flex items-baseline gap-2 mb-2">
+                    <span className="text-xl font-bold" style={{ color: 'var(--foreground)' }}>
+                      {formatPrice(product.priceRange.min)} - {formatPrice(product.priceRange.max)}
+                    </span>
+                    <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                      atacado
+                    </span>
+                  </div>
+                  
+                  {/* Range de preços super atacado */}
+                  {product.priceRange.superWholesaleMin && product.priceRange.superWholesaleMax && (
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--green)' }}></div>
+                      <p className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>
+                        Super atacado: {formatPrice(product.priceRange.superWholesaleMin)} - {formatPrice(product.priceRange.superWholesaleMax)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <div className="flex items-baseline gap-2 mb-2">
+                    <AnimatedPrice
+                      price={currentPrice}
+                      className="text-xl font-bold"
+                      style={{ color: 'var(--foreground)' }}
+                    />
+                    <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                      unidade
+                    </span>
+                  </div>
+                  
+                  {product.superWholesalePrice && product.superWholesaleQuantity && (
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--green)' }}></div>
+                      <p className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>
+                        {product.superWholesaleQuantity}+ un: {formatPrice(product.superWholesalePrice)}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
-            <div className="space-y-3">
-              {/* Quantidade */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium" style={{ color: 'var(--muted-foreground)' }}>
-                  Quantidade
-                </span>
-                <div className="flex items-center rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                  <button
-                    onClick={() => {
-                      const currentNum = typeof quantity === 'string' ? parseInt(quantity) || 1 : quantity
-                      setQuantity(Math.max(1, currentNum - 1))
-                    }}
-                    className="interactive px-3 py-1.5 hover:bg-accent text-sm font-medium"
-                    style={{ color: 'var(--muted-foreground)' }}
-                  >
-                    -
-                  </button>
-                  <input
-                    type="number"
-                    value={quantity}
-                    onChange={(e) => {
-                      const value = e.target.value
-                      // Permite campo vazio temporariamente para digitar
-                      if (value === '') {
-                        setQuantity('')
-                        return
-                      }
-                      // Converte para número e valida
-                      const numValue = parseInt(value)
-                      if (!isNaN(numValue) && numValue > 0) {
-                        setQuantity(numValue)
-                      }
-                    }}
-                    onBlur={(e) => {
-                      // Garante que nunca fica vazio ou zero quando perde o foco
-                      const value = e.target.value
-                      if (value === '' || parseInt(value) <= 0) {
-                        setQuantity(1)
-                      }
-                    }}
-                    min="1"
-                    className="w-12 text-center py-1.5 text-sm font-medium border-x"
-                    style={{ 
-                      background: 'var(--surface)',
-                      borderColor: 'var(--border)',
-                      color: 'var(--foreground)'
-                    }}
-                  />
-                  <button
-                    onClick={() => {
-                      const currentNum = typeof quantity === 'string' ? parseInt(quantity) || 1 : quantity
-                      setQuantity(currentNum + 1)
-                    }}
-                    className="interactive px-3 py-1.5 hover:bg-accent text-sm font-medium"
-                    style={{ color: 'var(--muted-foreground)' }}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-              
+            {product.isModalProduct ? (
               <button
                 ref={buttonRef}
                 onClick={handleAddToCart}
-                disabled={isAnimating}
-                className={`btn-primary w-full interactive flex items-center justify-center gap-2 relative overflow-hidden transition-all duration-300 ${
-                  isAnimating ? 'cursor-not-allowed' : ''
-                }`}
+                className="btn-primary w-full interactive flex items-center justify-center gap-2"
                 style={{ 
-                  background: showSuccess ? 'var(--green)' : 'var(--primary)', 
-                  color: 'var(--primary-foreground)',
-                  opacity: isAnimating ? 0.9 : 1
+                  background: 'var(--primary)', 
+                  color: 'var(--primary-foreground)'
                 }}
               >
-                {showSuccess ? (
-                  <>
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="16" 
-                      height="16" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="2.5"
-                      className="checkmark-animate"
-                    >
-                      <path d="M20 6L9 17l-5-5"/>
-                    </svg>
-                    <span className="font-medium">Adicionado!</span>
-                  </>
-                ) : (
-                  <>
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="16" 
-                      height="16" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="1.5"
-                      className={isAnimating ? 'cart-icon-bounce' : ''}
-                    >
-                      <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-                    </svg>
-                    <span className="font-medium">
-                      {product.hasModels ? 'Escolher Modelo' : (isAnimating ? 'Adicionando...' : 'Adicionar')}
-                    </span>
-                    {typeof quantity === 'number' && quantity > 1 && !isAnimating && (
-                      <span 
-                        className="ml-1 px-1.5 py-0.5 rounded-full text-xs font-bold quantity-pop"
-                        style={{ background: 'rgba(255,255,255,0.2)' }}
-                      >
-                        {quantity}
-                      </span>
-                    )}
-                  </>
-                )}
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="1.5"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <path d="M9 9h6v6H9z"/>
+                </svg>
+                <span className="font-medium">Escolher Modelo</span>
               </button>
-            </div>
+            ) : (
+              <div className="space-y-3">
+                {/* Quantidade */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium" style={{ color: 'var(--muted-foreground)' }}>
+                    Quantidade
+                  </span>
+                  <div className="flex items-center rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                    <button
+                      onClick={() => {
+                        const currentNum = typeof quantity === 'string' ? parseInt(quantity) || 1 : quantity
+                        setQuantity(Math.max(1, currentNum - 1))
+                      }}
+                      className="interactive px-3 py-1.5 hover:bg-accent text-sm font-medium"
+                      style={{ color: 'var(--muted-foreground)' }}
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      value={quantity}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        // Permite campo vazio temporariamente para digitar
+                        if (value === '') {
+                          setQuantity('')
+                          return
+                        }
+                        // Converte para número e valida
+                        const numValue = parseInt(value)
+                        if (!isNaN(numValue) && numValue > 0) {
+                          setQuantity(numValue)
+                        }
+                      }}
+                      onBlur={(e) => {
+                        // Garante que nunca fica vazio ou zero quando perde o foco
+                        const value = e.target.value
+                        if (value === '' || parseInt(value) <= 0) {
+                          setQuantity(1)
+                        }
+                      }}
+                      min="1"
+                      className="w-12 text-center py-1.5 text-sm font-medium border-x"
+                      style={{ 
+                        background: 'var(--surface)',
+                        borderColor: 'var(--border)',
+                        color: 'var(--foreground)'
+                      }}
+                    />
+                    <button
+                      onClick={() => {
+                        const currentNum = typeof quantity === 'string' ? parseInt(quantity) || 1 : quantity
+                        setQuantity(currentNum + 1)
+                      }}
+                      className="interactive px-3 py-1.5 hover:bg-accent text-sm font-medium"
+                      style={{ color: 'var(--muted-foreground)' }}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                
+                <button
+                  ref={buttonRef}
+                  onClick={handleAddToCart}
+                  disabled={isAnimating}
+                  className={`btn-primary w-full interactive flex items-center justify-center gap-2 relative overflow-hidden transition-all duration-300 ${
+                    isAnimating ? 'cursor-not-allowed' : ''
+                  }`}
+                  style={{ 
+                    background: showSuccess ? 'var(--green)' : 'var(--primary)', 
+                    color: 'var(--primary-foreground)',
+                    opacity: isAnimating ? 0.9 : 1
+                  }}
+                >
+                  {showSuccess ? (
+                    <>
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2.5"
+                        className="checkmark-animate"
+                      >
+                        <path d="M20 6L9 17l-5-5"/>
+                      </svg>
+                      <span className="font-medium">Adicionado!</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="1.5"
+                        className={isAnimating ? 'cart-icon-bounce' : ''}
+                      >
+                        <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                      </svg>
+                      <span className="font-medium">
+                        {product.hasModels || product.isModalProduct ? 'Escolher Modelo' : (isAnimating ? 'Adicionando...' : 'Adicionar')}
+                      </span>
+                      {typeof quantity === 'number' && quantity > 1 && !isAnimating && (
+                        <span 
+                          className="ml-1 px-1.5 py-0.5 rounded-full text-xs font-bold quantity-pop"
+                          style={{ background: 'rgba(255,255,255,0.2)' }}
+                        >
+                          {quantity}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="mt-3">

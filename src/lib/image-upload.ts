@@ -2,32 +2,8 @@ import { supabase } from './supabase'
 
 export async function uploadProductImage(file: File, index: number): Promise<string | null> {
   try {
-    // Primeiro, verificar se o bucket existe
-    const { data: buckets, error: listError } = await supabase.storage.listBuckets()
-    
-    if (listError) {
-      console.error('Erro ao listar buckets:', listError)
-      return null
-    }
-
-    const bucketExists = buckets?.some(bucket => bucket.name === 'product-images')
-    
-    if (!bucketExists) {
-      // Tentar criar o bucket
-      const { error: createError } = await supabase.storage
-        .createBucket('product-images', {
-          public: true,
-          allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'],
-          fileSizeLimit: 5242880 // 5MB
-        })
-      
-      if (createError) {
-        console.error('Erro ao criar bucket:', createError)
-        return null
-      }
-
-      console.log('Bucket product-images criado com sucesso!')
-    }
+    // Usar cliente regular - assumir que bucket já existe ou será criado manualmente
+    const storageClient = supabase
 
     // Gerar nome único para o arquivo
     const timestamp = Date.now()
@@ -36,7 +12,7 @@ export async function uploadProductImage(file: File, index: number): Promise<str
     const fileName = `${timestamp}_${index}_${randomString}_${cleanFileName}`
 
     // Fazer upload do arquivo
-    const { data, error: uploadError } = await supabase.storage
+    const { data, error: uploadError } = await storageClient.storage
       .from('product-images')
       .upload(fileName, file, {
         cacheControl: '3600',
@@ -49,7 +25,7 @@ export async function uploadProductImage(file: File, index: number): Promise<str
     }
 
     // Obter URL pública
-    const { data: { publicUrl } } = supabase.storage
+    const { data: { publicUrl } } = storageClient.storage
       .from('product-images')
       .getPublicUrl(fileName)
 
@@ -62,31 +38,24 @@ export async function uploadProductImage(file: File, index: number): Promise<str
 
 export async function ensureStorageBucket(): Promise<boolean> {
   try {
-    const { data: buckets, error: listError } = await supabase.storage.listBuckets()
+    // Tentar fazer um teste de upload para verificar se o bucket existe e está acessível
+    const testFileName = `test_${Date.now()}.txt`
+    const testFile = new Blob(['test'], { type: 'text/plain' })
     
-    if (listError) {
-      console.error('Erro ao verificar buckets:', listError)
+    const { error: uploadError } = await supabase.storage
+      .from('product-images')
+      .upload(testFileName, testFile)
+    
+    if (uploadError) {
+      console.error('Erro ao testar bucket:', uploadError)
       return false
     }
-
-    const bucketExists = buckets?.some(bucket => bucket.name === 'product-images')
     
-    if (!bucketExists) {
-      const { error: createError } = await supabase.storage
-        .createBucket('product-images', {
-          public: true,
-          allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'],
-          fileSizeLimit: 5242880 // 5MB
-        })
-      
-      if (createError) {
-        console.error('Erro ao criar bucket:', createError)
-        return false
-      }
-
-      console.log('Bucket product-images criado!')
-    }
-
+    // Remove o arquivo de teste
+    await supabase.storage
+      .from('product-images')
+      .remove([testFileName])
+    
     return true
   } catch (error) {
     console.error('Erro ao garantir bucket:', error)

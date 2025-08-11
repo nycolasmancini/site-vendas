@@ -16,11 +16,23 @@ interface Product {
   cost?: number
   categoryId: string
   isActive: boolean
+  isModalProduct?: boolean
+  quickAddIncrement?: number
   category: {
     name: string
   }
   images: Array<{ id: string; url: string; isMain: boolean }>
   suppliers: Array<{ id: string; supplier: { name: string; phone?: string } }>
+  models?: Array<{
+    id: string
+    price: number
+    superWholesalePrice?: number
+    model: {
+      id: string
+      name: string
+      brand: { name: string }
+    }
+  }>
   createdAt: string
 }
 
@@ -43,7 +55,10 @@ export default function AdminDashboard() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [showModalForm, setShowModalForm] = useState(false)
   const [showEditForm, setShowEditForm] = useState(false)
+  const [showManageModels, setShowManageModels] = useState(false)
+  const [managingProduct, setManagingProduct] = useState<Product | null>(null)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [selectedImages, setSelectedImages] = useState<File[]>([])
   const [logoFile, setLogoFile] = useState<File | null>(null)
@@ -61,6 +76,14 @@ export default function AdminDashboard() {
     supplierId: '',
     supplierName: '',
     supplierPhone: ''
+  })
+
+  const [newModalProduct, setNewModalProduct] = useState({
+    name: '',
+    description: '',
+    categoryId: '',
+    quickAddIncrement: '25',
+    models: [] as { brandName: string; modelName: string; price: string; superWholesalePrice: string }[]
   })
 
   useEffect(() => {
@@ -347,6 +370,86 @@ export default function AdminDashboard() {
     }
   }
 
+  const addModalProductModel = () => {
+    setNewModalProduct(prev => ({
+      ...prev,
+      models: [...prev.models, { brandName: '', modelName: '', price: '', superWholesalePrice: '' }]
+    }))
+  }
+
+  const removeModalProductModel = (index: number) => {
+    setNewModalProduct(prev => ({
+      ...prev,
+      models: prev.models.filter((_, i) => i !== index)
+    }))
+  }
+
+  const updateModalProductModel = (index: number, field: string, value: string) => {
+    setNewModalProduct(prev => ({
+      ...prev,
+      models: prev.models.map((model, i) => 
+        i === index ? { ...model, [field]: value } : model
+      )
+    }))
+  }
+
+  const handleAddModalProduct = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (selectedImages.length === 0) {
+      alert('Por favor, selecione pelo menos uma imagem')
+      return
+    }
+    
+    if (newModalProduct.models.length === 0) {
+      alert('Por favor, adicione pelo menos um modelo')
+      return
+    }
+    
+    try {
+      const formData = new FormData()
+      
+      // Dados do produto de modal
+      formData.append('name', newModalProduct.name)
+      formData.append('description', newModalProduct.description)
+      formData.append('categoryId', newModalProduct.categoryId)
+      formData.append('quickAddIncrement', newModalProduct.quickAddIncrement)
+      formData.append('isModalProduct', 'true')
+      formData.append('models', JSON.stringify(newModalProduct.models))
+      
+      // Adicionar imagens
+      selectedImages.forEach((file, index) => {
+        formData.append('images', file)
+        if (index === 0) formData.append('mainImageIndex', '0')
+      })
+
+      const response = await fetch('/api/products/modal', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (response.ok) {
+        alert('Produto de modal adicionado com sucesso!')
+        await fetchProducts()
+        setShowModalForm(false)
+        setSelectedImages([])
+        setNewModalProduct({
+          name: '',
+          description: '',
+          categoryId: '',
+          quickAddIncrement: '25',
+          models: []
+        })
+      } else {
+        const errorData = await response.json()
+        alert(`Erro ao adicionar produto: ${errorData.error || 'Erro desconhecido'}`)
+      }
+    } catch (error) {
+      console.error('Erro ao adicionar produto de modal:', error)
+      alert('Erro ao adicionar produto de modal')
+    }
+  }
+
   const handleToggleAvailability = async (id: string, currentStatus: boolean) => {
     try {
       const response = await fetch(`/api/products/${id}`, {
@@ -403,13 +506,21 @@ export default function AdminDashboard() {
                 Painel Administrativo
               </h1>
             </div>
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700"
-              style={{ backgroundColor: '#FC6D36' }}
-            >
-              Adicionar Produto
-            </button>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700"
+                style={{ backgroundColor: '#FC6D36' }}
+              >
+                Produto Normal
+              </button>
+              <button
+                onClick={() => setShowModalForm(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+              >
+                Produto Modal
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -533,6 +644,17 @@ export default function AdminDashboard() {
                       >
                         {product.isActive ? 'Marcar Indisponível' : 'Marcar Disponível'}
                       </button>
+                      {product.isModalProduct && (
+                        <button
+                          onClick={() => {
+                            setManagingProduct(product)
+                            setShowManageModels(true)
+                          }}
+                          className="text-purple-600 hover:text-purple-900 text-sm"
+                        >
+                          Gerenciar Modelos
+                        </button>
+                      )}
                       <button
                         onClick={() => handleEditProduct(product)}
                         className="text-blue-600 hover:text-blue-900 text-sm"
@@ -1063,6 +1185,367 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para adicionar produto de modal (capas/películas) */}
+      {showModalForm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
+              Adicionar Produto de Modal (Capas/Películas)
+            </h3>
+            <form onSubmit={handleAddModalProduct} className="max-h-screen overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Nome do Produto */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Nome do Produto *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newModalProduct.name}
+                    onChange={(e) => setNewModalProduct({ ...newModalProduct, name: e.target.value })}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Ex: Película 3D, Capa de Silicone..."
+                  />
+                </div>
+
+                {/* Categoria */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Categoria *
+                  </label>
+                  <select
+                    required
+                    value={newModalProduct.categoryId}
+                    onChange={(e) => setNewModalProduct({ ...newModalProduct, categoryId: e.target.value })}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Selecione uma categoria</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Descrição */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Descrição *
+                </label>
+                <textarea
+                  required
+                  value={newModalProduct.description}
+                  onChange={(e) => setNewModalProduct({ ...newModalProduct, description: e.target.value })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  rows={3}
+                  placeholder="Descreva o produto..."
+                />
+              </div>
+
+              {/* Incremento de Adição Rápida */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Incremento para Adição Rápida *
+                </label>
+                <select
+                  required
+                  value={newModalProduct.quickAddIncrement}
+                  onChange={(e) => setNewModalProduct({ ...newModalProduct, quickAddIncrement: e.target.value })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="1">1 em 1</option>
+                  <option value="5">5 em 5</option>
+                  <option value="10">10 em 10</option>
+                  <option value="25">25 em 25</option>
+                  <option value="50">50 em 50</option>
+                  <option value="100">100 em 100</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Quantidade que será adicionada/removida nos botões de incremento rápido
+                </p>
+              </div>
+
+              {/* Upload de Imagens */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700">
+                  Imagens do Produto *
+                </label>
+                <div className="mt-1 space-y-2">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Selecione uma ou mais imagens. A primeira será a imagem principal.
+                  </p>
+                </div>
+                
+                {/* Preview das imagens */}
+                {selectedImages.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-600 mb-2">
+                      {selectedImages.length} imagem{selectedImages.length !== 1 ? 's' : ''} selecionada{selectedImages.length !== 1 ? 's' : ''}:
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {selectedImages.map((file, index) => (
+                        <div key={index} className="relative">
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={`Preview ${index}`}
+                            className="w-full h-20 object-cover rounded border"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs hover:bg-red-600 flex items-center justify-center"
+                          >
+                            ×
+                          </button>
+                          {index === 0 && (
+                            <span className="absolute bottom-0 left-0 bg-green-500 text-white text-xs px-1 rounded-tr">
+                              Principal
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Modelos */}
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="text-md font-medium text-gray-900">Modelos e Preços</h4>
+                  <button
+                    type="button"
+                    onClick={addModalProductModel}
+                    className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 text-sm"
+                  >
+                    + Adicionar Modelo
+                  </button>
+                </div>
+
+                {newModalProduct.models.length === 0 && (
+                  <div className="text-center text-gray-500 py-8 border-2 border-dashed border-gray-200 rounded">
+                    Nenhum modelo adicionado. Clique em "Adicionar Modelo" para começar.
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {newModalProduct.models.map((model, index) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                      <div className="flex justify-between items-start mb-4">
+                        <h5 className="text-sm font-medium text-gray-800">Modelo {index + 1}</h5>
+                        <button
+                          type="button"
+                          onClick={() => removeModalProductModel(index)}
+                          className="text-red-600 hover:text-red-800 text-sm"
+                        >
+                          Remover
+                        </button>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600">
+                            Marca do Celular *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={model.brandName}
+                            onChange={(e) => updateModalProductModel(index, 'brandName', e.target.value)}
+                            className="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            placeholder="Ex: Samsung, Apple, Xiaomi..."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600">
+                            Modelo do Celular *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={model.modelName}
+                            onChange={(e) => updateModalProductModel(index, 'modelName', e.target.value)}
+                            className="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            placeholder="Ex: Galaxy S23, iPhone 14 Pro..."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600">
+                            Preço Atacado *
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            required
+                            value={model.price}
+                            onChange={(e) => updateModalProductModel(index, 'price', e.target.value)}
+                            className="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            placeholder="0.00"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600">
+                            Preço Super Atacado
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={model.superWholesalePrice}
+                            onChange={(e) => updateModalProductModel(index, 'superWholesalePrice', e.target.value)}
+                            className="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            placeholder="0.00"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowModalForm(false)
+                    setSelectedImages([])
+                    setNewModalProduct({
+                      name: '',
+                      description: '',
+                      categoryId: '',
+                      quickAddIncrement: '25',
+                      models: []
+                    })
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                >
+                  Adicionar Produto de Modal
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para gerenciar modelos de produto de modal */}
+      {showManageModels && managingProduct && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
+              Gerenciar Modelos: {managingProduct.name}
+            </h3>
+            
+            <div className="mb-4">
+              <p className="text-sm text-gray-600">
+                Tipo: Produto de Modal | Incremento: {managingProduct.quickAddIncrement || 25}
+              </p>
+            </div>
+
+            {managingProduct.models && managingProduct.models.length > 0 ? (
+              <div className="space-y-4">
+                <h4 className="font-medium text-gray-900">Modelos Cadastrados:</h4>
+                <div className="grid gap-4">
+                  {managingProduct.models.map((productModel) => (
+                    <div key={productModel.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {productModel.model.brand.name}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {productModel.model.name}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Preço Atacado</p>
+                          <p className="font-semibold text-blue-600">
+                            R$ {productModel.price.toFixed(2)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Super Atacado</p>
+                          <p className="font-semibold text-green-600">
+                            {productModel.superWholesalePrice 
+                              ? `R$ ${productModel.superWholesalePrice.toFixed(2)}`
+                              : 'Não definido'
+                            }
+                          </p>
+                        </div>
+                        <div className="flex justify-end space-x-2">
+                          <button
+                            onClick={() => {
+                              // TODO: Implement edit model
+                              console.log('Edit model:', productModel.id)
+                            }}
+                            className="text-blue-600 hover:text-blue-900 text-sm"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => {
+                              // TODO: Implement remove model
+                              console.log('Remove model:', productModel.id)
+                            }}
+                            className="text-red-600 hover:text-red-900 text-sm"
+                          >
+                            Remover
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                  <h5 className="font-medium text-blue-900 mb-2">Adicionar Novos Modelos</h5>
+                  <p className="text-sm text-blue-700 mb-4">
+                    Para adicionar novos modelos, use o formulário "Produto Modal" no menu principal.
+                    Você pode criar um produto temporário só com os novos modelos e depois transferir os modelos para este produto.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <h4 className="mt-2 text-lg font-medium text-gray-900">Nenhum modelo cadastrado</h4>
+                <p className="mt-2 text-sm text-gray-500">
+                  Use o formulário "Produto Modal" para adicionar modelos a este produto.
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-end space-x-2 mt-6 pt-4 border-t">
+              <button
+                onClick={() => {
+                  setShowManageModels(false)
+                  setManagingProduct(null)
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+              >
+                Fechar
+              </button>
+            </div>
           </div>
         </div>
       )}

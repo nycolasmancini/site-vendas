@@ -67,8 +67,41 @@ export async function GET(request: NextRequest) {
       prisma.product.count({ where })
     ])
 
+    // Processar produtos para incluir dados de modal
+    const processedProducts = products.map(product => {
+      const baseProduct: any = {
+        ...product,
+        hasModels: product.models.length > 0,
+        isModalProduct: product.isModalProduct
+      }
+
+      // Se é produto de modal, calcular range de preços
+      if (product.isModalProduct && product.models.length > 0) {
+        const prices = product.models
+          .map(pm => pm.price)
+          .filter(price => price !== null) as number[]
+        
+        const superWholesalePrices = product.models
+          .map(pm => pm.superWholesalePrice)
+          .filter(price => price !== null) as number[]
+
+        if (prices.length > 0) {
+          baseProduct.priceRange = {
+            min: Math.min(...prices),
+            max: Math.max(...prices),
+            ...(superWholesalePrices.length > 0 && {
+              superWholesaleMin: Math.min(...superWholesalePrices),
+              superWholesaleMax: Math.max(...superWholesalePrices)
+            })
+          }
+        }
+      }
+
+      return baseProduct
+    })
+
     return NextResponse.json({
-      products,
+      products: processedProducts,
       pagination: {
         page,
         limit,
