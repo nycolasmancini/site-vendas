@@ -161,7 +161,7 @@ export default function CarrinhoPage() {
                         {isWholesaleActive && (
                           <div className="mt-1">
                             <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold">
-                              💰 Super Atacado Ativo!
+                              💰 Caixa Fechada Ativa!
                             </span>
                           </div>
                         )}
@@ -196,7 +196,7 @@ export default function CarrinhoPage() {
                   
                   <div className="pt-3 border-t border-gray-200">
                     <div className="flex justify-between text-sm text-green-600">
-                      <span>Economia com Super Atacado:</span>
+                      <span>Economia com Caixa Fechada:</span>
                       <span className="font-semibold">
                         {formatPrice(cartItems.reduce((savings, item) => {
                           if (item.superWholesaleQuantity && item.quantity >= item.superWholesaleQuantity && item.superWholesalePrice) {

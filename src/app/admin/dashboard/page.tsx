@@ -520,6 +520,18 @@ export default function AdminDashboard() {
               >
                 Produto Modal
               </button>
+              <button
+                onClick={() => router.push('/admin/transportadoras')}
+                className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
+              >
+                Transportadoras
+              </button>
+              <button
+                onClick={() => router.push('/admin/configuracoes')}
+                className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
+              >
+                Configurações
+              </button>
             </div>
           </div>
         </div>

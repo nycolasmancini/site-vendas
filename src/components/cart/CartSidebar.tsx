@@ -36,6 +36,74 @@ export function CartSidebar() {
   // Simple calculation without complex memoization
   const upgradesLength = eligibleUpgrades.length
 
+  // Group items: modal products (those with modelId) are grouped by productId
+  const groupedItems = useMemo(() => {
+    const groups: Array<{
+      id: string
+      type: 'single' | 'grouped'
+      productId: string
+      name: string
+      subname?: string
+      image?: string
+      items: typeof items
+      totalQuantity: number
+      totalPrice: number
+    }> = []
+
+    const processedProductIds = new Set<string>()
+
+    items.forEach(item => {
+      if (processedProductIds.has(item.productId)) return
+
+      // Check if this product has multiple models (modal product)
+      const productItems = items.filter(i => i.productId === item.productId)
+      
+      if (productItems.length > 1 || (productItems.length === 1 && productItems[0].modelId)) {
+        // This is a modal product - group all variations
+        const totalQuantity = productItems.reduce((sum, i) => sum + i.quantity, 0)
+        const totalPrice = productItems.reduce((sum, i) => {
+          const price = i.specialQuantity && i.quantity >= i.specialQuantity && i.specialPrice
+            ? i.specialPrice
+            : i.unitPrice
+          return sum + (price * i.quantity)
+        }, 0)
+
+        groups.push({
+          id: item.productId,
+          type: 'grouped',
+          productId: item.productId,
+          name: item.name,
+          subname: item.subname,
+          image: item.image,
+          items: productItems,
+          totalQuantity,
+          totalPrice
+        })
+      } else {
+        // Single item (not modal)
+        const price = item.specialQuantity && item.quantity >= item.specialQuantity && item.specialPrice
+          ? item.specialPrice
+          : item.unitPrice
+
+        groups.push({
+          id: item.id,
+          type: 'single',
+          productId: item.productId,
+          name: item.name,
+          subname: item.subname,
+          image: item.image,
+          items: [item],
+          totalQuantity: item.quantity,
+          totalPrice: price * item.quantity
+        })
+      }
+
+      processedProductIds.add(item.productId)
+    })
+
+    return groups
+  }, [items])
+
   // Smooth button state management with animations
   useEffect(() => {
     if (!mounted) return
@@ -134,25 +202,27 @@ export function CartSidebar() {
             </div>
           ) : (
             <div className="space-y-4">
-              {items.map((item, index) => {
-                const currentPrice = item.specialQuantity && item.quantity >= item.specialQuantity && item.specialPrice
-                  ? item.specialPrice
-                  : item.unitPrice
+              {groupedItems.map((group, index) => {
+                if (group.type === 'single') {
+                  const item = group.items[0]
+                  const currentPrice = item.specialQuantity && item.quantity >= item.specialQuantity && item.specialPrice
+                    ? item.specialPrice
+                    : item.unitPrice
 
-                const isRemoving = removingItems.has(item.id)
+                  const isRemoving = removingItems.has(item.id)
                 
-                return (
-                  <div 
-                    key={item.id} 
-                    className={`flex gap-4 bg-gray-50 rounded-lg transition-all duration-300 ${
-                      isRemoving 
-                        ? 'cart-item-removing px-3' 
-                        : 'p-3 hover:bg-gray-100 hover:shadow-md transform hover:scale-[1.02] animate-in slide-in-from-right duration-300'
-                    }`}
-                    style={{
-                      animationDelay: isRemoving ? '0ms' : `${index * 50}ms`
-                    }}
-                  >
+                  return (
+                    <div 
+                      key={item.id} 
+                      className={`flex gap-4 bg-gray-50 rounded-lg transition-all duration-300 ${
+                        isRemoving 
+                          ? 'cart-item-removing px-3' 
+                          : 'p-3 hover:bg-gray-100 hover:shadow-md transform hover:scale-[1.02] animate-in slide-in-from-right duration-300'
+                      }`}
+                      style={{
+                        animationDelay: isRemoving ? '0ms' : `${index * 50}ms`
+                      }}
+                    >
                     {/* Image */}
                     <div className="w-16 h-16 bg-gray-200 rounded-md overflow-hidden flex-shrink-0">
                       {item.image ? (
@@ -242,6 +312,73 @@ export function CartSidebar() {
                     </div>
                   </div>
                 )
+                } else {
+                  // Grouped modal product
+                  return (
+                    <div 
+                      key={group.id} 
+                      className="flex gap-4 bg-gray-50 rounded-lg p-3 hover:bg-gray-100 hover:shadow-md transform hover:scale-[1.02] animate-in slide-in-from-right duration-300"
+                      style={{
+                        animationDelay: `${index * 50}ms`
+                      }}
+                    >
+                      {/* Image */}
+                      <div className="w-16 h-16 bg-gray-200 rounded-md overflow-hidden flex-shrink-0">
+                        {group.image ? (
+                          <Image
+                            src={group.image}
+                            alt={group.name}
+                            width={64}
+                            height={64}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-sm line-clamp-2">{group.name}</h3>
+                        {group.subname && (
+                          <p className="text-xs text-gray-500 mt-1">{group.subname}</p>
+                        )}
+                        
+                        {/* Variações em azul */}
+                        <div className="mt-2 space-y-1">
+                          {group.items.map((item) => (
+                            <div key={item.id} className="flex items-center justify-between">
+                              <p className="text-xs text-blue-600 font-medium">
+                                {item.modelName} ({item.quantity} un.)
+                              </p>
+                              <button
+                                onClick={() => handleRemoveItem(item.id)}
+                                className="p-1 rounded transition-all duration-200 text-red-500 hover:bg-red-50 hover:scale-110 active:scale-95 opacity-70 hover:opacity-100"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+
+
+                        {/* Total */}
+                        <div className="flex items-center justify-between mt-2">
+                          <div className="text-sm">
+                            <span className="font-semibold text-gray-900">{group.totalQuantity} unidades</span>
+                          </div>
+                          <div className="text-sm font-semibold text-right">
+                            {formatPrice(group.totalPrice)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                }
               })}
             </div>
           )}

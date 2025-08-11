@@ -55,7 +55,7 @@ export default function SuperWholesaleUpgrade({ cartItems }: SuperWholesaleUpgra
         <div className="text-2xl">🎯</div>
         <div>
           <h3 className="font-bold text-green-800 text-lg">Você está quase lá!</h3>
-          <p className="text-green-700 text-sm">Complete alguns itens e ganhe desconto no Super Atacado</p>
+          <p className="text-green-700 text-sm">Complete alguns itens e ganhe desconto na Caixa fechada</p>
         </div>
       </div>
 
@@ -76,7 +76,7 @@ export default function SuperWholesaleUpgrade({ cartItems }: SuperWholesaleUpgra
                 <div className="flex-1">
                   <h4 className="font-semibold text-gray-900">{item.name}</h4>
                   <p className="text-sm text-gray-600 mt-1">
-                    Você tem {currentQuantity}, faltam apenas <span className="font-bold text-green-600">{missingQuantity}</span> para o Super Atacado
+                    Você tem {currentQuantity}, faltam apenas <span className="font-bold text-green-600">{missingQuantity}</span> para a Caixa fechada
                   </p>
                   
                   <div className="mt-2 flex items-center gap-2">
@@ -109,7 +109,7 @@ export default function SuperWholesaleUpgrade({ cartItems }: SuperWholesaleUpgra
                       <p className="text-xs text-red-600">por unidade</p>
                     </div>
                     <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                      <p className="text-sm font-medium text-green-800">Super Atacado</p>
+                      <p className="text-sm font-medium text-green-800">Caixa Fechada</p>
                       <p className="text-lg font-bold text-green-600">{formatPrice(item.superWholesalePrice!)}</p>
                       <p className="text-xs text-green-600">por unidade</p>
                     </div>

@@ -5,6 +5,7 @@ import ProductCard from '@/components/products/ProductCard'
 import ProductVariationModal from '@/components/products/ProductVariationModal'
 import UnlockPricesModal from '@/components/ui/UnlockPricesModal'
 import { Header } from '@/components/layout/Header'
+import { Footer } from '@/components/layout/Footer'
 import { useSession } from '@/contexts/SessionContext'
 import { useCartStore } from '@/stores/useCartStore'
 import { formatPrice } from '@/lib/utils'
@@ -83,6 +84,7 @@ export default function Home() {
   const [mounted, setMounted] = useState(false)
   const [selectedProductForVariation, setSelectedProductForVariation] = useState<any>(null)
   const [showVariationModal, setShowVariationModal] = useState(false)
+  const [navigationTimer, setNavigationTimer] = useState<NodeJS.Timeout | null>(null)
 
   // Evitar problemas de hidratação
   useEffect(() => {
@@ -120,15 +122,38 @@ export default function Home() {
       })
   }, [selectedCategory, searchTerm])
 
-  // Mostrar modal se não tiver preços liberados
+  // Iniciar timer de 30 segundos quando o usuário navegar sem ter preços liberados
   useEffect(() => {
-    if (!unlocked && products.length > 0) {
+    if (!unlocked && products.length > 0 && mounted) {
+      // Limpar timer anterior se existir
+      if (navigationTimer) {
+        clearTimeout(navigationTimer)
+      }
+      
+      // Criar novo timer de 30 segundos
       const timer = setTimeout(() => {
         setShowUnlockModal(true)
-      }, 2000)
-      return () => clearTimeout(timer)
+      }, 30000) // 30 segundos
+      
+      setNavigationTimer(timer)
     }
-  }, [unlocked, products])
+    
+    // Cleanup do timer ao desmontar ou quando preços são liberados
+    return () => {
+      if (navigationTimer) {
+        clearTimeout(navigationTimer)
+        setNavigationTimer(null)
+      }
+    }
+  }, [unlocked, products, mounted])
+
+  // Limpar timer se preços forem liberados
+  useEffect(() => {
+    if (unlocked && navigationTimer) {
+      clearTimeout(navigationTimer)
+      setNavigationTimer(null)
+    }
+  }, [unlocked, navigationTimer])
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--background)' }}>
@@ -418,6 +443,9 @@ export default function Home() {
           }}
         />
       )}
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

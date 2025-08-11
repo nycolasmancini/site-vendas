@@ -39,7 +39,9 @@
     "react-dom": "19.1.0",
     "react-hook-form": "^7.62.0",
     "react-input-mask": "^2.0.4",
+    "styled-jsx": "^5.1.7",
     "tailwind-merge": "^3.3.1",
+    "tapable": "^2.2.2",
     "uuid": "^11.1.0",
     "zod": "^4.0.15",
     "zustand": "^5.0.7"

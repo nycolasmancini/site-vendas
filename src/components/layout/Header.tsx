@@ -12,6 +12,7 @@ interface HeaderProps {
   onMenuToggle?: () => void
   showMenuButton?: boolean
   onLogoClick?: () => void
+  showSearchBar?: boolean
 }
 
 export function Header({ 
@@ -19,7 +20,8 @@ export function Header({
   onSearchChange, 
   onMenuToggle, 
   showMenuButton = false,
-  onLogoClick
+  onLogoClick,
+  showSearchBar = true
 }: HeaderProps = {}) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -127,18 +129,20 @@ export function Header({
           </div>
           
           {/* Desktop Search */}
-          <div className="hidden md:flex flex-1 max-w-md mx-8">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
-                type="search"
-                placeholder="Buscar produtos..."
-                value={searchTerm}
-                onChange={(e) => onSearchChange?.(e.target.value)}
-                className="w-full rounded-lg border border-gray-200 bg-gray-50 pl-10 pr-4 py-2 text-sm focus:border-[#FC6D36] focus:bg-white focus:outline-none"
-              />
+          {showSearchBar && (
+            <div className="hidden md:flex flex-1 max-w-md mx-8">
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="search"
+                  placeholder="Buscar produtos..."
+                  value={searchTerm}
+                  onChange={(e) => onSearchChange?.(e.target.value)}
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 pl-10 pr-4 py-2 text-sm focus:border-[#FC6D36] focus:bg-white focus:outline-none"
+                />
+              </div>
             </div>
-          </div>
+          )}
           
           {/* Actions */}
           <div className="flex items-center space-x-4">
@@ -176,23 +180,25 @@ export function Header({
         </div>
         
         {/* Mobile Search */}
-        <div
-          className={cn(
-            "md:hidden overflow-hidden transition-all duration-300",
-            showSearch ? "max-h-16 pb-3" : "max-h-0"
-          )}
-        >
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <input
-              type="search"
-              placeholder="Buscar produtos..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange?.(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 bg-gray-50 pl-10 pr-4 py-2 text-sm focus:border-[#FC6D36] focus:bg-white focus:outline-none"
-            />
+        {showSearchBar && (
+          <div
+            className={cn(
+              "md:hidden overflow-hidden transition-all duration-300",
+              showSearch ? "max-h-16 pb-3" : "max-h-0"
+            )}
+          >
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                type="search"
+                placeholder="Buscar produtos..."
+                value={searchTerm}
+                onChange={(e) => onSearchChange?.(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 bg-gray-50 pl-10 pr-4 py-2 text-sm focus:border-[#FC6D36] focus:bg-white focus:outline-none"
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </header>
   )

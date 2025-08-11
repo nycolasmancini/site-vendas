@@ -19,6 +19,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+      </head>
       <body className={inter.className}>
         <NextAuthProvider>
           <SessionProvider>
@@ -26,6 +29,45 @@ export default function RootLayout({
             <CartSidebar />
           </SessionProvider>
         </NextAuthProvider>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              document.addEventListener('DOMContentLoaded', function() {
+                // Selecionar texto automaticamente ao clicar em inputs
+                document.addEventListener('click', function(e) {
+                  if (e.target.tagName === 'INPUT' && 
+                      (e.target.type === 'text' || 
+                       e.target.type === 'number' || 
+                       e.target.type === 'email' || 
+                       e.target.type === 'password' || 
+                       e.target.type === 'search' || 
+                       e.target.type === 'tel' || 
+                       e.target.type === 'url')) {
+                    setTimeout(function() {
+                      e.target.select();
+                    }, 0);
+                  }
+                });
+                
+                // Também selecionar quando ganhar foco
+                document.addEventListener('focus', function(e) {
+                  if (e.target.tagName === 'INPUT' && 
+                      (e.target.type === 'text' || 
+                       e.target.type === 'number' || 
+                       e.target.type === 'email' || 
+                       e.target.type === 'password' || 
+                       e.target.type === 'search' || 
+                       e.target.type === 'tel' || 
+                       e.target.type === 'url')) {
+                    setTimeout(function() {
+                      e.target.select();
+                    }, 0);
+                  }
+                }, true);
+              });
+            `,
+          }}
+        />
       </body>
     </html>
   );

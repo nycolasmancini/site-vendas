@@ -198,7 +198,8 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
   }
 
   const numericQuantity = typeof quantity === 'string' ? parseInt(quantity) || 1 : quantity
-  const currentPrice = product.superWholesaleQuantity && numericQuantity >= product.superWholesaleQuantity && product.superWholesalePrice
+  const hasReachedWholesaleQuantity = product.superWholesaleQuantity && numericQuantity >= product.superWholesaleQuantity
+  const currentPrice = hasReachedWholesaleQuantity && product.superWholesalePrice
     ? product.superWholesalePrice
     : product.price
 
@@ -206,7 +207,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
   const imageUrl = product.images?.find(img => img.isMain)?.url || product.images?.[0]?.url || product.image
 
   return (
-    <div className="card hover:shadow-lg transition-all duration-300 overflow-hidden group animate-fade-in">
+    <div className="card hover:shadow-lg transition-all duration-300 overflow-hidden group animate-fade-in sm:w-full md:min-w-[280px]">
       <div className="aspect-square relative" style={{ background: 'var(--muted)' }}>
         {imageUrl ? (
           <Image
@@ -239,12 +240,12 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
         
       </div>
 
-      <div className="p-4">
-        <h3 className="font-semibold line-clamp-2 mb-1" style={{ color: 'var(--foreground)' }}>
+      <div className="p-3 sm:p-4">
+        <h3 className="font-semibold line-clamp-2 mb-1 text-sm sm:text-base" style={{ color: 'var(--foreground)' }}>
           {product.name}
         </h3>
         {product.subname && (
-          <p className="text-sm mb-3" style={{ color: 'var(--muted-foreground)' }}>
+          <p className="text-xs sm:text-sm mb-2 sm:mb-3" style={{ color: 'var(--muted-foreground)' }}>
             {product.subname}
           </p>
         )}
@@ -257,7 +258,10 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                   {/* Range de preços atacado */}
                   <div className="flex items-baseline gap-2 mb-2">
                     <span className="text-xl font-bold" style={{ color: 'var(--foreground)' }}>
-                      {formatPrice(product.priceRange.min)} - {formatPrice(product.priceRange.max)}
+                      {product.priceRange.min === product.priceRange.max 
+                        ? formatPrice(product.priceRange.min)
+                        : `${formatPrice(product.priceRange.min)} - ${formatPrice(product.priceRange.max)}`
+                      }
                     </span>
                     <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                       atacado
@@ -269,32 +273,39 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                     <div className="flex items-center gap-2">
                       <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--green)' }}></div>
                       <p className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>
-                        Super atacado: {formatPrice(product.priceRange.superWholesaleMin)} - {formatPrice(product.priceRange.superWholesaleMax)}
+                        Caixa fechada: {product.priceRange.superWholesaleMin === product.priceRange.superWholesaleMax
+                          ? formatPrice(product.priceRange.superWholesaleMin)
+                          : `${formatPrice(product.priceRange.superWholesaleMin)} - ${formatPrice(product.priceRange.superWholesaleMax)}`
+                        }
                       </p>
                     </div>
                   )}
                 </div>
               ) : (
                 <div>
-                  <div className="flex items-baseline gap-2 mb-2">
-                    <AnimatedPrice
-                      price={currentPrice}
-                      className="text-xl font-bold"
-                      style={{ color: 'var(--foreground)' }}
-                    />
-                    <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                      unidade
-                    </span>
-                  </div>
-                  
-                  {product.superWholesalePrice && product.superWholesaleQuantity && (
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--green)' }}></div>
-                      <p className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>
-                        {product.superWholesaleQuantity}+ un: {formatPrice(product.superWholesalePrice)}
-                      </p>
+                  {/* Preço principal */}
+                  <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
+                    <div className="flex items-baseline gap-2">
+                      <AnimatedPrice
+                        price={currentPrice}
+                        className="text-lg sm:text-xl font-bold"
+                        style={{ color: 'var(--foreground)' }}
+                      />
+                      <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                        unidade
+                      </span>
                     </div>
-                  )}
+                    
+                    {/* Preço de atacado - aparece embaixo no mobile */}
+                    {product.superWholesalePrice && product.superWholesaleQuantity && !hasReachedWholesaleQuantity && (
+                      <div className="flex items-center gap-2 mt-1 sm:mt-0">
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--green)' }}></div>
+                        <p className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>
+                          +{product.superWholesaleQuantity} un: {formatPrice(product.superWholesalePrice)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -324,10 +335,10 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                 <span className="font-medium">Escolher Modelo</span>
               </button>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {/* Quantidade */}
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium" style={{ color: 'var(--muted-foreground)' }}>
+                  <span className="text-xs sm:text-sm font-medium" style={{ color: 'var(--muted-foreground)' }}>
                     Quantidade
                   </span>
                   <div className="flex items-center rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
@@ -336,7 +347,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                         const currentNum = typeof quantity === 'string' ? parseInt(quantity) || 1 : quantity
                         setQuantity(Math.max(1, currentNum - 1))
                       }}
-                      className="interactive px-3 py-1.5 hover:bg-accent text-sm font-medium"
+                      className="interactive px-2 sm:px-3 py-1 sm:py-1.5 hover:bg-accent text-sm font-medium"
                       style={{ color: 'var(--muted-foreground)' }}
                     >
                       -
@@ -365,7 +376,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                         }
                       }}
                       min="1"
-                      className="w-12 text-center py-1.5 text-sm font-medium border-x"
+                      className="w-10 sm:w-12 text-center py-1 sm:py-1.5 text-sm font-medium border-x"
                       style={{ 
                         background: 'var(--surface)',
                         borderColor: 'var(--border)',
@@ -377,7 +388,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                         const currentNum = typeof quantity === 'string' ? parseInt(quantity) || 1 : quantity
                         setQuantity(currentNum + 1)
                       }}
-                      className="interactive px-3 py-1.5 hover:bg-accent text-sm font-medium"
+                      className="interactive px-2 sm:px-3 py-1 sm:py-1.5 hover:bg-accent text-sm font-medium"
                       style={{ color: 'var(--muted-foreground)' }}
                     >
                       +
@@ -428,7 +439,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                       >
                         <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                       </svg>
-                      <span className="font-medium">
+                      <span className="font-medium text-sm sm:text-base">
                         {product.hasModels || product.isModalProduct ? 'Escolher Modelo' : (isAnimating ? 'Adicionando...' : 'Adicionar')}
                       </span>
                       {typeof quantity === 'number' && quantity > 1 && !isAnimating && (

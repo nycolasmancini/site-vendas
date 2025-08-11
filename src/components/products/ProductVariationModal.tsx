@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useCartStore } from '@/stores/useCartStore'
 import { formatPrice } from '@/lib/utils'
 
@@ -40,9 +40,74 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
   const [groupedModels, setGroupedModels] = useState<Record<string, ProductModel[]>>({})
   const [expandedBrands, setExpandedBrands] = useState<Record<string, boolean>>({})
   const [loading, setLoading] = useState(false)
+  const [isAnimating, setIsAnimating] = useState(false)
+  const modalRef = useRef<HTMLDivElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
   const addItem = useCartStore((state) => state.addItem)
   const updateQuantity = useCartStore((state) => state.updateQuantity)
   const cartItems = useCartStore((state) => state.items)
+
+  // Handle close with animation
+  const handleClose = useCallback(() => {
+    if (isAnimating) return
+    setIsAnimating(true)
+    setTimeout(() => {
+      onClose()
+      setIsAnimating(false)
+    }, 200)
+  }, [onClose, isAnimating])
+
+  // Handle keyboard events
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      handleClose()
+    }
+  }, [handleClose])
+
+  // Focus trap for accessibility
+  const handleTabKeyPress = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Tab' && modalRef.current) {
+      const focusableElements = modalRef.current.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )
+      const firstElement = focusableElements[0] as HTMLElement
+      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          lastElement.focus()
+          e.preventDefault()
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          firstElement.focus()
+          e.preventDefault()
+        }
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown)
+      document.addEventListener('keydown', handleTabKeyPress)
+      document.body.style.overflow = 'hidden'
+      
+      // Focus first interactive element
+      setTimeout(() => {
+        const firstButton = modalRef.current?.querySelector('button')
+        firstButton?.focus()
+      }, 100)
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('keydown', handleTabKeyPress)
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen, handleKeyDown, handleTabKeyPress])
 
   // Função para obter quantidade no carrinho por modelId
   const getCartQuantityByModel = (modelId: string): number => {
@@ -83,7 +148,7 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
         const data = await response.json()
         setModels(data)
         
-        // Agrupar por marca
+        // Agrupar por marca e ordenar
         const grouped = data.reduce((acc: Record<string, ProductModel[]>, model: ProductModel) => {
           if (!acc[model.brandName]) {
             acc[model.brandName] = []
@@ -92,12 +157,17 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
           return acc
         }, {})
         
+        // Ordenar modelos dentro de cada marca
+        Object.keys(grouped).forEach(brandName => {
+          grouped[brandName].sort((a: any, b: any) => a.modelName.localeCompare(b.modelName))
+        })
+        
         setGroupedModels(grouped)
         
-        // Expandir todas as marcas por padrão para melhor UX
+        // Iniciar com todas as marcas fechadas - usuário clica para expandir
         const expandedState: Record<string, boolean> = {}
         Object.keys(grouped).forEach(brandName => {
-          expandedState[brandName] = true
+          expandedState[brandName] = false
         })
         setExpandedBrands(expandedState)
       }
@@ -199,7 +269,7 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
       // Calcular preço baseado na quantidade específica deste modelo
       const increment = product.quickAddIncrement || 1
       const useSuperPrice = model.superWholesalePrice && cartQty >= increment
-      const priceToUse = useSuperPrice ? model.superWholesalePrice : model.price
+      const priceToUse = useSuperPrice ? (model.superWholesalePrice || model.price) : model.price
       
       return total + (priceToUse * cartQty)
     }, 0)
@@ -209,40 +279,58 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
 
   return (
     <div 
-      className="fixed inset-0 flex items-center justify-center z-50 p-4"
+      ref={overlayRef}
+      className={`fixed inset-0 flex items-center justify-center z-50 p-4 transition-all duration-300 ease-out ${
+        isAnimating ? 'opacity-0' : 'opacity-100 animate-fade-in'
+      }`}
       style={{ 
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)'
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)'
       }}
-      onClick={onClose}
+      onClick={handleClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
     >
-      <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+      <div 
+        ref={modalRef}
+        className={`bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden transform transition-all duration-300 ease-out ${
+          isAnimating 
+            ? 'scale-95 opacity-0 translate-y-4' 
+            : 'scale-100 opacity-100 translate-y-0 animate-scale-in'
+        }`}
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05)'
+        }}
+      >
         {/* Header */}
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white">
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-gray-900">{product.name}</h2>
+            <h2 id="modal-title" className="text-2xl font-bold text-gray-900 mb-1">{product.name}</h2>
             {product.description && (
-              <p className="text-sm text-gray-600 mt-1">{product.description}</p>
+              <p className="text-sm text-gray-600 opacity-80">{product.description}</p>
             )}
           </div>
           
           {/* Resumo do total no header */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
             {models.length > 0 && (
-              <div className="text-right">
-                <p className="text-sm text-gray-600">
+              <div className="text-right transform transition-all duration-300 ease-out animate-slide-up">
+                <p className="text-sm text-gray-600 font-medium">
                   Total: {getTotalItems()} item{getTotalItems() !== 1 ? 's' : ''}
                 </p>
-                <p className="text-lg font-bold text-blue-600">
+                <p className="text-xl font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">
                   {formatPrice(getTotalValue())}
                 </p>
               </div>
             )}
             
             <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              onClick={handleClose}
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              aria-label="Fechar modal"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -251,23 +339,49 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-240px)]">
-          <h3 className="text-lg font-semibold mb-6">Selecione os modelos e quantidades:</h3>
+        
+        {/* Scrollable Content with Sticky Headers */}
+        <div className="overflow-y-auto max-h-[calc(90vh-200px)] custom-scrollbar modal-content-scroll relative">
             
           {loading ? (
-            <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <p className="mt-2 text-gray-600">Carregando modelos...</p>
+            <div className="text-center py-12 animate-fade-in">
+              <div className="relative inline-block">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-600 shadow-lg"></div>
+                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-blue-500 to-blue-600 opacity-10 animate-pulse"></div>
+              </div>
+              <p className="mt-4 text-gray-600 font-medium">Carregando modelos...</p>
+              <div className="mt-2 flex justify-center space-x-1">
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+              </div>
             </div>
           ) : (
-            <div className="space-y-6">
-              {Object.entries(groupedModels).map(([brandName, brandModels]) => (
-                <div key={brandName} className="border border-gray-200 rounded-lg overflow-hidden">
-                  {/* Brand Header */}
+            <div className="p-6 pt-2 space-y-6 animate-slide-up">
+              {Object.entries(groupedModels)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([brandName, brandModels], index) => (
+                <div 
+                  key={brandName} 
+                  className="border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 ease-out transform hover:-translate-y-1"
+                  style={{animationDelay: `${index * 100}ms`}}
+                >
+                  {/* Brand Header - Sticky */}
                   <button
                     onClick={() => toggleBrandExpansion(brandName)}
-                    className="w-full px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between text-left"
+                    className={`brand-header w-full px-6 py-5 transition-all duration-300 ease-out flex items-center justify-between text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset sticky top-0 z-30 ${
+                      expandedBrands[brandName] ? 'expanded' : 'collapsed'
+                    }`}
+                    style={{
+                      backgroundColor: expandedBrands[brandName] 
+                        ? 'rgba(219, 234, 254, 0.98)' 
+                        : 'rgba(248, 250, 252, 0.98)',
+                      backdropFilter: 'blur(12px)',
+                      WebkitBackdropFilter: 'blur(12px)',
+                      boxShadow: expandedBrands[brandName]
+                        ? '0 4px 12px rgba(59, 130, 246, 0.15)'
+                        : '0 2px 8px rgba(0, 0, 0, 0.1)'
+                    }}
                   >
                     <div className="flex items-center">
                       {(() => {
@@ -275,7 +389,7 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                         return (
                           <>
                             {totalQuantity > 0 && (
-                              <div className="mr-3 px-3 py-1 bg-blue-500 text-white rounded-full font-medium text-sm flex items-center justify-center shadow-sm">
+                              <div className="hidden sm:flex mr-3 px-3 py-1 bg-blue-500 text-white rounded-full font-medium text-sm items-center justify-center shadow-sm">
                                 {totalQuantity} un.
                               </div>
                             )}
@@ -288,8 +402,8 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                       })()}
                     </div>
                     <svg
-                      className={`w-5 h-5 transform transition-transform ${
-                        expandedBrands[brandName] ? 'rotate-180' : ''
+                      className={`w-5 h-5 transform transition-all duration-300 ease-out ${
+                        expandedBrands[brandName] ? 'rotate-180 text-blue-600' : 'text-gray-400'
                       }`}
                       fill="none"
                       viewBox="0 0 24 24"
@@ -300,23 +414,62 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                   </button>
 
                   {/* Models List */}
-                  {expandedBrands[brandName] && (
-                    <div className="divide-y divide-gray-200">
-                      {brandModels.map((model) => {
-                        const currentQuantity = getCartQuantityByModel(model.id)
-                        return (
-                          <div key={model.id} className="p-4 bg-white">
+                  <div className={`transition-all duration-400 ease-out overflow-hidden ${
+                    expandedBrands[brandName] 
+                      ? 'max-h-[2000px] opacity-100' 
+                      : 'max-h-0 opacity-0'
+                  }`}>
+                    <div className={`transform transition-all duration-300 ease-out ${
+                      expandedBrands[brandName] 
+                        ? 'translate-y-0 opacity-100' 
+                        : '-translate-y-2 opacity-0'
+                    }`}>
+                      {/* Models container com padding interno para criar recuo */}
+                      <div className="models-container models-background relative z-10">
+                        {brandModels.map((model, modelIndex) => {
+                          const currentQuantity = getCartQuantityByModel(model.id)
+                          return (
+                            <div 
+                              key={model.id} 
+                              className="model-item relative z-10"
+                              style={{animationDelay: `${modelIndex * 50}ms`}}
+                            >
+                            {/* Badge verde mobile - canto superior direito */}
+                            {(() => {
+                              const cartQuantity = getCartQuantityByModel(model.id)
+                              if (cartQuantity > 0) {
+                                return (
+                                  <div 
+                                    className="sm:hidden absolute top-2 right-2 z-20 px-2 py-1 bg-green-500 text-white rounded-full font-medium text-xs flex items-center justify-center shadow-sm"
+                                    style={{
+                                      minWidth: cartQuantity >= 100000 ? '4rem' : 
+                                               cartQuantity >= 10000 ? '3.5rem' : 
+                                               cartQuantity >= 1000 ? '3rem' : 
+                                               cartQuantity >= 100 ? '2.5rem' : 
+                                               cartQuantity >= 10 ? '2rem' : '1.5rem',
+                                      whiteSpace: 'nowrap',
+                                      transition: 'all 0.2s ease-in-out'
+                                    }}
+                                    title={`${cartQuantity} unidades no carrinho`}
+                                  >
+                                    {cartQuantity.toLocaleString()} un.
+                                  </div>
+                                )
+                              }
+                              return null
+                            })()}
+                            
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2">
                                   <h4 className="text-base font-medium text-gray-900">{model.modelName}</h4>
-                                  {/* Badge verde com quantidade no carrinho */}
+                                  {/* Badge verde desktop - ao lado do nome */}
                                   {(() => {
                                     const cartQuantity = getCartQuantityByModel(model.id)
                                     if (cartQuantity > 0) {
                                       return (
                                         <div 
-                                          className="px-2 py-1 bg-green-500 text-white rounded-full font-medium text-xs flex items-center justify-center shadow-sm"
+                                          className="hidden sm:flex px-2 py-1 bg-green-500 text-white rounded-full font-medium text-xs items-center justify-center shadow-sm"
                                           style={{
                                             minWidth: cartQuantity >= 100000 ? '4rem' : 
                                                      cartQuantity >= 10000 ? '3.5rem' : 
@@ -335,12 +488,12 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                                     return null
                                   })()}
                                 </div>
-                                <div className="flex items-center">
+                                <div className="flex flex-col items-start gap-1">
                                   <span className="text-lg font-bold text-gray-900">
                                     {formatPrice(model.price)}
                                   </span>
                                   {model.superWholesalePrice && (
-                                    <span className="ml-3 text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded">
+                                    <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded whitespace-nowrap">
                                       +{product.quickAddIncrement || 1} un.: {formatPrice(model.superWholesalePrice)}
                                     </span>
                                   )}
@@ -348,14 +501,13 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                               </div>
                               
                               {/* Quantity Controls alinhados à direita */}
-                              <div className="flex items-center rounded-lg overflow-hidden ml-4" style={{ border: '1px solid var(--border)' }}>
+                              <div className="flex items-center rounded-xl overflow-hidden ml-2 sm:ml-4 shadow-sm border border-gray-200 bg-white">
                                 <button
                                   onClick={() => decrementQuantity(model.id, 1)}
                                   disabled={currentQuantity === 0}
-                                  className="interactive px-2 py-1 hover:bg-accent text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                                  style={{ color: 'var(--muted-foreground)' }}
+                                  className="px-2 sm:px-3 py-1.5 sm:py-2 hover:bg-red-50 hover:text-red-600 text-gray-500 font-bold transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-300 active:scale-95"
                                 >
-                                  -
+                                  −
                                 </button>
                                 <input
                                   type="number"
@@ -364,27 +516,24 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                                     const value = parseInt(e.target.value) || 0
                                     setQuantityDirectly(model.id, value)
                                   }}
-                                  className="w-10 text-center py-1 text-sm font-medium border-x"
-                                  style={{ 
-                                    background: 'var(--surface)',
-                                    borderColor: 'var(--border)',
-                                    color: 'var(--foreground)'
-                                  }}
+                                  className="w-12 sm:w-16 text-center py-1.5 sm:py-2 text-sm font-semibold border-x border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-200"
+                                  min="0"
+                                  aria-label={`Quantidade para ${model.modelName}`}
                                 />
                                 <button
                                   onClick={() => incrementQuantity(model.id, 1)}
-                                  className="interactive px-2 py-1 hover:bg-accent text-sm font-medium"
-                                  style={{ color: 'var(--muted-foreground)' }}
+                                  className="px-2 sm:px-3 py-1.5 sm:py-2 hover:bg-green-50 hover:text-green-600 text-gray-500 font-bold transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-green-300 active:scale-95"
                                 >
                                   +
                                 </button>
                               </div>
                             </div>
-                          </div>
-                        )
-                      })}
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               ))}
             </div>

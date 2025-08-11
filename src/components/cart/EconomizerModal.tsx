@@ -72,7 +72,7 @@ export function EconomizerModal({ isOpen, onClose, eligibleItems }: EconomizerMo
               </div>
               <div>
                 <h2 className="text-xl font-bold text-green-800">Economize levando mais!</h2>
-                <p className="text-sm text-green-600">Complete alguns itens e ganhe desconto no Super Atacado</p>
+                <p className="text-sm text-green-600">Complete alguns itens e ganhe desconto na Caixa fechada</p>
               </div>
             </div>
             <button
@@ -138,7 +138,7 @@ export function EconomizerModal({ isOpen, onClose, eligibleItems }: EconomizerMo
                       <p className="text-xs text-red-600">por unidade</p>
                     </div>
                     <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <p className="text-xs font-medium text-green-800 uppercase tracking-wide">Super Atacado</p>
+                      <p className="text-xs font-medium text-green-800 uppercase tracking-wide">Caixa Fechada</p>
                       <p className="text-lg font-bold text-green-600">{formatPrice(item.specialPrice!)}</p>
                       <p className="text-xs text-green-600">por unidade</p>
                     </div>

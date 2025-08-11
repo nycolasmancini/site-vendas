@@ -19,6 +19,30 @@ async function main() {
 
   console.log('Admin criado:', admin.email)
 
+  // Criar transportadoras padrão
+  const transportadoras = [
+    { name: 'Correios', order: 1 },
+    { name: 'Jadlog', order: 2 },
+    { name: 'Loggi', order: 3 },
+    { name: 'J&T Express', order: 4 },
+    { name: 'Braspress', order: 5 },
+    { name: 'Rodonaves', order: 6 }
+  ]
+
+  for (const transportadora of transportadoras) {
+    await prisma.shippingCompany.upsert({
+      where: { name: transportadora.name },
+      update: {},
+      create: {
+        name: transportadora.name,
+        order: transportadora.order,
+        isActive: true
+      }
+    })
+  }
+
+  console.log('Transportadoras criadas')
+
   // Criar categorias
   const categories = [
     { name: 'Capas', slug: 'capas', order: 1 },
