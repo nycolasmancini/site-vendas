@@ -5,12 +5,56 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Package, Tag, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { 
+  TodosProdutosIcon,
+  CapasIcon,
+  PeliculaIcon,
+  FonesIcon,
+  FonesBluetoothIcon,
+  CaixasSomIcon,
+  CabosIcon,
+  CarregadoresIcon,
+  SuportesIcon,
+  CarregadoresVeicularIcon,
+  SmartwatchCustomIcon
+} from "@/components/ui/Icons"
 
 interface Category {
   id: string
   name: string
   slug: string
   productCount?: number
+}
+
+const getCategoryIcon = (categorySlug: string, isActive: boolean) => {
+  const iconSize = 30
+  const strokeWidth = isActive ? "2" : "1.5"
+  
+  
+  switch (categorySlug) {
+    case 'capas':
+      return <CapasIcon size={iconSize} strokeWidth={strokeWidth} />
+    case 'peliculas':
+      return <PeliculaIcon size={iconSize} strokeWidth={strokeWidth} />
+    case 'fones':
+      return <FonesIcon size={iconSize} strokeWidth={strokeWidth} isActive={isActive} />
+    case 'fones-bluetooth':
+      return <FonesBluetoothIcon size={iconSize} strokeWidth={strokeWidth} />
+    case 'caixas-de-som':
+      return <CaixasSomIcon size={iconSize} strokeWidth={strokeWidth} />
+    case 'cabos':
+      return <CabosIcon size={iconSize} strokeWidth={strokeWidth} />
+    case 'carregadores':
+      return <CarregadoresIcon size={iconSize} strokeWidth={strokeWidth} />
+    case 'carregadores-veicular':
+      return <CarregadoresVeicularIcon size={iconSize} strokeWidth={strokeWidth} />
+    case 'suportes':
+      return <SuportesIcon size={iconSize} strokeWidth={strokeWidth} />
+    case 'smartwatch':
+      return <SmartwatchCustomIcon size={iconSize} strokeWidth={strokeWidth} />
+    default:
+      return <Package size={iconSize} />
+  }
 }
 
 export function Sidebar() {
@@ -67,7 +111,10 @@ export function Sidebar() {
                     : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                 )}
               >
-                <span>Todos os Produtos</span>
+                <span className="flex items-center">
+                  <TodosProdutosIcon size={20} />
+                  <span className="ml-2">Todos os Produtos</span>
+                </span>
                 <ChevronRight className="h-4 w-4" />
               </Link>
               
@@ -91,30 +138,36 @@ export function Sidebar() {
               <div className="my-2 border-t border-gray-200" />
               
               {/* Categorias */}
-              {categories.map((category) => (
-                <Link
-                  key={category.id}
-                  href={`/categoria/${category.slug}`}
-                  className={cn(
-                    "flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-all duration-300 ease-out transform hover:scale-[1.02]",
-                    pathname === `/categoria/${category.slug}`
-                      ? "bg-[#FC6D36] text-white shadow-md"
-                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                  )}
-                >
-                  <span>{category.name}</span>
-                  {category.productCount && category.productCount > 0 && (
-                    <span className={cn(
-                      "text-xs transition-colors duration-300 ease-out",
-                      pathname === `/categoria/${category.slug}`
-                        ? "text-white/80"
-                        : "text-gray-500"
-                    )}>
-                      {category.productCount}
+              {categories.map((category) => {
+                const isActive = pathname === `/categoria/${category.slug}`
+                return (
+                  <Link
+                    key={category.id}
+                    href={`/categoria/${category.slug}`}
+                    className={cn(
+                      "flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-all duration-300 ease-out transform hover:scale-[1.02]",
+                      isActive
+                        ? "bg-[#FC6D36] text-white shadow-md"
+                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                    )}
+                  >
+                    <span className="flex items-center">
+                      {getCategoryIcon(category.slug, isActive)}
+                      <span className="ml-2">{category.name}</span>
                     </span>
-                  )}
-                </Link>
-              ))}
+                    {category.productCount && category.productCount > 0 && (
+                      <span className={cn(
+                        "text-xs transition-colors duration-300 ease-out",
+                        isActive
+                          ? "text-white/80"
+                          : "text-gray-500"
+                      )}>
+                        {category.productCount}
+                      </span>
+                    )}
+                  </Link>
+                )
+              })}
             </nav>
           )}
         </div>

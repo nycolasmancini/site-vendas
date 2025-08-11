@@ -10,55 +10,58 @@ import { useCartStore } from '@/stores/useCartStore'
 import { formatPrice } from '@/lib/utils'
 import { 
   PhoneIcon, 
-  StoreIcon, 
+  TodosProdutosIcon, 
   BoxIcon, 
   ShoppingCartIcon,
-  CaseIcon,
-  ScreenProtectorIcon,
-  WiredHeadphonesIcon,
-  BluetoothHeadphonesIcon,
-  SpeakerIcon,
-  CableIcon,
-  ChargerIcon,
-  CarChargerIcon,
-  SmartwatchIcon,
-  CarHolderIcon,
+  CapasIcon,
+  PeliculaIcon,
+  FonesIcon,
+  FonesBluetoothIcon,
+  CaixasSomIcon,
+  CabosIcon,
+  CarregadoresIcon,
+  SuportesIcon,
+  CarregadoresVeicularIcon,
+  SmartwatchCustomIcon,
   AdapterIcon
 } from '@/components/ui/Icons'
 
 // Função para obter o ícone correto para cada categoria
-const getCategoryIcon = (categoryName: string, size: number = 18) => {
+const getCategoryIcon = (categoryName: string, size: number = 30) => {
   const name = categoryName.toLowerCase()
   
   if (name.includes('capa') || name.includes('case') || name.includes('capinha')) {
-    return <CaseIcon size={size} />
+    return <CapasIcon size={size} />
   }
   if (name.includes('película') || name.includes('protetor') || name.includes('vidro')) {
-    return <ScreenProtectorIcon size={size} />
+    return <PeliculaIcon size={size} />
   }
   if (name.includes('fone') && name.includes('bluetooth')) {
-    return <BluetoothHeadphonesIcon size={size} />
+    return <FonesBluetoothIcon size={size} />
   }
   if (name.includes('fone')) {
-    return <WiredHeadphonesIcon size={size} />
+    return <FonesIcon size={size} />
   }
   if (name.includes('caixa') && name.includes('som')) {
-    return <SpeakerIcon size={size} />
+    return <CaixasSomIcon size={size} />
   }
   if (name.includes('cabo') || name.includes('usb')) {
-    return <CableIcon size={size} />
+    return <CabosIcon size={size} />
   }
   if (name.includes('carregador') && (name.includes('veicular') || name.includes('carro'))) {
-    return <CarChargerIcon size={size} />
+    return <CarregadoresVeicularIcon size={size} />
   }
   if (name.includes('carregador')) {
-    return <ChargerIcon size={size} />
+    return <CarregadoresIcon size={size} />
   }
   if (name.includes('suporte') && (name.includes('veicular') || name.includes('carro'))) {
-    return <CarHolderIcon size={size} />
+    return <CarChargerIcon size={size} />
   }
   if (name.includes('suporte')) {
-    return <SmartwatchIcon size={size} />
+    return <SuportesIcon size={size} />
+  }
+  if (name.includes('smart') || name.includes('watch') || name.includes('relógio')) {
+    return <SmartwatchCustomIcon size={size} />
   }
   if (name.includes('adaptador')) {
     return <AdapterIcon size={size} />
@@ -146,9 +149,8 @@ export default function Home() {
           {/* Sidebar Categories - Desktop */}
           <aside className="hidden lg:block w-64 flex-shrink-0">
             <div className="card p-6 animate-slide-up">
-              <div className="flex items-center gap-3 mb-6">
-                <PhoneIcon size={24} className="text-[#f97316]" />
-                <h2 className="text-lg font-semibold" style={{ color: 'var(--foreground)' }}>
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-center" style={{ color: 'var(--foreground)' }}>
                   Categorias
                 </h2>
               </div>
@@ -167,14 +169,14 @@ export default function Home() {
                     color: 'var(--muted-foreground)'
                   }}
                 >
-                  <StoreIcon size={16} />
+                  <TodosProdutosIcon size={16} />
                   <span>Todos os Produtos</span>
                 </button>
                 {categories.map((category) => (
                   <button
                     key={category.id}
                     onClick={() => setSelectedCategory(category.id)}
-                    className={`interactive w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${
+                    className={`interactive w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center ${
                       selectedCategory === category.id
                         ? 'text-white'
                         : 'hover:bg-gray-50'
@@ -190,11 +192,6 @@ export default function Home() {
                       {getCategoryIcon(category.name, 16)}
                       <span>{category.name}</span>
                     </div>
-                    {category._count?.products > 0 && (
-                      <span className="badge text-xs">
-                        {category._count.products}
-                      </span>
-                    )}
                   </button>
                 ))}
               </nav>
@@ -323,7 +320,7 @@ export default function Home() {
                         {getCategoryIcon(categories.find(c => c.id === selectedCategory)?.name || '', 28)}
                       </div>
                     ) : (
-                      <StoreIcon size={28} className="text-[#f97316]" />
+                      <TodosProdutosIcon size={28} className="text-[#f97316]" />
                     )}
                     <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
                       {selectedCategory
@@ -394,7 +391,7 @@ export default function Home() {
                     className="btn-primary interactive flex items-center gap-2 mx-auto"
                     style={{ background: 'var(--orange)', color: 'var(--surface)' }}
                   >
-                    <StoreIcon size={16} />
+                    <TodosProdutosIcon size={16} />
                     Ver Todos os Produtos
                   </button>
                 </div>
