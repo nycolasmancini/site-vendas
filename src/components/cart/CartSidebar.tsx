@@ -4,8 +4,10 @@ import { useCartStore } from '@/stores/useCartStore'
 import { formatPrice } from '@/lib/utils'
 import { X, Plus, Minus, Trash2, TrendingUp } from 'lucide-react'
 import Image from 'next/image'
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { EconomizerModal } from './EconomizerModal'
+import Toast from '@/components/ui/Toast'
+import { useToast } from '@/hooks/useToast'
 
 export function CartSidebar() {
   const [mounted, setMounted] = useState(false)
@@ -13,6 +15,8 @@ export function CartSidebar() {
   const [previousUpgradesLength, setPreviousUpgradesLength] = useState(-1) // Start with -1 to detect initial state
   const [buttonState, setButtonState] = useState<'hidden' | 'entering' | 'visible' | 'exiting'>('hidden')
   const [removingItems, setRemovingItems] = useState<Set<string>>(new Set())
+  const { toasts, showToast, removeToast } = useToast()
+  const minimumOrderRef = useRef<HTMLParagraphElement>(null)
   const { 
     items, 
     isOpen, 
@@ -32,6 +36,35 @@ export function CartSidebar() {
   const subtotal = getSubtotal()
   const savings = getSavings()
   const eligibleUpgrades = getEligibleUpgrades()
+  const totalQuantity = getItemsCount()
+  
+  // Função para finalizar pedido com validação
+  const handleFinalizePedido = () => {
+    console.log('Clique no botão finalizar - Total:', totalQuantity)
+    
+    if (totalQuantity < 30) {
+      const remaining = 30 - totalQuantity
+      console.log('Mostrando toast - faltam:', remaining)
+      
+      showToast(
+        `Adicione mais ${remaining} ${remaining === 1 ? 'item' : 'itens'} para atingir o pedido mínimo de 30 unidades`,
+        'warning'
+      )
+      
+      // Destacar visualmente o texto de pedido mínimo
+      if (minimumOrderRef.current) {
+        console.log('Fazendo destaque no texto de pedido mínimo')
+        minimumOrderRef.current.classList.add('animate-pulse', 'text-orange-600', 'font-bold')
+        setTimeout(() => {
+          minimumOrderRef.current?.classList.remove('animate-pulse', 'text-orange-600', 'font-bold')
+        }, 2000)
+      }
+      return
+    }
+    
+    // Aqui você pode adicionar a lógica de finalização do pedido
+    console.log('Finalizando pedido...') 
+  }
 
   // Simple calculation without complex memoization
   const upgradesLength = eligibleUpgrades.length
@@ -481,16 +514,20 @@ export function CartSidebar() {
             )}
             
             <button
-              className="w-full bg-[#FC6D36] text-white py-3 rounded-lg font-medium hover:bg-[#e55a2b] transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
-              onClick={() => {
-                // TODO: Navigate to checkout
-                console.log('Navigate to checkout')
-              }}
+              className={`w-full py-3 rounded-lg font-medium transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] ${
+                totalQuantity >= 30
+                  ? 'bg-[#FC6D36] text-white hover:bg-[#e55a2b]'
+                  : 'bg-gray-400 text-white cursor-pointer hover:bg-gray-500'
+              }`}
+              onClick={handleFinalizePedido}
             >
-              Finalizar Pedido
+              {totalQuantity >= 30 ? 'Finalizar Pedido' : `⚠️ Faltam ${30 - totalQuantity} itens`}
             </button>
             
-            <p className="text-xs text-gray-500 text-center">
+            <p 
+              ref={minimumOrderRef}
+              className="text-xs text-gray-500 text-center transition-all duration-300"
+            >
               Pedido mínimo: 30 peças
             </p>
           </div>
@@ -503,6 +540,16 @@ export function CartSidebar() {
         onClose={() => setShowEconomizerModal(false)}
         eligibleItems={eligibleUpgrades}
       />
+      
+      {/* Toast notifications */}
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
     </>
   )
 }

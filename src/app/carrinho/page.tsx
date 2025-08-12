@@ -1,69 +1,68 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef } from 'react'
 import Link from 'next/link'
 import SuperWholesaleUpgrade from '@/components/cart/SuperWholesaleUpgrade'
 import MinimumOrderAlert from '@/components/cart/MinimumOrderAlert'
+import Toast from '@/components/ui/Toast'
+import { useToast } from '@/hooks/useToast'
+import { useCartStore } from '@/stores/useCartStore'
 import { formatPrice } from '@/lib/utils'
 
-// Mock data para demonstração
-const mockCartItems = [
-  {
-    productId: '1',
-    name: 'iPhone 15 Pro Max',
-    subname: '256GB Titanium Natural',
-    image: '/placeholder.jpg',
-    quantity: 8,
-    unitPrice: 4200,
-    superWholesalePrice: 3900,
-    superWholesaleQuantity: 10
-  },
-  {
-    productId: '2', 
-    name: 'Capinha Transparente',
-    subname: 'iPhone 15 Series',
-    image: '/placeholder.jpg',
-    quantity: 15,
-    unitPrice: 25,
-    superWholesalePrice: 20,
-    superWholesaleQuantity: 20
-  },
-  {
-    productId: '3',
-    name: 'Película de Vidro 9H',
-    subname: 'iPhone 15 Pro Max',
-    image: '/placeholder.jpg',
-    quantity: 12,
-    unitPrice: 18,
-    superWholesalePrice: 15,
-    superWholesaleQuantity: 15
-  }
-]
-
 export default function CarrinhoPage() {
-  const [cartItems, setCartItems] = useState(mockCartItems)
+  const { toasts, showToast, removeToast } = useToast()
+  const alertRef = useRef<HTMLDivElement>(null)
+  
+  // Usar dados reais do carrinho
+  const {
+    items: cartItems,
+    updateQuantity: updateCartQuantity,
+    removeItem,
+    getSubtotal,
+    getItemsCount,
+    getSavings
+  } = useCartStore()
 
-  const updateQuantity = (productId: string, newQuantity: number) => {
-    setCartItems(items => 
-      items.map(item => 
-        item.productId === productId 
-          ? { ...item, quantity: Math.max(1, newQuantity) }
-          : item
+  const updateQuantity = (id: string, newQuantity: number) => {
+    updateCartQuantity(id, Math.max(1, newQuantity))
+  }
+
+  const handleRemoveItem = (id: string) => {
+    removeItem(id)
+  }
+
+  const totalQuantity = getItemsCount()
+  const totalValue = getSubtotal()
+  const totalSavings = getSavings()
+  
+  
+  const handleFinalizePedido = () => {
+    console.log('Clique no botão finalizar - Total:', totalQuantity)
+    
+    if (totalQuantity < 30) {
+      const remaining = 30 - totalQuantity
+      console.log('Mostrando toast - faltam:', remaining)
+      
+      showToast(
+        `Adicione mais ${remaining} ${remaining === 1 ? 'item' : 'itens'} para atingir o pedido mínimo de 30 unidades`,
+        'warning'
       )
-    )
+      
+      // Destacar visualmente o alerta
+      if (alertRef.current) {
+        console.log('Fazendo scroll para o alerta')
+        alertRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        alertRef.current.classList.add('animate-pulse')
+        setTimeout(() => {
+          alertRef.current?.classList.remove('animate-pulse')
+        }, 2000)
+      }
+      return
+    }
+    
+    // Aqui você pode adicionar a lógica de finalização do pedido
+    console.log('Finalizando pedido...') 
   }
-
-  const removeItem = (productId: string) => {
-    setCartItems(items => items.filter(item => item.productId !== productId))
-  }
-
-  const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0)
-  const totalValue = cartItems.reduce((sum, item) => {
-    const price = item.superWholesaleQuantity && item.quantity >= item.superWholesaleQuantity && item.superWholesalePrice
-      ? item.superWholesalePrice 
-      : item.unitPrice
-    return sum + (price * item.quantity)
-  }, 0)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -91,10 +90,13 @@ export default function CarrinhoPage() {
             <div className="bg-white/70 backdrop-blur-md rounded-xl p-6 border border-gray-200 mb-6">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">🛒 Seu Carrinho</h1>
               <p className="text-gray-600">{totalQuantity} itens selecionados</p>
+              
             </div>
 
             {/* Minimum Order Alert */}
-            <MinimumOrderAlert />
+            <div ref={alertRef}>
+              <MinimumOrderAlert />
+            </div>
 
             {/* Super Wholesale Upgrade */}
             <SuperWholesaleUpgrade cartItems={cartItems} />
@@ -102,17 +104,21 @@ export default function CarrinhoPage() {
             {/* Cart Items List */}
             <div className="space-y-4">
               {cartItems.map((item) => {
-                const isWholesaleActive = item.superWholesaleQuantity && 
-                  item.quantity >= item.superWholesaleQuantity && 
-                  item.superWholesalePrice
+                const isWholesaleActive = item.specialQuantity && 
+                  item.quantity >= item.specialQuantity && 
+                  item.specialPrice
                 
-                const currentPrice = isWholesaleActive ? item.superWholesalePrice : item.unitPrice
+                const currentPrice = isWholesaleActive ? item.specialPrice : item.unitPrice
 
                 return (
-                  <div key={item.productId} className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                  <div key={item.id} className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
                     <div className="flex items-start gap-4">
                       <div className="w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex items-center justify-center">
-                        📱
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} className="w-full h-full object-cover rounded-lg" />
+                        ) : (
+                          <span className="text-2xl">📱</span>
+                        )}
                       </div>
                       
                       <div className="flex-1">
@@ -120,11 +126,14 @@ export default function CarrinhoPage() {
                         {item.subname && (
                           <p className="text-gray-600 text-sm font-medium">{item.subname}</p>
                         )}
+                        {item.modelName && (
+                          <p className="text-gray-500 text-xs">{item.modelName}</p>
+                        )}
                         
                         <div className="mt-3 flex items-center gap-4">
                           <div className="flex items-center bg-gray-50 rounded-lg border">
                             <button
-                              onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
                               className="px-3 py-2 hover:bg-gray-100 font-bold text-gray-600"
                             >
                               -
@@ -132,11 +141,11 @@ export default function CarrinhoPage() {
                             <input
                               type="number"
                               value={item.quantity}
-                              onChange={(e) => updateQuantity(item.productId, parseInt(e.target.value) || 1)}
+                              onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 1)}
                               className="w-16 text-center py-2 bg-white border-x font-semibold"
                             />
                             <button
-                              onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
                               className="px-3 py-2 hover:bg-gray-100 font-bold text-gray-600"
                             >
                               +
@@ -144,7 +153,7 @@ export default function CarrinhoPage() {
                           </div>
                           
                           <button
-                            onClick={() => removeItem(item.productId)}
+                            onClick={() => handleRemoveItem(item.id)}
                             className="text-red-600 hover:text-red-700 font-semibold text-sm"
                           >
                             🗑️ Remover
@@ -198,12 +207,7 @@ export default function CarrinhoPage() {
                     <div className="flex justify-between text-sm text-green-600">
                       <span>Economia com Caixa Fechada:</span>
                       <span className="font-semibold">
-                        {formatPrice(cartItems.reduce((savings, item) => {
-                          if (item.superWholesaleQuantity && item.quantity >= item.superWholesaleQuantity && item.superWholesalePrice) {
-                            return savings + ((item.unitPrice - item.superWholesalePrice) * item.quantity)
-                          }
-                          return savings
-                        }, 0))}
+                        {formatPrice(totalSavings)}
                       </span>
                     </div>
                   </div>
@@ -211,8 +215,12 @@ export default function CarrinhoPage() {
 
                 <div className="space-y-3">
                   <button
-                    className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-4 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all font-bold text-lg shadow-lg hover:shadow-xl"
-                    disabled={totalQuantity < 30}
+                    onClick={handleFinalizePedido}
+                    className={`w-full py-3 px-4 rounded-lg font-bold text-lg shadow-lg transition-all ${
+                      totalQuantity >= 30
+                        ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white hover:shadow-xl'
+                        : 'bg-gradient-to-r from-gray-400 to-gray-500 text-white cursor-pointer hover:from-gray-500 hover:to-gray-600'
+                    }`}
                   >
                     {totalQuantity >= 30 ? '🎯 Finalizar Pedido' : `⚠️ Faltam ${30 - totalQuantity} itens`}
                   </button>
@@ -238,6 +246,16 @@ export default function CarrinhoPage() {
           </div>
         </div>
       </div>
+      
+      {/* Toast notifications */}
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
     </div>
   )
 }

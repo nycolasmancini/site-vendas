@@ -42,7 +42,7 @@ export default function MinimumOrderAlert({ minimumQuantity = 30 }: MinimumOrder
         <div>
           <h3 className="font-bold text-orange-800 text-lg">Quase lá!</h3>
           <p className="text-orange-700 text-sm">
-            Faltam apenas <span className="font-bold">{remainingQuantity} itens</span> para atingir o pedido mínimo
+            Adicione mais <span className="font-bold">{remainingQuantity} {remainingQuantity === 1 ? 'item' : 'itens'}</span> para atingir o pedido mínimo
           </p>
         </div>
       </div>
