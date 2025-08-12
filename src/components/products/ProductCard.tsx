@@ -6,85 +6,6 @@ import { useCartStore } from '@/stores/useCartStore'
 import { useSession } from '@/contexts/SessionContext'
 import { formatPrice } from '@/lib/utils'
 
-// Componente de animação de preços com crossfade elegante
-function AnimatedPrice({ price, className, style }: { price: number; className?: string; style?: any }) {
-  const [currentPrice, setCurrentPrice] = useState(price)
-  const [oldPrice, setOldPrice] = useState<number | null>(null)
-  const [isTransitioning, setIsTransitioning] = useState(false)
-  const [animationPhase, setAnimationPhase] = useState<'idle' | 'fadeOut' | 'fadeIn'>('idle')
-  const prevPrice = useRef(price)
-
-  useEffect(() => {
-    if (prevPrice.current !== price && prevPrice.current !== 0) {
-      // Inicia a sequência de animação
-      setOldPrice(prevPrice.current)
-      setIsTransitioning(true)
-      setAnimationPhase('fadeOut')
-      
-      // Após fade out, atualiza o preço e faz fade in
-      setTimeout(() => {
-        setCurrentPrice(price)
-        setAnimationPhase('fadeIn')
-        
-        // Finaliza a animação
-        setTimeout(() => {
-          setIsTransitioning(false)
-          setAnimationPhase('idle')
-          setOldPrice(null)
-        }, 400)
-      }, 350)
-      
-      prevPrice.current = price
-    }
-  }, [price])
-
-  const isDecrease = oldPrice !== null && price < oldPrice
-  const isIncrease = oldPrice !== null && price > oldPrice
-
-  return (
-    <div className="relative inline-block min-h-[1.75rem] flex items-center">
-      {/* Preço antigo - fade out */}
-      {oldPrice !== null && animationPhase === 'fadeOut' && (
-        <span 
-          className={`${className} price-fade-out absolute top-0 left-0 whitespace-nowrap font-bold`}
-          style={{
-            ...style,
-            color: isDecrease ? '#ef4444' : isIncrease ? '#6b7280' : style?.color,
-            textDecoration: isDecrease ? 'line-through' : 'none',
-            opacity: 0.7,
-            fontWeight: 'bold' // Sempre negrito
-          }}
-        >
-          {formatPrice(oldPrice)}
-        </span>
-      )}
-      
-      {/* Preço novo - fade in */}
-      <span 
-        className={`${className} whitespace-nowrap font-bold ${
-          animationPhase === 'fadeIn' ? 'price-fade-in' : ''
-        } ${
-          isTransitioning && isDecrease
-            ? 'text-green-600' 
-            : isTransitioning && isIncrease
-              ? 'text-orange-600'
-              : ''
-        }`}
-        style={{
-          ...style,
-          textShadow: isTransitioning && isDecrease 
-            ? '0 0 8px rgba(34, 197, 94, 0.3)' 
-            : isTransitioning 
-              ? '0 0 6px rgba(249, 115, 22, 0.2)' 
-              : 'none',
-          fontWeight: 'bold' // Sempre negrito
-        }}
-      >
-        {formatPrice(currentPrice)}
-      </span>
-    </div>
-  )
-}
 
 interface ProductCardProps {
   product: {
@@ -115,11 +36,18 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, onSelectModels, onUnlockPrices }: ProductCardProps) {
   const addItem = useCartStore((state) => state.addItem)
+  const cartItems = useCartStore((state) => state.items)
   const { unlocked } = useSession()
   const [quantity, setQuantity] = useState<number | string>(1)
   const [isAnimating, setIsAnimating] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
+
+  // Função para obter quantidade no carrinho para este produto
+  const getCartQuantity = (): number => {
+    const cartItem = cartItems.find(item => item.productId === product.id && !item.modelId)
+    return cartItem ? cartItem.quantity : 0
+  }
 
   const createRippleEffect = (event: React.MouseEvent<HTMLButtonElement>) => {
     const button = event.currentTarget
@@ -198,7 +126,10 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
   }
 
   const numericQuantity = typeof quantity === 'string' ? parseInt(quantity) || 1 : quantity
-  const hasReachedWholesaleQuantity = product.superWholesaleQuantity && numericQuantity >= product.superWholesaleQuantity
+  const cartQuantity = getCartQuantity()
+  
+  // Só mostra preço de super atacado se já atingiu a quantidade no carrinho
+  const hasReachedWholesaleQuantity = product.superWholesaleQuantity && cartQuantity >= product.superWholesaleQuantity
   const currentPrice = hasReachedWholesaleQuantity && product.superWholesalePrice
     ? product.superWholesalePrice
     : product.price
@@ -284,28 +215,31 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
               ) : (
                 <div>
                   {/* Preço principal */}
-                  <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
-                    <div className="flex items-baseline gap-2">
-                      <AnimatedPrice
-                        price={currentPrice}
-                        className="text-lg sm:text-xl font-bold"
-                        style={{ color: 'var(--foreground)' }}
-                      />
-                      <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                        unidade
-                      </span>
-                    </div>
-                    
-                    {/* Preço de atacado - aparece embaixo no mobile */}
-                    {product.superWholesalePrice && product.superWholesaleQuantity && !hasReachedWholesaleQuantity && (
-                      <div className="flex items-center gap-2 mt-1 sm:mt-0">
-                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--green)' }}></div>
-                        <p className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>
-                          +{product.superWholesaleQuantity} un: {formatPrice(product.superWholesalePrice)}
-                        </p>
-                      </div>
-                    )}
+                  <div className="flex items-baseline gap-2 mb-2">
+                    <span 
+                      key={`${product.id}-${currentPrice}`}
+                      className="text-lg sm:text-xl font-bold transition-all duration-500 ease-in-out animate-price-change"
+                      style={{
+                        color: 'var(--foreground)',
+                        animation: 'fadeInPrice 0.5s ease-in-out'
+                      }}
+                    >
+                      {formatPrice(currentPrice)}
+                    </span>
+                    <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                      unidade
+                    </span>
                   </div>
+                  
+                  {/* Preço de super atacado - aparece sempre abaixo */}
+                  {product.superWholesalePrice && product.superWholesaleQuantity && !hasReachedWholesaleQuantity && (
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--green)' }}></div>
+                      <p className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>
+                        +{Math.max(0, product.superWholesaleQuantity - cartQuantity)} un: {formatPrice(product.superWholesalePrice)}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

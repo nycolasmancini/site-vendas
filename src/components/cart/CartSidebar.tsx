@@ -296,19 +296,44 @@ export function CartSidebar() {
 
                       <div className="flex items-center justify-between mt-2">
                         <div className="text-sm">
-                          <span className="font-semibold">{formatPrice(currentPrice)}</span>
+                          {(() => {
+                            const isWholesaleActive = item.specialQuantity && item.quantity >= item.specialQuantity && item.specialPrice
+                            return (
+                              <span 
+                                key={`unit-${item.id}-${isWholesaleActive}`}
+                                className={`font-semibold transition-all duration-500 ease-in-out ${
+                                  isWholesaleActive ? 'text-green-600' : 'text-gray-900'
+                                }`}
+                                style={{
+                                  animation: isWholesaleActive ? 'priceChangeColor 0.6s ease-in-out, microBounce 0.4s ease-out 0.2s' : 'fadeInPrice 0.5s ease-in-out'
+                                }}
+                              >
+                                {formatPrice(currentPrice)}
+                              </span>
+                            )
+                          })()}
                           <span className="text-gray-500 ml-1">cada</span>
                         </div>
                         <div className="text-sm font-semibold text-right">
-                          {formatPrice(currentPrice * item.quantity)}
+                          {(() => {
+                            const isWholesaleActive = item.specialQuantity && item.quantity >= item.specialQuantity && item.specialPrice
+                            return (
+                              <span 
+                                key={`total-${item.id}-${isWholesaleActive}`}
+                                className={`transition-all duration-500 ease-in-out ${
+                                  isWholesaleActive ? 'text-green-600' : 'text-gray-900'
+                                }`}
+                                style={{
+                                  animation: isWholesaleActive ? 'priceChangeColor 0.6s ease-in-out, microBounce 0.4s ease-out 0.3s' : 'fadeInPrice 0.5s ease-in-out'
+                                }}
+                              >
+                                {formatPrice(currentPrice * item.quantity)}
+                              </span>
+                            )
+                          })()}
                         </div>
                       </div>
 
-                      {item.specialQuantity && item.quantity >= item.specialQuantity && item.specialPrice && (
-                        <div className="mt-1 text-xs text-green-600 font-medium">
-                          Desconto de atacado aplicado!
-                        </div>
-                      )}
                     </div>
                   </div>
                 )
@@ -372,7 +397,25 @@ export function CartSidebar() {
                             <span className="font-semibold text-gray-900">{group.totalQuantity} unidades</span>
                           </div>
                           <div className="text-sm font-semibold text-right">
-                            {formatPrice(group.totalPrice)}
+                            {(() => {
+                              // Check if any item in the group has wholesale active
+                              const hasWholesaleActive = group.items.some(item => 
+                                item.specialQuantity && item.quantity >= item.specialQuantity && item.specialPrice
+                              )
+                              return (
+                                <span 
+                                  key={`group-total-${group.id}-${hasWholesaleActive}`}
+                                  className={`transition-all duration-500 ease-in-out ${
+                                    hasWholesaleActive ? 'text-green-600' : 'text-gray-900'
+                                  }`}
+                                  style={{
+                                    animation: hasWholesaleActive ? 'priceChangeColor 0.6s ease-in-out, microBounce 0.4s ease-out 0.2s' : 'fadeInPrice 0.5s ease-in-out'
+                                  }}
+                                >
+                                  {formatPrice(group.totalPrice)}
+                                </span>
+                              )
+                            })()}
                           </div>
                         </div>
                       </div>

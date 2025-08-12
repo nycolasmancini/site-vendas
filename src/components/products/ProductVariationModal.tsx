@@ -489,9 +489,24 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                                   })()}
                                 </div>
                                 <div className="flex flex-col items-start gap-1">
-                                  <span className="text-lg font-bold text-gray-900">
-                                    {formatPrice(model.price)}
-                                  </span>
+                                  {(() => {
+                                    const cartQuantity = getCartQuantityByModel(model.id)
+                                    const increment = product.quickAddIncrement || 1
+                                    const hasReachedSuperWholesale = model.superWholesalePrice && cartQuantity >= increment
+                                    const currentPrice = hasReachedSuperWholesale ? model.superWholesalePrice : model.price
+                                    
+                                    return (
+                                      <span 
+                                        key={`${model.id}-${hasReachedSuperWholesale}`}
+                                        className="text-lg font-bold text-gray-900 transition-all duration-500 ease-in-out animate-price-change"
+                                        style={{
+                                          animation: 'fadeInPrice 0.5s ease-in-out'
+                                        }}
+                                      >
+                                        {formatPrice(currentPrice)}
+                                      </span>
+                                    )
+                                  })()}
                                   {model.superWholesalePrice && (
                                     <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded whitespace-nowrap">
                                       +{product.quickAddIncrement || 1} un.: {formatPrice(model.superWholesalePrice)}
