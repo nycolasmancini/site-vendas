@@ -6,12 +6,19 @@ import { X, Plus, Minus, Trash2, TrendingUp } from 'lucide-react'
 import Image from 'next/image'
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { EconomizerModal } from './EconomizerModal'
+import { OrderCompletionSidebar } from './OrderCompletionSidebar'
 import Toast from '@/components/ui/Toast'
 import { useToast } from '@/hooks/useToast'
 
 export function CartSidebar() {
   const [mounted, setMounted] = useState(false)
   const [showEconomizerModal, setShowEconomizerModal] = useState(false)
+  const [showOrderCompletion, setShowOrderCompletion] = useState(false)
+  const [currentOrderNumber, setCurrentOrderNumber] = useState(28793)
+  const [orderData, setOrderData] = useState({
+    subtotal: 0,
+    itemsCount: 0
+  })
   const [previousUpgradesLength, setPreviousUpgradesLength] = useState(-1) // Start with -1 to detect initial state
   const [buttonState, setButtonState] = useState<'hidden' | 'entering' | 'visible' | 'exiting'>('hidden')
   const [removingItems, setRemovingItems] = useState<Set<string>>(new Set())
@@ -62,8 +69,26 @@ export function CartSidebar() {
       return
     }
     
-    // Aqui você pode adicionar a lógica de finalização do pedido
-    console.log('Finalizando pedido...') 
+    // Capturar dados do pedido antes de mostrar tela de finalização
+    setOrderData({
+      subtotal: subtotal,
+      itemsCount: totalQuantity
+    })
+    
+    // Gerar próximo número de pedido e mostrar tela de finalização
+    setCurrentOrderNumber(prev => prev + 1)
+    setShowOrderCompletion(true)
+  }
+
+  // Função para voltar do completion para o carrinho
+  const handleBackToCart = () => {
+    setShowOrderCompletion(false)
+  }
+
+  // Função para fechar completamente o carrinho
+  const handleCloseCompletion = () => {
+    setShowOrderCompletion(false)
+    toggleCart() // Fecha o carrinho principal
   }
 
   // Simple calculation without complex memoization
@@ -534,11 +559,21 @@ export function CartSidebar() {
         )}
       </div>
       
-      {/* Modal */}
+      {/* Modals */}
       <EconomizerModal
         isOpen={showEconomizerModal}
         onClose={() => setShowEconomizerModal(false)}
         eligibleItems={eligibleUpgrades}
+      />
+
+      {/* Order Completion Sidebar */}
+      <OrderCompletionSidebar
+        isOpen={showOrderCompletion}
+        onClose={handleCloseCompletion}
+        onBack={handleBackToCart}
+        orderNumber={currentOrderNumber}
+        subtotal={orderData.subtotal}
+        itemsCount={orderData.itemsCount}
       />
       
       {/* Toast notifications */}
