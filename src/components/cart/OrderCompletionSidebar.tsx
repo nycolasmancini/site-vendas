@@ -24,7 +24,7 @@ export function OrderCompletionSidebar({
   subtotal, 
   itemsCount 
 }: OrderCompletionSidebarProps) {
-  const { clearCart } = useCartStore()
+  const { clearCart, items } = useCartStore()
   const { whatsapp: storeWhatsapp, customerName: storeCustomerName } = useSessionStore()
   const { whatsapp: contextWhatsapp } = useSession()
   
@@ -91,26 +91,65 @@ export function OrderCompletionSidebar({
   const handleSubmitOrder = async () => {
     setIsSubmitting(true)
     
-    // Simular envio do pedido
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    // Aqui você implementaria a lógica real de envio do pedido
-    console.log('Pedido enviado:', {
-      pedido: orderNumber,
-      cliente: customerName,
-      whatsapp: whatsappNumber,
-      total: subtotal,
-      itens: itemsCount
-    })
-    
-    // Limpar carrinho após sucesso
-    clearCart()
-    setIsSubmitting(false)
-    
-    // Fechar modal após envio
-    setTimeout(() => {
-      onClose()
-    }, 1000)
+    try {
+      // Pegar itens do carrinho (usar items já disponível)
+      
+      // Converter WhatsApp para formato brasileiro (adicionar 55 se necessário)
+      const cleanWhatsapp = whatsappNumber.replace(/\D/g, '')
+      const finalWhatsapp = cleanWhatsapp.length === 11 ? `55${cleanWhatsapp}` : cleanWhatsapp
+      
+      // Preparar dados do pedido
+      const orderData = {
+        customer: {
+          name: customerName.trim(),
+          whatsapp: finalWhatsapp,
+          email: '', // Opcional
+          company: '', // Opcional
+          cnpj: '' // Opcional
+        },
+        items: items.map(item => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          modelName: item.modelName || undefined
+        })),
+        notes: '' // Observações do cliente (opcional)
+      }
+      
+      console.log('Enviando pedido:', orderData)
+      
+      // Enviar pedido para a API
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+      })
+      
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Erro ao criar pedido')
+      }
+      
+      const order = await response.json()
+      console.log('Pedido criado com sucesso:', order)
+      
+      // Limpar carrinho após sucesso
+      clearCart()
+      setIsSubmitting(false)
+      
+      // Fechar modal após envio
+      setTimeout(() => {
+        onClose()
+      }, 1000)
+      
+    } catch (error) {
+      console.error('Erro ao enviar pedido:', error)
+      setIsSubmitting(false)
+      
+      // Aqui você pode mostrar uma mensagem de erro para o usuário
+      alert(`Erro ao enviar pedido: ${error.message}`)
+    }
   }
 
   const formatWhatsapp = (value: string) => {

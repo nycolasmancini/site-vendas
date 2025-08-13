@@ -1,10 +1,11 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
 import SuperWholesaleUpgrade from '@/components/cart/SuperWholesaleUpgrade'
 import MinimumOrderAlert from '@/components/cart/MinimumOrderAlert'
 import Toast from '@/components/ui/Toast'
+import { OrderCompletionSidebar } from '@/components/cart/OrderCompletionSidebar'
 import { useToast } from '@/hooks/useToast'
 import { useCartStore } from '@/stores/useCartStore'
 import { formatPrice } from '@/lib/utils'
@@ -12,6 +13,8 @@ import { formatPrice } from '@/lib/utils'
 export default function CarrinhoPage() {
   const { toasts, showToast, removeToast } = useToast()
   const alertRef = useRef<HTMLDivElement>(null)
+  const [showOrderCompletion, setShowOrderCompletion] = useState(false)
+  const [orderNumber, setOrderNumber] = useState(0)
   
   // Usar dados reais do carrinho
   const {
@@ -60,8 +63,12 @@ export default function CarrinhoPage() {
       return
     }
     
-    // Aqui você pode adicionar a lógica de finalização do pedido
-    console.log('Finalizando pedido...') 
+    // Gerar número do pedido temporário (será substituído pela API)
+    const tempOrderNumber = Date.now()
+    setOrderNumber(tempOrderNumber)
+    
+    // Abrir modal de finalização
+    setShowOrderCompletion(true)
   }
 
   return (
@@ -256,6 +263,16 @@ export default function CarrinhoPage() {
           onClose={() => removeToast(toast.id)}
         />
       ))}
+      
+      {/* Order Completion Sidebar */}
+      <OrderCompletionSidebar
+        isOpen={showOrderCompletion}
+        onClose={() => setShowOrderCompletion(false)}
+        onBack={() => setShowOrderCompletion(false)}
+        orderNumber={orderNumber}
+        subtotal={totalValue}
+        itemsCount={totalQuantity}
+      />
     </div>
   )
 }
