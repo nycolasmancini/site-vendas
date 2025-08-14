@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { useAnalytics } from '@/lib/analytics'
+import { debounce } from '@/utils/debounce'
 
 export interface CartItem {
   id: string
@@ -18,6 +20,8 @@ export interface CartItem {
 interface CartStore {
   items: CartItem[]
   isOpen: boolean
+  isLoading: boolean
+  lastSyncTimestamp: number | null
   
   addItem: (item: Omit<CartItem, 'id'>) => void
   removeItem: (id: string) => void
@@ -29,19 +33,42 @@ interface CartStore {
   getItemsCount: () => number
   getSavings: () => number
   getEligibleUpgrades: () => CartItem[]
+  
+  // Novos métodos para sincronização
+  syncToServer: () => Promise<void>
+  loadFromServer: () => Promise<void>
+  setLoading: (loading: boolean) => void
 }
+
+// Criar função debounced para sincronização (1 segundo após última mudança)
+const debouncedSyncToServer = debounce(async () => {
+  const store = useCartStore.getState()
+  await store.syncToServer()
+}, 1000)
 
 export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
       isOpen: false,
+      isLoading: false,
+      lastSyncTimestamp: null,
       
       addItem: (item) => {
         set((state) => {
           const existingItem = state.items.find(
             (i) => i.productId === item.productId && i.modelId === item.modelId
           )
+          
+          // Track cart event
+          if (typeof window !== 'undefined') {
+            const analytics = useAnalytics()
+            console.log(`🛒 Store: Tracking add event - productId: ${item.productId}, quantity: ${item.quantity}`)
+            analytics.trackCartEvent('add', item.productId, item.quantity)
+            
+            // Sincronizar com servidor (debounced)
+            debouncedSyncToServer()
+          }
           
           if (existingItem) {
             return {
@@ -66,9 +93,23 @@ export const useCartStore = create<CartStore>()(
       },
       
       removeItem: (id) => {
-        set((state) => ({
-          items: state.items.filter((item) => item.id !== id),
-        }))
+        set((state) => {
+          const item = state.items.find(i => i.id === id)
+          
+          // Track cart event
+          if (item && typeof window !== 'undefined') {
+            const analytics = useAnalytics()
+            console.log(`🛒 Store: Tracking remove event - productId: ${item.productId}, quantity: ${item.quantity}`)
+            analytics.trackCartEvent('remove', item.productId, item.quantity)
+            
+            // Sincronizar com servidor (debounced)
+            debouncedSyncToServer()
+          }
+          
+          return {
+            items: state.items.filter((item) => item.id !== id),
+          }
+        })
       },
       
       updateQuantity: (id, quantity) => {
@@ -77,15 +118,34 @@ export const useCartStore = create<CartStore>()(
           return
         }
         
-        set((state) => ({
-          items: state.items.map((item) =>
-            item.id === id ? { ...item, quantity } : item
-          ),
-        }))
+        set((state) => {
+          const item = state.items.find(i => i.id === id)
+          
+          // Track cart event
+          if (item && typeof window !== 'undefined') {
+            const analytics = useAnalytics()
+            console.log(`🛒 Store: Tracking update event - productId: ${item.productId}, quantity: ${quantity}`)
+            analytics.trackCartEvent('update', item.productId, quantity)
+            
+            // Sincronizar com servidor (debounced)
+            debouncedSyncToServer()
+          }
+          
+          return {
+            items: state.items.map((item) =>
+              item.id === id ? { ...item, quantity } : item
+            ),
+          }
+        })
       },
       
       clearCart: () => {
         set({ items: [] })
+        
+        // Sincronizar com servidor quando limpar carrinho
+        if (typeof window !== 'undefined') {
+          debouncedSyncToServer()
+        }
       },
       
       toggleCart: () => {
@@ -127,6 +187,104 @@ export const useCartStore = create<CartStore>()(
           // Só mostra produtos que estão entre 80% e 99% do valor necessário
           return percentageComplete >= 80 && percentageComplete < 100
         })
+      },
+
+      // Função para sincronizar carrinho com servidor
+      syncToServer: async () => {
+        if (typeof window === 'undefined') return
+
+        try {
+          const state = get()
+          if (state.items.length === 0) {
+            console.log('🛒 Store: Carrinho vazio, não sincronizando')
+            return
+          }
+
+          // Buscar sessionId e analytics
+          const analytics = typeof window !== 'undefined' ? useAnalytics() : null
+          if (!analytics) return
+
+          const analyticsSnapshot = analytics.getAnalyticsSnapshot()
+
+          const payload = {
+            sessionId: analyticsSnapshot.sessionId,
+            whatsapp: analyticsSnapshot.whatsappCollected,
+            cartData: {
+              items: state.items,
+              total: state.getSubtotal()
+            },
+            analyticsData: analyticsSnapshot,
+            lastActivity: Date.now()
+          }
+
+          console.log('🛒 Store: Sincronizando carrinho com servidor...', {
+            items: state.items.length,
+            total: state.getSubtotal()
+          })
+
+          const response = await fetch('/api/cart/simple-update', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          })
+
+          if (response.ok) {
+            set({ lastSyncTimestamp: Date.now() })
+            console.log('✅ Store: Carrinho sincronizado com servidor')
+          } else {
+            console.warn('⚠️ Store: Erro na sincronização:', response.status)
+          }
+        } catch (error) {
+          console.warn('⚠️ Store: Falha na sincronização:', error)
+        }
+      },
+
+      // Função para carregar carrinho do servidor
+      loadFromServer: async () => {
+        if (typeof window === 'undefined') return
+
+        try {
+          set({ isLoading: true })
+
+          const analytics = useAnalytics()
+          const analyticsSnapshot = analytics.getAnalyticsSnapshot()
+
+          const response = await fetch(
+            `/api/cart/simple-update?sessionId=${analyticsSnapshot.sessionId}`
+          )
+
+          if (!response.ok) {
+            console.log('🛒 Store: Nenhum carrinho encontrado no servidor')
+            return
+          }
+
+          const data = await response.json()
+          
+          if (data.found && data.cart?.cartData?.items) {
+            const serverItems = data.cart.cartData.items
+            const currentItems = get().items
+
+            // Se servidor tem itens mais recentes, carregar
+            if (serverItems.length > 0 && currentItems.length === 0) {
+              set({ items: serverItems, lastSyncTimestamp: Date.now() })
+              console.log('✅ Store: Carrinho carregado do servidor:', serverItems.length, 'itens')
+            } else if (serverItems.length > currentItems.length) {
+              // Perguntar ao usuário se quer mesclar (implementar depois)
+              console.log('🔄 Store: Servidor tem mais itens que local')
+            }
+          }
+        } catch (error) {
+          console.warn('⚠️ Store: Erro ao carregar do servidor:', error)
+        } finally {
+          set({ isLoading: false })
+        }
+      },
+
+      // Helper para controlar loading
+      setLoading: (loading: boolean) => {
+        set({ isLoading: loading })
       },
     }),
     {

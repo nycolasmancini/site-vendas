@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useSession } from '@/contexts/SessionContext'
 import { validateBrazilianWhatsApp, formatWhatsApp } from '@/lib/utils'
+import { useAnalytics } from '@/lib/analytics'
 
 interface UnlockPricesModalProps {
   isOpen: boolean
@@ -33,11 +34,31 @@ export default function UnlockPricesModal({ isOpen, onClose }: UnlockPricesModal
     setLoading(true)
 
     try {
+      console.log('📞 Iniciando desbloqueio para:', formattedWhatsApp)
+      
       await unlockPrices(formattedWhatsApp)
+      
+      console.log('✅ Preços desbloqueados com sucesso')
+      
+      // Track WhatsApp collection
+      console.log('📞 Modal: WhatsApp coletado, iniciando tracking...')
+      if (typeof window !== 'undefined') {
+        try {
+          const analytics = useAnalytics()
+          console.log('📞 Modal: Analytics instance obtida:', analytics)
+          analytics.trackWhatsAppCollection(formattedWhatsApp)
+          console.log('📞 Modal: trackWhatsAppCollection chamado com sucesso')
+        } catch (analyticsError) {
+          console.error('❌ Erro no tracking de WhatsApp:', analyticsError)
+        }
+      }
+      
       onClose()
     } catch (error) {
+      console.error('❌ Erro ao liberar preços:', error)
       setError('Erro ao liberar preços. Tente novamente.')
     } finally {
+      console.log('🔄 Finalizando processo de desbloqueio')
       setLoading(false)
     }
   }

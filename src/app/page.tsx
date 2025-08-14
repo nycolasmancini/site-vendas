@@ -9,6 +9,9 @@ import { Footer } from '@/components/layout/Footer'
 import { useSession } from '@/contexts/SessionContext'
 import { useCartStore } from '@/stores/useCartStore'
 import { formatPrice } from '@/lib/utils'
+import { useAnalytics } from '@/lib/analytics'
+import { useCartSync } from '@/hooks/useCartSync'
+import { CartRecovery } from '@/components/cart/CartRecovery'
 import { 
   PhoneIcon, 
   TodosProdutosIcon, 
@@ -23,6 +26,7 @@ import {
   CarregadoresIcon,
   SuportesIcon,
   CarregadoresVeicularIcon,
+  CarChargerIcon,
   SmartwatchCustomIcon,
   AdapterIcon
 } from '@/components/ui/Icons'
@@ -74,6 +78,8 @@ const getCategoryIcon = (categoryName: string, size: number = 30) => {
 
 export default function Home() {
   const { unlocked } = useSession()
+  const analytics = useAnalytics()
+  const { isLoading: cartSyncLoading } = useCartSync()
   const [showUnlockModal, setShowUnlockModal] = useState(false)
   const [products, setProducts] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
@@ -106,8 +112,15 @@ export default function Home() {
     // Se há um termo de busca, pesquisar em todos os produtos (ignorar categoria selecionada)
     if (searchTerm) {
       params.append('search', searchTerm)
+      // Track search
+      analytics.trackSearch(searchTerm)
     } else if (selectedCategory) {
       params.append('categoryId', selectedCategory)
+      // Track category visit
+      const categoryName = categories.find(c => c.id === selectedCategory)?.name
+      if (categoryName) {
+        analytics.trackCategoryVisit(categoryName)
+      }
     }
 
     fetch(`/api/products?${params}`)
@@ -120,7 +133,7 @@ export default function Home() {
         console.error(error)
         setLoading(false)
       })
-  }, [selectedCategory, searchTerm])
+  }, [selectedCategory, searchTerm, categories, analytics])
 
   // Iniciar timer de 30 segundos quando o usuário navegar sem ter preços liberados
   useEffect(() => {
@@ -443,6 +456,9 @@ export default function Home() {
           }}
         />
       )}
+
+      {/* Cart Recovery Modal */}
+      {mounted && <CartRecovery />}
 
       {/* Footer */}
       <Footer />
