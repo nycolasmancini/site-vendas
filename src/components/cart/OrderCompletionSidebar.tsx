@@ -110,6 +110,7 @@ export function OrderCompletionSidebar({
         items: items.map(item => ({
           productId: item.productId,
           quantity: item.quantity,
+          modelId: item.modelId || undefined,
           modelName: item.modelName || undefined
         })),
         notes: '' // Observações do cliente (opcional)

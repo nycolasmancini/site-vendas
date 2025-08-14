@@ -68,10 +68,38 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Determinar preço baseado na quantidade
+      // Determinar preço baseado no modelo (se houver) ou no produto
       let unitPrice = product.price
+      let superWholesalePrice = product.superWholesalePrice
+      let superWholesaleQuantity = product.superWholesaleQuantity
+      
+      if (item.modelId) {
+        // Se tem modelId, buscar o preço específico do modelo
+        const productModel = await prisma.productModel.findUnique({
+          where: {
+            productId_modelId: {
+              productId: item.productId,
+              modelId: item.modelId
+            }
+          }
+        })
+        
+        if (productModel && productModel.price) {
+          unitPrice = productModel.price
+          superWholesalePrice = productModel.superWholesalePrice
+          // Para produtos com modelo, usar quickAddIncrement como quantidade mínima
+          superWholesaleQuantity = product.quickAddIncrement
+        }
+      }
+
+      // Aplicar preço especial (1º nível de desconto)
       if (product.specialQuantity && item.quantity >= product.specialQuantity && product.specialPrice) {
         unitPrice = product.specialPrice
+      }
+
+      // Aplicar preço super atacado (2º nível de desconto - maior desconto)
+      if (superWholesaleQuantity && item.quantity >= superWholesaleQuantity && superWholesalePrice) {
+        unitPrice = superWholesalePrice
       }
 
       const totalPrice = unitPrice * item.quantity
