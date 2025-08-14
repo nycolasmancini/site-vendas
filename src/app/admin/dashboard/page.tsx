@@ -86,10 +86,24 @@ export default function AdminDashboard() {
     models: [] as { brandName: string; modelName: string; price: string; superWholesalePrice: string }[]
   })
 
+  const [showAddCategoryForm, setShowAddCategoryForm] = useState(false)
+  const [newCategory, setNewCategory] = useState({
+    name: '',
+    icon: '',
+    order: ''
+  })
+  const [svgFile, setSvgFile] = useState<File | null>(null)
+
   useEffect(() => {
     if (status === 'loading') return
     
     if (!session) {
+      router.push('/admin/login')
+      return
+    }
+
+    // Verificar se o usuário tem acesso (ADMIN ou EMPLOYEE)
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'EMPLOYEE') {
       router.push('/admin/login')
       return
     }
@@ -191,6 +205,106 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Erro ao fazer upload do logo:', error)
       alert('Erro ao fazer upload do logo')
+    }
+  }
+
+  const handleSvgSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.type !== 'image/svg+xml' && !file.name.endsWith('.svg')) {
+        alert('Por favor, selecione apenas arquivos SVG (.svg)')
+        return
+      }
+      
+      // Read SVG content and store as text
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const svgContent = e.target?.result as string
+        setNewCategory(prev => ({ ...prev, icon: svgContent }))
+      }
+      reader.readAsText(file)
+      setSvgFile(file)
+    }
+  }
+
+  const handleSvgTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    // Clear file when user types in text area
+    setSvgFile(null)
+    setNewCategory(prev => ({ ...prev, icon: e.target.value }))
+  }
+
+  const handleAddCategory = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!newCategory.name) {
+      alert('Por favor, digite o nome da categoria')
+      return
+    }
+    
+    try {
+      const formData = new FormData()
+      formData.append('name', newCategory.name)
+      formData.append('icon', newCategory.icon)
+      formData.append('order', newCategory.order || '0')
+
+      const response = await fetch('/api/categories', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        alert('Categoria adicionada com sucesso!')
+        await fetchCategories()
+        setShowAddCategoryForm(false)
+        setSvgFile(null)
+        setNewCategory({
+          name: '',
+          icon: '',
+          order: ''
+        })
+      } else {
+        const errorText = await response.text()
+        console.error('Category creation error:', errorText)
+        try {
+          const errorData = JSON.parse(errorText)
+          alert(`Erro ao adicionar categoria: ${errorData.error || 'Erro desconhecido'}`)
+        } catch {
+          alert(`Erro ao adicionar categoria: ${response.status} - ${response.statusText}`)
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao adicionar categoria:', error)
+      alert(`Erro ao adicionar categoria: ${error}`)
+    }
+  }
+
+  const handleDeleteCategory = async (categoryId: string, categoryName: string) => {
+    if (!confirm(`Tem certeza que deseja excluir a categoria "${categoryName}"?`)) {
+      return
+    }
+    
+    try {
+      const response = await fetch(`/api/categories?id=${categoryId}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        alert('Categoria excluída com sucesso!')
+        await fetchCategories()
+      } else {
+        const errorText = await response.text()
+        console.error('Category deletion error:', errorText)
+        try {
+          const errorData = JSON.parse(errorText)
+          alert(`Erro ao excluir categoria: ${errorData.error || 'Erro desconhecido'}`)
+        } catch {
+          alert(`Erro ao excluir categoria: ${response.status} - ${response.statusText}`)
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao excluir categoria:', error)
+      alert(`Erro ao excluir categoria: ${error}`)
     }
   }
 
@@ -502,24 +616,69 @@ export default function AdminDashboard() {
                 <span className="text-2xl font-bold text-black leading-none">PMCELL</span>
                 <span className="text-sm font-light text-black leading-tight">São Paulo</span>
               </div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Painel Administrativo
-              </h1>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Painel Administrativo
+                </h1>
+                <div className="flex items-center space-x-4 mt-2">
+                  <span className="text-sm text-gray-600">
+                    Bem-vindo, {session?.user?.name}
+                  </span>
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    session?.user?.role === 'ADMIN' 
+                      ? 'bg-purple-100 text-purple-800' 
+                      : 'bg-blue-100 text-blue-800'
+                  }`}>
+                    {session?.user?.role === 'ADMIN' ? 'Administrador' : 'Funcionário'}
+                  </span>
+                </div>
+              </div>
             </div>
             <div className="flex space-x-3">
-              <button
-                onClick={() => setShowAddForm(true)}
-                className="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700"
-                style={{ backgroundColor: '#FC6D36' }}
-              >
-                Produto Normal
-              </button>
-              <button
-                onClick={() => setShowModalForm(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-              >
-                Produto Modal
-              </button>
+              {/* Botões apenas para ADMIN */}
+              {session?.user?.role === 'ADMIN' && (
+                <>
+                  <button
+                    onClick={() => setShowAddCategoryForm(true)}
+                    className="bg-pink-600 text-white px-4 py-2 rounded-md hover:bg-pink-700"
+                  >
+                    + Categoria
+                  </button>
+                  <button
+                    onClick={() => setShowAddForm(true)}
+                    className="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700"
+                    style={{ backgroundColor: '#FC6D36' }}
+                  >
+                    Produto Normal
+                  </button>
+                  <button
+                    onClick={() => setShowModalForm(true)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                  >
+                    Produto Modal
+                  </button>
+                  <button
+                    onClick={() => router.push('/admin/transportadoras')}
+                    className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
+                  >
+                    Transportadoras
+                  </button>
+                  <button
+                    onClick={() => router.push('/admin/configuracoes')}
+                    className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
+                  >
+                    Configurações
+                  </button>
+                  <button
+                    onClick={() => router.push('/admin/usuarios')}
+                    className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+                  >
+                    Usuários
+                  </button>
+                </>
+              )}
+              
+              {/* Botões para ADMIN e EMPLOYEE */}
               <button
                 onClick={() => router.push('/admin/pedidos')}
                 className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
@@ -527,16 +686,10 @@ export default function AdminDashboard() {
                 Pedidos
               </button>
               <button
-                onClick={() => router.push('/admin/transportadoras')}
-                className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
+                onClick={() => router.push('/admin/carrinhos')}
+                className="bg-cyan-600 text-white px-4 py-2 rounded-md hover:bg-cyan-700"
               >
-                Transportadoras
-              </button>
-              <button
-                onClick={() => router.push('/admin/configuracoes')}
-                className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
-              >
-                Configurações
+                Carrinhos
               </button>
             </div>
           </div>
@@ -601,6 +754,37 @@ export default function AdminDashboard() {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Seção de Gerenciamento de Categorias */}
+        <div className="bg-white shadow overflow-hidden sm:rounded-md mb-6">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900">Gerenciar Categorias</h2>
+          </div>
+          <div className="px-6 py-4">
+            {categories.length === 0 ? (
+              <div className="text-center text-gray-500">
+                Nenhuma categoria encontrada. Adicione a primeira categoria!
+              </div>
+            ) : (
+              <div className="grid gap-3">
+                {categories.map((category) => (
+                  <div key={category.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-sm font-medium text-gray-900">{category.name}</span>
+                      <span className="text-xs text-gray-500">ID: {category.id}</span>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteCategory(category.id, category.name)}
+                      className="px-3 py-1 text-xs font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+                    >
+                      Excluir
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1564,6 +1748,130 @@ export default function AdminDashboard() {
                 Fechar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para adicionar categoria */}
+      {showAddCategoryForm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
+              Adicionar Nova Categoria
+            </h3>
+            <form onSubmit={handleAddCategory}>
+              {/* Nome da Categoria */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Nome da Categoria *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newCategory.name}
+                  onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500"
+                  placeholder="Ex: Capas, Películas, Fones..."
+                />
+              </div>
+
+              {/* Upload do SVG */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Ícone SVG
+                </label>
+                <div className="mt-1 space-y-3">
+                  {/* Opção 1: Upload de arquivo */}
+                  <div>
+                    <label className="text-xs text-gray-600 font-medium">Opção 1: Upload de arquivo</label>
+                    <input
+                      type="file"
+                      accept=".svg,image/svg+xml"
+                      onChange={handleSvgSelect}
+                      className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100"
+                    />
+                  </div>
+                  
+                  {/* Opção 2: Texto SVG */}
+                  <div>
+                    <label className="text-xs text-gray-600 font-medium">Opção 2: Código SVG (Cole o código aqui)</label>
+                    <textarea
+                      value={newCategory.icon}
+                      onChange={handleSvgTextChange}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 text-sm font-mono"
+                      rows={4}
+                      placeholder="Cole aqui o código SVG... ex: <svg>...</svg>"
+                    />
+                  </div>
+                  
+                  <p className="text-xs text-gray-500">
+                    Você pode enviar um arquivo SVG ou colar o código SVG diretamente
+                  </p>
+                </div>
+                
+                {/* Preview do SVG */}
+                {newCategory.icon && (
+                  <div className="mt-3">
+                    <p className="text-sm text-gray-600 mb-2">Preview do ícone:</p>
+                    <div className="flex items-center space-x-3">
+                      <div className="flex items-center justify-center w-16 h-16 border border-gray-200 rounded bg-gray-50">
+                        <div 
+                          dangerouslySetInnerHTML={{ __html: newCategory.icon }}
+                          className="w-8 h-8"
+                          style={{ color: '#EC4899' }}
+                        />
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        <p>✓ SVG carregado</p>
+                        <p>{svgFile ? `Arquivo: ${svgFile.name}` : 'Código SVG inserido'}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Ordem */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700">
+                  Ordem de Exibição
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={newCategory.order}
+                  onChange={(e) => setNewCategory({ ...newCategory, order: e.target.value })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500"
+                  placeholder="0"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Deixe em branco para adicionar no final da lista
+                </p>
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddCategoryForm(false)
+                    setSvgFile(null)
+                    setNewCategory({
+                      name: '',
+                      icon: '',
+                      order: ''
+                    })
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-medium text-white bg-pink-600 rounded-md hover:bg-pink-700"
+                >
+                  Adicionar Categoria
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

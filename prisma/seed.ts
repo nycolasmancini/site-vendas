@@ -1,23 +1,71 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, UserRole } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
 async function main() {
-  // Criar admin padrão
-  const hashedPassword = await bcrypt.hash('admin123', 10)
+  console.log('🌱 Iniciando seed do banco de dados...')
   
-  const admin = await prisma.admin.upsert({
+  // Criar usuários no novo sistema
+  const adminPassword = await bcrypt.hash('admin123', 10)
+  const employeePassword = await bcrypt.hash('func123', 10)
+  
+  // Verificar se já existe um admin no novo sistema
+  const existingUser = await prisma.user.findFirst({
+    where: { role: UserRole.ADMIN }
+  }).catch(() => null) // Ignore se a tabela não existir ainda
+
+  if (!existingUser) {
+    try {
+      const admin = await prisma.user.upsert({
+        where: { email: 'admin@pmcell.com.br' },
+        update: {},
+        create: {
+          email: 'admin@pmcell.com.br',
+          password: adminPassword,
+          name: 'Administrador PMCELL',
+          role: UserRole.ADMIN,
+          isActive: true
+        }
+      })
+
+      console.log('✅ Admin criado no novo sistema:', admin.email)
+
+      const employee = await prisma.user.upsert({
+        where: { email: 'funcionario@pmcell.com.br' },
+        update: {},
+        create: {
+          email: 'funcionario@pmcell.com.br',
+          password: employeePassword,
+          name: 'Funcionário Exemplo',
+          role: UserRole.EMPLOYEE,
+          isActive: true
+        }
+      })
+
+      console.log('✅ Funcionário criado no novo sistema:', employee.email)
+    } catch (error) {
+      console.log('⚠️ Tabela User ainda não existe, pulando criação de usuários...')
+    }
+  }
+
+  // Manter admin legado para compatibilidade
+  const adminLegacy = await prisma.admin.upsert({
     where: { email: 'admin@pmcell.com.br' },
     update: {},
     create: {
       email: 'admin@pmcell.com.br',
-      password: hashedPassword,
+      password: adminPassword,
       name: 'Administrador'
     }
+  }).catch(() => {
+    console.log('⚠️ Tabela Admin não encontrada, pulando...')
+    return null
   })
 
-  console.log('Admin criado:', admin.email)
+  if (adminLegacy) {
+    console.log('✅ Admin legado mantido:', adminLegacy.email)
+  }
 
   // Criar transportadoras padrão
   const transportadoras = [

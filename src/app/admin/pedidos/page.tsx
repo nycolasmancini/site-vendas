@@ -73,6 +73,12 @@ export default function AdminPedidos() {
       return
     }
 
+    // Verificar se o usuário tem acesso (ADMIN ou EMPLOYEE)
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'EMPLOYEE') {
+      router.push('/admin/dashboard')
+      return
+    }
+
     fetchOrders()
   }, [session, status, router, currentPage, statusFilter])
 

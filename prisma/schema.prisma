@@ -7,7 +7,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Administradores do sistema
+// Tipos de usuário
+enum UserRole {
+  ADMIN      // Acesso completo ao sistema
+  EMPLOYEE   // Acesso limitado (Pedidos e Carrinhos)
+}
+
+// Usuários do sistema (Admins e Funcionários)
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      UserRole @default(EMPLOYEE)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Modelo legado - manter por compatibilidade
 model Admin {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -22,6 +40,7 @@ model Category {
   id          String    @id @default(cuid())
   name        String
   slug        String    @unique
+  icon        String?   @db.Text // SVG icon as text
   order       Int       @default(0)
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
