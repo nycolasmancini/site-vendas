@@ -71,7 +71,45 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes)
     const base64Logo = `data:${logoFile.type};base64,${buffer.toString('base64')}`
 
-    // Buscar ou criar configurações da empresa
+    // Em produção, usar conexão direta
+    if (process.env.NODE_ENV === 'production') {
+      const { Pool } = require('pg')
+      const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL
+      
+      const pool = new Pool({
+        connectionString: databaseUrl,
+        ssl: { rejectUnauthorized: false }
+      })
+
+      try {
+        // Verificar se já existe configuração
+        const existingResult = await pool.query('SELECT * FROM "CompanySettings" LIMIT 1')
+        let settings
+
+        if (existingResult.rows.length > 0) {
+          // Atualizar existente
+          const updateResult = await pool.query(
+            'UPDATE "CompanySettings" SET logo = $1, "updatedAt" = NOW() WHERE id = $2 RETURNING *',
+            [base64Logo, existingResult.rows[0].id]
+          )
+          settings = updateResult.rows[0]
+        } else {
+          // Criar novo registro
+          const insertResult = await pool.query(`
+            INSERT INTO "CompanySettings" ("id", "companyName", "primaryColor", "logo", "createdAt", "updatedAt") 
+            VALUES ('default', 'PMCELL', '#FC6D36', $1, NOW(), NOW()) 
+            RETURNING *
+          `, [base64Logo])
+          settings = insertResult.rows[0]
+        }
+
+        return NextResponse.json(settings)
+      } finally {
+        await pool.end()
+      }
+    }
+
+    // Em desenvolvimento, usar Prisma
     let settings = await prisma.companySettings.findFirst()
     
     if (settings) {

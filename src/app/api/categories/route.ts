@@ -152,8 +152,40 @@ export async function POST(request: Request) {
       .replace(/[^a-z0-9\s]/g, '')
       .replace(/\s+/g, '-')
       .trim()
+
+    // Em produção, usar conexão direta
+    if (process.env.NODE_ENV === 'production') {
+      const { Pool } = require('pg')
+      const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL
+      
+      const pool = new Pool({
+        connectionString: databaseUrl,
+        ssl: { rejectUnauthorized: false }
+      })
+
+      try {
+        // Check if slug already exists
+        const existingResult = await pool.query('SELECT id, name, slug FROM "Category" WHERE slug = $1', [slug])
+        
+        if (existingResult.rows.length > 0) {
+          return NextResponse.json({ error: 'A category with this name already exists' }, { status: 400 })
+        }
+        
+        // Create category
+        const insertResult = await pool.query(`
+          INSERT INTO "Category" (name, slug, "order", icon, "isActive", "createdAt", "updatedAt") 
+          VALUES ($1, $2, $3, $4, true, NOW(), NOW()) 
+          RETURNING id, name, slug, "order", "isActive", "createdAt", "updatedAt"
+        `, [name, slug, order ? parseInt(order) : 0, icon])
+        
+        const category = insertResult.rows[0]
+        return NextResponse.json(category, { status: 201 })
+      } finally {
+        await pool.end()
+      }
+    }
     
-    // Check if slug already exists
+    // Em desenvolvimento, usar Prisma
     const existingCategory = await prisma.category.findUnique({
       where: { slug },
       select: {
@@ -200,8 +232,50 @@ export async function DELETE(request: Request) {
     if (!id) {
       return NextResponse.json({ error: 'Category ID is required' }, { status: 400 })
     }
+
+    // Em produção, usar conexão direta
+    if (process.env.NODE_ENV === 'production') {
+      const { Pool } = require('pg')
+      const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL
+      
+      const pool = new Pool({
+        connectionString: databaseUrl,
+        ssl: { rejectUnauthorized: false }
+      })
+
+      try {
+        // Check if category exists and count products
+        const categoryResult = await pool.query(`
+          SELECT c.id, c.name, COUNT(p.id) as product_count
+          FROM "Category" c 
+          LEFT JOIN "Product" p ON p."categoryId" = c.id 
+          WHERE c.id = $1 
+          GROUP BY c.id, c.name
+        `, [id])
+        
+        if (categoryResult.rows.length === 0) {
+          return NextResponse.json({ error: 'Category not found' }, { status: 404 })
+        }
+        
+        const category = categoryResult.rows[0]
+        const productCount = parseInt(category.product_count)
+        
+        if (productCount > 0) {
+          return NextResponse.json({ 
+            error: `Cannot delete category. It has ${productCount} product(s) associated.` 
+          }, { status: 400 })
+        }
+        
+        // Delete the category
+        await pool.query('DELETE FROM "Category" WHERE id = $1', [id])
+        
+        return NextResponse.json({ message: 'Category deleted successfully' })
+      } finally {
+        await pool.end()
+      }
+    }
     
-    // Check if category exists
+    // Em desenvolvimento, usar Prisma
     const existingCategory = await prisma.category.findUnique({
       where: { id },
       select: {
