@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
         }
         return (now - createdTime) < 24 * 60 * 60 * 1000 // 24 horas
       })
-      .map(cart => {
+      .map((cart: any) => {
         const status = getCartStatus(cart)
         
         return {

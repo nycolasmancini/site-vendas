@@ -103,7 +103,9 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
         quantity: finalQuantity,
         unitPrice,
         specialPrice,
-        specialQuantity
+        specialQuantity,
+        superWholesalePrice: product.superWholesalePrice,
+        superWholesaleQuantity: product.superWholesaleQuantity
       })
 
       // Show success state

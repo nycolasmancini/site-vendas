@@ -30,10 +30,10 @@ export async function GET() {
     })
 
     // Calcular preço total e preço com desconto para cada kit
-    const kitsWithPrices = kits.map(kit => {
+    const kitsWithPrices = kits.map((kit: any) => {
       let totalPrice = 0
       
-      kit.products.forEach(kitProduct => {
+      kit.products.forEach((kitProduct: any) => {
         totalPrice += kitProduct.product.price * kitProduct.quantity
       })
 

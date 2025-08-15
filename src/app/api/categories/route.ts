@@ -23,7 +23,7 @@ export async function GET() {
           ORDER BY c."order" ASC
         `)
         
-        const categories = result.rows.map(cat => ({
+        const categories = result.rows.map((cat: any) => ({
           id: cat.id,
           name: cat.name,
           slug: cat.slug,
@@ -36,7 +36,7 @@ export async function GET() {
         }))
 
         // Temporariamente, adicionar ícones de teste para demonstração
-        const categoriesWithIcons = categories.map(cat => {
+        const categoriesWithIcons = categories.map((cat: any) => {
           if (cat.name === 'Teste Estrela') {
             return {
               ...cat,
@@ -106,7 +106,7 @@ export async function GET() {
     }
     
     // Temporariamente, adicionar ícones de teste para demonstração
-    const categoriesWithIcons = categories.map(cat => {
+    const categoriesWithIcons = categories.map((cat: any) => {
       if (cat.name === 'Teste Estrela') {
         return {
           ...cat,

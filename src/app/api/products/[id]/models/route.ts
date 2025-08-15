@@ -29,7 +29,7 @@ export async function GET(
     })
 
     // Transformar dados para o formato esperado pelo frontend
-    const models = productModels.map(pm => ({
+    const models = productModels.map((pm: any) => ({
       id: pm.model.id,
       brandName: pm.model.brand.name,
       modelName: pm.model.name,

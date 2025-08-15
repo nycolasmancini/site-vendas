@@ -295,16 +295,39 @@ export async function DELETE(
       return NextResponse.json({ error: 'Produto não encontrado' }, { status: 404 })
     }
 
-    // Deletar produto (cascade irá deletar as imagens automaticamente)
-    await prisma.product.delete({
-      where: { id }
+    // Usar transação para excluir produto e todos os registros relacionados
+    await prisma.$transaction(async (tx) => {
+      // 1. Excluir relações produto-fornecedor
+      await tx.productSupplier.deleteMany({
+        where: { productId: id }
+      })
+
+      // 2. Excluir relações produto-modelo (para capas/películas)
+      await tx.productModel.deleteMany({
+        where: { productId: id }
+      })
+
+      // 3. Excluir itens de pedidos relacionados
+      await tx.orderItem.deleteMany({
+        where: { productId: id }
+      })
+
+      // 4. Excluir produtos de kits
+      await tx.kitProduct.deleteMany({
+        where: { productId: id }
+      })
+
+      // 5. Excluir produto (imagens serão excluídas automaticamente pelo cascade)
+      await tx.product.delete({
+        where: { id }
+      })
     })
 
     return NextResponse.json({ message: 'Produto excluído com sucesso' })
   } catch (error) {
     console.error('Erro ao excluir produto:', error)
     return NextResponse.json(
-      { error: 'Erro interno do servidor' },
+      { error: 'Erro ao excluir produto: ' + (error instanceof Error ? error.message : 'Erro desconhecido') },
       { status: 500 }
     )
   }

@@ -63,7 +63,9 @@ export async function GET(request: NextRequest) {
         // Query para produtos com imagens
         const productsQuery = `
           SELECT 
-            p.id, p.name, p.price, p."superWholesalePrice", p."superWholesaleQuantity", 
+            p.id, p.name, p.price, 
+            p."superWholesalePrice" as "superWholesalePrice", 
+            p."superWholesaleQuantity" as "superWholesaleQuantity",
             p."isActive", p."createdAt",
             COALESCE(
               JSON_AGG(

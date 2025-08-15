@@ -167,6 +167,15 @@ export default function Home() {
     fetch(`/api/products?${params}`)
       .then(res => res.json())
       .then(data => {
+        // Debug: log dos produtos para verificar super atacado
+        console.log('🔍 Produtos recebidos da API:', data.products?.slice(0, 2))
+        if (data.products?.length > 0) {
+          const firstProduct = data.products[0]
+          console.log('🔍 Primeiro produto - Super atacado:', {
+            superWholesalePrice: firstProduct.superWholesalePrice,
+            superWholesaleQuantity: firstProduct.superWholesaleQuantity
+          })
+        }
         setProducts(data.products || [])
         setLoading(false)
       })

@@ -206,6 +206,8 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
         unitPrice: model.price,
         specialPrice: model.superWholesalePrice,
         specialQuantity: product.quickAddIncrement,
+        superWholesalePrice: model.superWholesalePrice,
+        superWholesaleQuantity: product.quickAddIncrement,
         modelId: model.id,
         modelName: `${model.brandName} ${model.modelName}`
       })
@@ -246,6 +248,8 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
         unitPrice: model.price,
         specialPrice: model.superWholesalePrice,
         specialQuantity: product.quickAddIncrement,
+        superWholesalePrice: model.superWholesalePrice,
+        superWholesaleQuantity: product.quickAddIncrement,
         modelId: model.id,
         modelName: `${model.brandName} ${model.modelName}`
       })

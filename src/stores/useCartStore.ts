@@ -15,6 +15,8 @@ export interface CartItem {
   unitPrice: number
   specialPrice?: number
   specialQuantity?: number
+  superWholesalePrice?: number
+  superWholesaleQuantity?: number
 }
 
 interface CartStore {
@@ -154,9 +156,18 @@ export const useCartStore = create<CartStore>()(
       
       getSubtotal: () => {
         return get().items.reduce((total, item) => {
-          const price = item.specialQuantity && item.quantity >= item.specialQuantity
-            ? item.specialPrice || item.unitPrice
-            : item.unitPrice
+          // Verificar se atingiu a quantidade para preço especial OU super atacado
+          const reachedSpecialQuantity = item.specialQuantity && item.quantity >= item.specialQuantity
+          const reachedSuperWholesaleQuantity = item.superWholesaleQuantity && item.quantity >= item.superWholesaleQuantity
+          
+          let price = item.unitPrice
+          
+          if (reachedSpecialQuantity && item.specialPrice) {
+            price = item.specialPrice
+          } else if (reachedSuperWholesaleQuantity && item.superWholesalePrice) {
+            price = item.superWholesalePrice
+          }
+          
           return total + price * item.quantity
         }, 0)
       },
@@ -167,17 +178,28 @@ export const useCartStore = create<CartStore>()(
       
       getSavings: () => {
         return get().items.reduce((total, item) => {
+          let savings = 0
+          
+          // Calcular economia se atingiu quantidade especial
           if (item.specialQuantity && item.quantity >= item.specialQuantity && item.specialPrice) {
             const regularTotal = item.unitPrice * item.quantity
             const specialTotal = item.specialPrice * item.quantity
-            return total + (regularTotal - specialTotal)
+            savings = regularTotal - specialTotal
           }
-          return total
+          // Calcular economia se atingiu quantidade super atacado
+          else if (item.superWholesaleQuantity && item.quantity >= item.superWholesaleQuantity && item.superWholesalePrice) {
+            const regularTotal = item.unitPrice * item.quantity
+            const superWholesaleTotal = item.superWholesalePrice * item.quantity
+            savings = regularTotal - superWholesaleTotal
+          }
+          
+          return total + savings
         }, 0)
       },
       
       getEligibleUpgrades: () => {
         return get().items.filter(item => {
+          // Verificar apenas specialPrice e specialQuantity (que é como os produtos são adicionados)
           if (!item.specialPrice || !item.specialQuantity) return false
           
           const neededQuantity = item.specialQuantity

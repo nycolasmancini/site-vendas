@@ -18,7 +18,87 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Buscar sessão existente ou criar nova
+    // Em produção, usar conexão direta
+    if (process.env.NODE_ENV === 'production') {
+      const { Pool } = require('pg')
+      const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL
+      
+      const pool = new Pool({
+        connectionString: databaseUrl,
+        ssl: { rejectUnauthorized: false },
+        max: 1,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 10000
+      })
+
+      try {
+        const cookieStore = await cookies()
+        const sessionId = cookieStore.get('sessionId')?.value
+        
+        let session
+        
+        if (sessionId) {
+          // Buscar sessão existente
+          const result = await pool.query(
+            'SELECT * FROM "Session" WHERE id = $1',
+            [sessionId]
+          )
+          session = result.rows[0]
+        }
+
+        if (!session) {
+          // Criar nova sessão
+          const result = await pool.query(`
+            INSERT INTO "Session" (id, whatsapp, unlocked, "unlockedAt", "createdAt", "updatedAt", "lastActivity")
+            VALUES (gen_random_uuid(), $1, true, NOW(), NOW(), NOW(), NOW())
+            RETURNING *
+          `, [cleanWhatsapp])
+          session = result.rows[0]
+        } else {
+          // Atualizar sessão existente
+          const result = await pool.query(`
+            UPDATE "Session" 
+            SET whatsapp = $1, unlocked = true, "unlockedAt" = NOW(), "lastActivity" = NOW(), "updatedAt" = NOW()
+            WHERE id = $2
+            RETURNING *
+          `, [cleanWhatsapp, session.id])
+          session = result.rows[0]
+        }
+
+        // Criar log do webhook
+        await pool.query(`
+          INSERT INTO "WebhookLog" (id, "eventType", payload, success, "createdAt")
+          VALUES (gen_random_uuid(), 'PRICE_UNLOCK', $1, false, NOW())
+        `, [JSON.stringify({ whatsapp: cleanWhatsapp, sessionId: session.id })])
+
+        // Definir cookie de sessão (7 dias)
+        const response = NextResponse.json({ 
+          success: true, 
+          sessionId: session.id,
+          unlocked: true 
+        })
+        
+        response.cookies.set('sessionId', session.id, {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 7 // 7 dias
+        })
+
+        response.cookies.set('pricesUnlocked', 'true', {
+          httpOnly: false,
+          secure: true,
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 7 // 7 dias
+        })
+
+        return response
+      } finally {
+        await pool.end()
+      }
+    }
+
+    // Em desenvolvimento, usar Prisma
     const cookieStore = await cookies()
     const sessionId = cookieStore.get('sessionId')?.value
     
@@ -67,14 +147,14 @@ export async function POST(request: NextRequest) {
     
     response.cookies.set('sessionId', session.id, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7 // 7 dias
     })
 
     response.cookies.set('pricesUnlocked', 'true', {
       httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7 // 7 dias
     })
@@ -95,6 +175,48 @@ export async function GET() {
       return NextResponse.json({ unlocked: false })
     }
 
+    // Em produção, usar conexão direta
+    if (process.env.NODE_ENV === 'production') {
+      const { Pool } = require('pg')
+      const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL
+      
+      const pool = new Pool({
+        connectionString: databaseUrl,
+        ssl: { rejectUnauthorized: false },
+        max: 1,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 10000
+      })
+
+      try {
+        const result = await pool.query(
+          'SELECT * FROM "Session" WHERE id = $1',
+          [sessionId]
+        )
+        
+        const session = result.rows[0]
+        
+        if (!session) {
+          return NextResponse.json({ unlocked: false })
+        }
+
+        // Atualizar última atividade
+        await pool.query(
+          'UPDATE "Session" SET "lastActivity" = NOW() WHERE id = $1',
+          [sessionId]
+        )
+
+        return NextResponse.json({ 
+          unlocked: session.unlocked,
+          whatsapp: session.whatsapp,
+          sessionId: session.id
+        })
+      } finally {
+        await pool.end()
+      }
+    }
+
+    // Em desenvolvimento, usar Prisma
     const session = await prisma.session.findUnique({
       where: { id: sessionId }
     })
