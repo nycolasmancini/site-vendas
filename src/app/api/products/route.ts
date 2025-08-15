@@ -4,14 +4,17 @@ import { supabase } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
-    // Em produção, usar conexão direta
+    // Em produção, usar conexão direta por enquanto
     if (process.env.NODE_ENV === 'production') {
       const { Pool } = require('pg')
       const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL
       
       const pool = new Pool({
         connectionString: databaseUrl,
-        ssl: { rejectUnauthorized: false }
+        ssl: { rejectUnauthorized: false },
+        max: 1, // Limit connections for serverless
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 10000
       })
 
       try {
@@ -29,56 +32,60 @@ export async function GET(request: NextRequest) {
 
         // Para requisições admin, mostrar todos os produtos. Para público, apenas ativos
         if (admin !== 'true') {
-          whereConditions.push('"Product"."isActive" = $' + (queryParams.length + 1))
-          queryParams.push(true)
+          whereConditions.push('p."isActive" = true')
         }
 
         if (categoryId) {
-          whereConditions.push('"Product"."categoryId" = $' + (queryParams.length + 1))
+          whereConditions.push('p."categoryId" = $' + (queryParams.length + 1))
           queryParams.push(categoryId)
         }
 
         if (featured === 'true') {
-          whereConditions.push('"Product"."featured" = $' + (queryParams.length + 1))
+          whereConditions.push('p."featured" = $' + (queryParams.length + 1))
           queryParams.push(true)
         }
 
         if (search) {
           const searchParam = queryParams.length + 1
           whereConditions.push(`(
-            "Product"."name" ILIKE $${searchParam} OR 
-            "Product"."description" ILIKE $${searchParam} OR 
-            "Product"."brand" ILIKE $${searchParam}
+            p."name" ILIKE $${searchParam} OR 
+            p."description" ILIKE $${searchParam} OR 
+            p."brand" ILIKE $${searchParam}
           )`)
           queryParams.push(`%${search}%`)
         }
 
         const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : ''
 
-        // Query principal para produtos
+        // Adicionar limit e offset aos parâmetros ANTES de construir a query
+        queryParams.push(limit, offset)
+
+        // Query para produtos com imagens
         const productsQuery = `
           SELECT 
-            p.*,
-            c.id as category_id, c.name as category_name, c.slug as category_slug,
-            c."order" as category_order, c."isActive" as category_isActive,
-            c."createdAt" as category_createdAt, c."updatedAt" as category_updatedAt,
-            (
-              SELECT json_agg(
-                json_build_object(
-                  'id', i.id, 'url', i.url, 'fileName', i."fileName", 
-                  'order', i."order", 'isMain', i."isMain"
-                ) ORDER BY i."order"
-              )
-              FROM "ProductImage" i 
-              WHERE i."productId" = p.id
+            p.id, p.name, p.price, p."superWholesalePrice", p."superWholesaleQuantity", 
+            p."isActive", p."createdAt",
+            COALESCE(
+              JSON_AGG(
+                CASE WHEN i.id IS NOT NULL THEN
+                  JSON_BUILD_OBJECT(
+                    'id', i.id,
+                    'url', i.url,
+                    'fileName', i."fileName",
+                    'order', i."order",
+                    'isMain', i."isMain"
+                  )
+                END ORDER BY i."order"
+              ) FILTER (WHERE i.id IS NOT NULL),
+              '[]'::json
             ) as images
           FROM "Product" p
-          LEFT JOIN "Category" c ON p."categoryId" = c.id
+          LEFT JOIN "ProductImage" i ON i."productId" = p.id
           ${whereClause}
+          GROUP BY p.id
           ORDER BY p."createdAt" DESC
-          LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}
+          LIMIT $${queryParams.length - 1} OFFSET $${queryParams.length}
         `
-        queryParams.push(limit, offset)
 
         // Query para contar total
         const countQuery = `
@@ -93,33 +100,28 @@ export async function GET(request: NextRequest) {
           pool.query(countQuery, countParams)
         ])
 
-        const products = productsResult.rows.map(row => ({
+        if (!productsResult.rows) {
+          throw new Error('No data returned from products query')
+        }
+
+        const products = productsResult.rows.map((row: any) => ({
           id: row.id,
           name: row.name,
-          subname: row.subname,
-          description: row.description,
-          brand: row.brand,
           price: parseFloat(row.price || 0),
           superWholesalePrice: row.superWholesalePrice ? parseFloat(row.superWholesalePrice) : null,
-          superWholesaleQuantity: row.superWholesaleQuantity,
-          cost: row.cost ? parseFloat(row.cost) : null,
-          featured: row.featured,
+          superWholesaleQuantity: row.superWholesaleQuantity ? parseInt(row.superWholesaleQuantity) : null,
           isActive: row.isActive,
-          isModalProduct: row.isModalProduct || false,
           createdAt: row.createdAt,
-          updatedAt: row.updatedAt,
-          category: row.category_id ? {
-            id: row.category_id,
-            name: row.category_name,
-            slug: row.category_slug,
-            order: row.category_order,
-            isActive: row.category_isActive,
-            createdAt: row.category_createdAt,
-            updatedAt: row.category_updatedAt
-          } : null,
-          images: row.images || [],
-          suppliers: [], // Simplificado para produção
-          models: [], // Simplificado para produção
+          // Add minimal required fields for frontend
+          subname: null,
+          description: null,
+          brand: null,
+          featured: false,
+          isModalProduct: false,
+          category: null,
+          images: Array.isArray(row.images) ? row.images : [],
+          suppliers: [],
+          models: [],
           hasModels: false
         }))
 
@@ -134,8 +136,15 @@ export async function GET(request: NextRequest) {
             totalPages: Math.ceil(total / limit)
           }
         })
+      } catch (error) {
+        console.error('Production query error:', error)
+        throw error
       } finally {
-        await pool.end()
+        try {
+          await pool.end()
+        } catch (endError) {
+          console.error('Error closing pool:', endError)
+        }
       }
     }
 
@@ -155,6 +164,7 @@ export async function GET(request: NextRequest) {
     if (admin !== 'true') {
       where.isActive = true
     }
+
 
     if (categoryId) {
       where.categoryId = categoryId
@@ -177,34 +187,25 @@ export async function GET(request: NextRequest) {
         where,
         skip,
         take: limit,
-        include: {
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          superWholesalePrice: true,
+          superWholesaleQuantity: true,
+          isActive: true,
+          createdAt: true,
+          // Add minimal fields needed for frontend
+          subname: true,
+          description: true,
+          brand: true,
+          featured: true,
+          isModalProduct: true,
           category: {
             select: {
               id: true,
               name: true,
-              slug: true,
-              order: true,
-              isActive: true,
-              createdAt: true,
-              updatedAt: true
-            }
-          },
-          images: {
-            orderBy: { order: 'asc' }
-          },
-          suppliers: {
-            include: {
-              supplier: true
-            },
-            where: { isActive: true }
-          },
-          models: {
-            include: {
-              model: {
-                include: {
-                  brand: true
-                }
-              }
+              slug: true
             }
           }
         },
@@ -213,38 +214,15 @@ export async function GET(request: NextRequest) {
       prisma.product.count({ where })
     ])
 
-    // Processar produtos para incluir dados de modal
-    const processedProducts = products.map(product => {
-      const baseProduct: any = {
-        ...product,
-        hasModels: product.models.length > 0,
-        isModalProduct: product.isModalProduct
-      }
 
-      // Se é produto de modal, calcular range de preços
-      if (product.isModalProduct && product.models.length > 0) {
-        const prices = product.models
-          .map(pm => pm.price)
-          .filter(price => price !== null) as number[]
-        
-        const superWholesalePrices = product.models
-          .map(pm => pm.superWholesalePrice)
-          .filter(price => price !== null) as number[]
-
-        if (prices.length > 0) {
-          baseProduct.priceRange = {
-            min: Math.min(...prices),
-            max: Math.max(...prices),
-            ...(superWholesalePrices.length > 0 && {
-              superWholesaleMin: Math.min(...superWholesalePrices),
-              superWholesaleMax: Math.max(...superWholesalePrices)
-            })
-          }
-        }
-      }
-
-      return baseProduct
-    })
+    // Simplificar produtos para produção
+    const processedProducts = products.map((product: any) => ({
+      ...product,
+      images: [],
+      suppliers: [],
+      models: [],
+      hasModels: false
+    }))
 
     return NextResponse.json({
       products: processedProducts,
@@ -257,7 +235,19 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error fetching products:', error)
-    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
+    
+    // More detailed error information for debugging
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error('Error details:', {
+      message: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+      env: process.env.NODE_ENV
+    })
+    
+    return NextResponse.json({ 
+      error: 'Failed to fetch products',
+      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+    }, { status: 500 })
   }
 }
 
@@ -396,7 +386,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Erro ao criar produto:', error)
     return NextResponse.json(
-      { error: 'Erro interno do servidor' },
+      { error: 'Erro ao criar produto: ' + (error instanceof Error ? error.message : 'Erro desconhecido') },
       { status: 500 }
     )
   }
