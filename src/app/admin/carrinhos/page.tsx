@@ -28,6 +28,9 @@ interface CartItem {
   name: string
   quantity: number
   unitPrice: number
+  specialQuantity?: number
+  specialPrice?: number
+  modelName?: string
 }
 
 interface Cart {
@@ -173,8 +176,8 @@ export default function CarrinhosAbandonados() {
     
     // Um produto por linha com modelo
     const itemsList = items.map(item => {
-      const fullName = item.modelName 
-        ? `${item.name || 'Produto'} - ${item.modelName}`
+      const fullName = (item as any).modelName 
+        ? `${item.name || 'Produto'} - ${(item as any).modelName}`
         : item.name || 'Produto'
       
       // Calcular preço correto
@@ -354,7 +357,9 @@ export default function CarrinhosAbandonados() {
                           <ShoppingCart className="w-5 h-5" />
                           Carrinho
                           {cart.contacted && (
-                            <CheckCircle className="w-4 h-4 text-green-600" title="Contatado" />
+                            <div title="Contatado">
+                              <CheckCircle className="w-4 h-4 text-green-600" />
+                            </div>
                           )}
                         </CardTitle>
                         <div className="flex gap-2">

@@ -204,7 +204,7 @@ export const useCartStore = create<CartStore>()(
           const analytics = typeof window !== 'undefined' ? useAnalytics() : null
           if (!analytics) return
 
-          const analyticsSnapshot = analytics.getAnalyticsSnapshot()
+          const analyticsSnapshot = analytics.getSnapshot()
 
           const payload = {
             sessionId: analyticsSnapshot.sessionId,
@@ -249,7 +249,7 @@ export const useCartStore = create<CartStore>()(
           set({ isLoading: true })
 
           const analytics = useAnalytics()
-          const analyticsSnapshot = analytics.getAnalyticsSnapshot()
+          const analyticsSnapshot = analytics.getSnapshot()
 
           const response = await fetch(
             `/api/cart/simple-update?sessionId=${analyticsSnapshot.sessionId}`

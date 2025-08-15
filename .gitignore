@@ -47,6 +47,9 @@ cookies*.txt
 test-*.js
 node_modules_bak/
 .git_backup/
+pmcell-vendas/
+**/node_modules_bak/**
+node_modules_bak
 
 # Arquivos de desenvolvimento
 dev.log

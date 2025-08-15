@@ -493,7 +493,7 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                                     const cartQuantity = getCartQuantityByModel(model.id)
                                     const increment = product.quickAddIncrement || 1
                                     const hasReachedSuperWholesale = model.superWholesalePrice && cartQuantity >= increment
-                                    const currentPrice = hasReachedSuperWholesale ? model.superWholesalePrice : model.price
+                                    const currentPrice = hasReachedSuperWholesale ? (model.superWholesalePrice || 0) : (model.price || 0)
                                     
                                     return (
                                       <span 
@@ -509,7 +509,7 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                                   })()}
                                   {model.superWholesalePrice && (
                                     <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded whitespace-nowrap">
-                                      +{product.quickAddIncrement || 1} un.: {formatPrice(model.superWholesalePrice)}
+                                      +{product.quickAddIncrement || 1} un.: {formatPrice(model.superWholesalePrice || 0)}
                                     </span>
                                   )}
                                 </div>

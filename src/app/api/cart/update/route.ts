@@ -1,7 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import fs from 'fs'
+import path from 'path'
 
-const prisma = new PrismaClient()
+// Arquivo para armazenar carrinhos
+const CARTS_FILE = path.join(process.cwd(), 'data', 'abandoned-carts.json')
+
+// Garantir que a pasta data existe
+function ensureDataDir() {
+  const dataDir = path.dirname(CARTS_FILE)
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true })
+  }
+}
+
+// Carregar carrinhos do arquivo
+function loadCarts(): any[] {
+  try {
+    if (fs.existsSync(CARTS_FILE)) {
+      const data = fs.readFileSync(CARTS_FILE, 'utf8')
+      return JSON.parse(data)
+    }
+  } catch (error) {
+    console.error('Erro ao carregar carrinhos:', error)
+  }
+  return []
+}
+
+// Salvar carrinhos no arquivo
+function saveCarts(carts: any[]) {
+  try {
+    ensureDataDir()
+    fs.writeFileSync(CARTS_FILE, JSON.stringify(carts, null, 2))
+  } catch (error) {
+    console.error('Erro ao salvar carrinhos:', error)
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,14 +55,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Carregar carrinhos existentes
+    const carts = loadCarts()
+    
     // Verificar se carrinho tem itens
     const hasItems = cartData.items && cartData.items.length > 0
     
     if (!hasItems) {
-      // Se carrinho está vazio, remover registro se existir
-      await prisma.abandonedCart.deleteMany({
-        where: { sessionId }
-      })
+      // Remover carrinho se vazio
+      const filteredCarts = carts.filter(cart => cart.sessionId !== sessionId)
+      saveCarts(filteredCarts)
       
       return NextResponse.json({ 
         message: 'Carrinho vazio removido',
@@ -37,47 +72,45 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Salvar ou atualizar carrinho abandonado
-    const abandonedCart = await prisma.abandonedCart.upsert({
-      where: { sessionId },
-      update: {
-        whatsapp: whatsapp || null,
-        cartData,
-        analyticsData: analyticsData || null,
-        lastActivity: new Date(lastActivity || Date.now()),
-        webhookSent: false, // Reset webhook se carrinho foi modificado
-        webhookSentAt: null,
-        updatedAt: new Date()
-      },
-      create: {
-        sessionId,
-        whatsapp: whatsapp || null,
-        cartData,
-        analyticsData: analyticsData || null,
-        lastActivity: new Date(lastActivity || Date.now()),
-        webhookSent: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    })
+    // Buscar carrinho existente
+    const existingIndex = carts.findIndex(cart => cart.sessionId === sessionId)
+    
+    const cartRecord = {
+      id: existingIndex >= 0 ? carts[existingIndex].id : `cart_${Date.now()}`,
+      sessionId,
+      whatsapp: whatsapp || null,
+      cartData,
+      analyticsData: analyticsData || null,
+      lastActivity: new Date(lastActivity || Date.now()).toISOString(),
+      webhookSent: false,
+      webhookSentAt: null,
+      createdAt: existingIndex >= 0 ? carts[existingIndex].createdAt : new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
 
-    console.log(`🛒 Server: Carrinho salvo para sessionId: ${sessionId}`)
-    console.log(`🛒 Server: ${cartData.items.length} itens, lastActivity: ${new Date(lastActivity || Date.now()).toLocaleTimeString()}`)
+    if (existingIndex >= 0) {
+      // Atualizar existente
+      carts[existingIndex] = { ...carts[existingIndex], ...cartRecord }
+    } else {
+      // Criar novo
+      carts.push(cartRecord)
+    }
+
+    // Salvar de volta
+    saveCarts(carts)
 
     return NextResponse.json({
       message: 'Carrinho salvo no servidor',
-      id: abandonedCart.id,
+      id: cartRecord.id,
       saved: true
     })
 
   } catch (error) {
-    console.error('❌ Erro ao salvar carrinho no servidor:', error)
+    console.error('Cart save error:', error instanceof Error ? error.message : 'Unknown error')
     return NextResponse.json(
-      { error: 'Erro interno do servidor', details: error instanceof Error ? error.message : 'Erro desconhecido' },
+      { error: 'Erro interno do servidor' },
       { status: 500 }
     )
-  } finally {
-    await prisma.$disconnect()
   }
 }
 
@@ -93,35 +126,32 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const abandonedCart = await prisma.abandonedCart.findUnique({
-      where: { sessionId }
-    })
+    const carts = loadCarts()
+    const cart = carts.find(cart => cart.sessionId === sessionId)
 
-    if (!abandonedCart) {
+    if (!cart) {
       return NextResponse.json({ found: false, cart: null })
     }
 
     return NextResponse.json({
       found: true,
       cart: {
-        id: abandonedCart.id,
-        sessionId: abandonedCart.sessionId,
-        whatsapp: abandonedCart.whatsapp,
-        cartData: abandonedCart.cartData,
-        analyticsData: abandonedCart.analyticsData,
-        lastActivity: abandonedCart.lastActivity,
-        webhookSent: abandonedCart.webhookSent,
-        webhookSentAt: abandonedCart.webhookSentAt
+        id: cart.id,
+        sessionId: cart.sessionId,
+        whatsapp: cart.whatsapp,
+        cartData: cart.cartData,
+        analyticsData: cart.analyticsData,
+        lastActivity: cart.lastActivity,
+        webhookSent: cart.webhookSent,
+        webhookSentAt: cart.webhookSentAt
       }
     })
 
   } catch (error) {
-    console.error('❌ Erro ao buscar carrinho:', error)
+    console.error('Cart fetch error:', error instanceof Error ? error.message : 'Unknown error')
     return NextResponse.json(
       { error: 'Erro interno do servidor' },
       { status: 500 }
     )
-  } finally {
-    await prisma.$disconnect()
   }
 }

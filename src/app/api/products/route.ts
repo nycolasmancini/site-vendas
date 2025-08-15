@@ -4,6 +4,142 @@ import { supabase } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
+    // Em produção, usar conexão direta
+    if (process.env.NODE_ENV === 'production') {
+      const { Pool } = require('pg')
+      const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL
+      
+      const pool = new Pool({
+        connectionString: databaseUrl,
+        ssl: { rejectUnauthorized: false }
+      })
+
+      try {
+        const searchParams = request.nextUrl.searchParams
+        const categoryId = searchParams.get('categoryId')
+        const featured = searchParams.get('featured')
+        const search = searchParams.get('search')
+        const admin = searchParams.get('admin')
+        const page = parseInt(searchParams.get('page') || '1')
+        const limit = parseInt(searchParams.get('limit') || '12')
+        const offset = (page - 1) * limit
+
+        let whereConditions = []
+        let queryParams = []
+
+        // Para requisições admin, mostrar todos os produtos. Para público, apenas ativos
+        if (admin !== 'true') {
+          whereConditions.push('"Product"."isActive" = $' + (queryParams.length + 1))
+          queryParams.push(true)
+        }
+
+        if (categoryId) {
+          whereConditions.push('"Product"."categoryId" = $' + (queryParams.length + 1))
+          queryParams.push(categoryId)
+        }
+
+        if (featured === 'true') {
+          whereConditions.push('"Product"."featured" = $' + (queryParams.length + 1))
+          queryParams.push(true)
+        }
+
+        if (search) {
+          const searchParam = queryParams.length + 1
+          whereConditions.push(`(
+            "Product"."name" ILIKE $${searchParam} OR 
+            "Product"."description" ILIKE $${searchParam} OR 
+            "Product"."brand" ILIKE $${searchParam}
+          )`)
+          queryParams.push(`%${search}%`)
+        }
+
+        const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : ''
+
+        // Query principal para produtos
+        const productsQuery = `
+          SELECT 
+            p.*,
+            c.id as category_id, c.name as category_name, c.slug as category_slug,
+            c."order" as category_order, c."isActive" as category_isActive,
+            c."createdAt" as category_createdAt, c."updatedAt" as category_updatedAt,
+            (
+              SELECT json_agg(
+                json_build_object(
+                  'id', i.id, 'url', i.url, 'fileName', i."fileName", 
+                  'order', i."order", 'isMain', i."isMain"
+                ) ORDER BY i."order"
+              )
+              FROM "ProductImage" i 
+              WHERE i."productId" = p.id
+            ) as images
+          FROM "Product" p
+          LEFT JOIN "Category" c ON p."categoryId" = c.id
+          ${whereClause}
+          ORDER BY p."createdAt" DESC
+          LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}
+        `
+        queryParams.push(limit, offset)
+
+        // Query para contar total
+        const countQuery = `
+          SELECT COUNT(*) as total
+          FROM "Product" p
+          ${whereClause}
+        `
+        const countParams = queryParams.slice(0, -2) // Remove limit e offset
+
+        const [productsResult, totalResult] = await Promise.all([
+          pool.query(productsQuery, queryParams),
+          pool.query(countQuery, countParams)
+        ])
+
+        const products = productsResult.rows.map(row => ({
+          id: row.id,
+          name: row.name,
+          subname: row.subname,
+          description: row.description,
+          brand: row.brand,
+          price: parseFloat(row.price || 0),
+          superWholesalePrice: row.superWholesalePrice ? parseFloat(row.superWholesalePrice) : null,
+          superWholesaleQuantity: row.superWholesaleQuantity,
+          cost: row.cost ? parseFloat(row.cost) : null,
+          featured: row.featured,
+          isActive: row.isActive,
+          isModalProduct: row.isModalProduct || false,
+          createdAt: row.createdAt,
+          updatedAt: row.updatedAt,
+          category: row.category_id ? {
+            id: row.category_id,
+            name: row.category_name,
+            slug: row.category_slug,
+            order: row.category_order,
+            isActive: row.category_isActive,
+            createdAt: row.category_createdAt,
+            updatedAt: row.category_updatedAt
+          } : null,
+          images: row.images || [],
+          suppliers: [], // Simplificado para produção
+          models: [], // Simplificado para produção
+          hasModels: false
+        }))
+
+        const total = parseInt(totalResult.rows[0].total)
+
+        return NextResponse.json({
+          products,
+          pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit)
+          }
+        })
+      } finally {
+        await pool.end()
+      }
+    }
+
+    // Em desenvolvimento, usar Prisma
     const searchParams = request.nextUrl.searchParams
     const categoryId = searchParams.get('categoryId')
     const featured = searchParams.get('featured')
@@ -42,7 +178,17 @@ export async function GET(request: NextRequest) {
         skip,
         take: limit,
         include: {
-          category: true,
+          category: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              order: true,
+              isActive: true,
+              createdAt: true,
+              updatedAt: true
+            }
+          },
           images: {
             orderBy: { order: 'asc' }
           },
@@ -205,7 +351,17 @@ export async function POST(request: NextRequest) {
         }
       },
       include: {
-        category: true,
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            order: true,
+            isActive: true,
+            createdAt: true,
+            updatedAt: true
+          }
+        },
         images: true
       }
     })

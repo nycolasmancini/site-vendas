@@ -32,8 +32,43 @@ import {
 } from '@/components/ui/Icons'
 
 // Função para obter o ícone correto para cada categoria
-const getCategoryIcon = (categoryName: string, size: number = 30) => {
-  const name = categoryName.toLowerCase()
+const getCategoryIcon = (category: any, size: number = 30) => {
+  // Se a categoria tem um ícone SVG personalizado, usar ele
+  if (category?.icon) {
+    console.log(`Renderizando SVG para categoria: ${category.name}`, category.icon)
+    
+    let processedSvg = category.icon
+    
+    // Atualizar dimensões
+    processedSvg = processedSvg.replace(/width="[^"]*"/g, `width="${size}"`)
+    processedSvg = processedSvg.replace(/height="[^"]*"/g, `height="${size}"`)
+    
+    // Atualizar cores - para SVGs com fill
+    processedSvg = processedSvg.replace(/fill="[^"]*"/g, 'fill="currentColor"')
+    
+    // Atualizar cores - para SVGs com stroke
+    processedSvg = processedSvg.replace(/stroke="[^"]*"/g, 'stroke="currentColor"')
+    processedSvg = processedSvg.replace(/color="[^"]*"/g, 'color="currentColor"')
+    
+    console.log(`SVG processado:`, processedSvg)
+    
+    return (
+      <div 
+        className="flex items-center justify-center flex-shrink-0"
+        style={{ 
+          width: `${size}px`,
+          height: `${size}px`,
+          lineHeight: 0
+        }}
+        dangerouslySetInnerHTML={{ 
+          __html: processedSvg
+        }}
+      />
+    )
+  }
+
+  // Caso contrário, usar a lógica baseada no nome
+  const name = category?.name?.toLowerCase() || ''
   
   if (name.includes('capa') || name.includes('case') || name.includes('capinha')) {
     return <CapasIcon size={size} />
@@ -101,8 +136,14 @@ export default function Home() {
   useEffect(() => {
     fetch('/api/categories')
       .then(res => res.json())
-      .then(data => setCategories(data))
-      .catch(console.error)
+      .then(data => {
+        // Ensure data is always an array
+        setCategories(Array.isArray(data) ? data : [])
+      })
+      .catch(error => {
+        console.error('Error loading categories:', error)
+        setCategories([]) // Set empty array on error
+      })
   }, [])
 
   // Carregar produtos
@@ -227,7 +268,7 @@ export default function Home() {
                     }}
                   >
                     <div className="flex items-center gap-3">
-                      {getCategoryIcon(category.name, 16)}
+                      {getCategoryIcon(category, 16)}
                       <span>{category.name}</span>
                     </div>
                   </button>
@@ -261,32 +302,6 @@ export default function Home() {
               </div>
             )}
 
-            {/* B2B Benefits */}
-            <div className="card mt-6 p-6 animate-fade-in">
-              <h3 className="font-semibold text-base mb-4" style={{ color: 'var(--foreground)' }}>
-                Por que PMCELL?
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full" style={{ background: 'var(--orange)' }}></div>
-                  <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-                    Preços imbatíveis no atacado
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full" style={{ background: 'var(--green)' }}></div>
-                  <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-                    Entrega rápida em SP
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full" style={{ background: 'var(--blue)' }}></div>
-                  <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-                    Produtos originais garantidos
-                  </p>
-                </div>
-              </div>
-            </div>
           </aside>
 
           {/* Mobile Menu */}
@@ -355,7 +370,7 @@ export default function Home() {
                   <div className="flex items-center gap-4 mb-2">
                     {selectedCategory ? (
                       <div style={{ color: 'var(--orange)' }}>
-                        {getCategoryIcon(categories.find(c => c.id === selectedCategory)?.name || '', 28)}
+                        {getCategoryIcon(categories.find(c => c.id === selectedCategory), 28)}
                       </div>
                     ) : (
                       <TodosProdutosIcon size={28} className="text-[#f97316]" />

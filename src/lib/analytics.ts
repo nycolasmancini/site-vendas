@@ -683,6 +683,14 @@ class Analytics {
     return { ...this.analytics }
   }
 
+  getSessionId(): string {
+    return this.analytics.sessionId
+  }
+
+  getSnapshot() {
+    return this.getAnalyticsSnapshot()
+  }
+
   getTopCategories(limit: number = 5) {
     return this.analytics.categoriesVisited.slice(0, limit)
   }

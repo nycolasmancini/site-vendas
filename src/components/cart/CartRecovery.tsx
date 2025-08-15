@@ -24,10 +24,10 @@ export function CartRecovery({ onClose }: CartRecoveryProps) {
     try {
       setIsLoading(true)
       const analytics = useAnalytics()
-      const snapshot = analytics.getAnalyticsSnapshot()
+      const sessionId = analytics.getSessionId()
 
       const response = await fetch(
-        `/api/cart/simple-update?sessionId=${snapshot.sessionId}`
+        `/api/cart/simple-update?sessionId=${sessionId}`
       )
 
       if (!response.ok) return

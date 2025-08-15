@@ -18,18 +18,72 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          // Verificar se o banco está disponível
+          // Em produção, usar conexão direta com PostgreSQL
+          if (process.env.NODE_ENV === 'production') {
+            console.log('🔍 Usando autenticação direta para produção...')
+            
+            const { Pool } = require('pg')
+            const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL
+            
+            const pool = new Pool({
+              connectionString: databaseUrl,
+              ssl: { rejectUnauthorized: false }
+            })
+
+            try {
+              // Try User table first
+              let result = await pool.query('SELECT * FROM "User" WHERE email = $1 AND "isActive" = true', [credentials.email])
+              let user = result.rows[0]
+
+              // If not found, try Admin table (legacy)
+              if (!user) {
+                try {
+                  result = await pool.query('SELECT * FROM "Admin" WHERE email = $1', [credentials.email])
+                  user = result.rows[0]
+                  
+                  if (user) {
+                    user.role = 'ADMIN'
+                    user.isActive = true
+                  }
+                } catch (adminError) {
+                  console.log('⚠️ Tabela Admin não encontrada')
+                }
+              }
+
+              if (!user) {
+                console.log('❌ Usuário não encontrado:', credentials.email)
+                return null
+              }
+
+              const passwordMatch = await bcrypt.compare(credentials.password, user.password)
+
+              if (!passwordMatch) {
+                console.log('❌ Senha incorreta')
+                return null
+              }
+
+              console.log('✅ Autenticação bem-sucedida via conexão direta')
+              return {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role
+              }
+
+            } finally {
+              await pool.end()
+            }
+          }
+
+          // Em desenvolvimento, usar Prisma
+          console.log('🔍 Usando Prisma para desenvolvimento...')
           const dbConnected = await testDatabaseConnection()
           
           if (dbConnected) {
-            console.log('🔍 Tentando autenticar com banco de dados...')
-            
-            // Tentar buscar no novo modelo User primeiro
             let user = await prisma.user.findUnique({
               where: { email: credentials.email }
             })
 
-            // Se não encontrar, buscar no modelo Admin legado
             if (!user) {
               try {
                 const admin = await prisma.admin.findUnique({
@@ -37,7 +91,6 @@ export const authOptions: NextAuthOptions = {
                 })
 
                 if (admin) {
-                  console.log('👤 Usuário encontrado na tabela Admin legada')
                   user = {
                     id: admin.id,
                     email: admin.email,
@@ -50,25 +103,20 @@ export const authOptions: NextAuthOptions = {
                   }
                 }
               } catch (adminError) {
-                console.log('⚠️ Tabela Admin não encontrada, continuando...')
+                console.log('⚠️ Tabela Admin não encontrada')
               }
-            } else {
-              console.log('👤 Usuário encontrado na tabela User')
             }
 
             if (!user || !user.isActive) {
-              console.log('❌ Usuário não encontrado ou inativo')
               return null
             }
 
             const passwordMatch = await bcrypt.compare(credentials.password, user.password)
 
             if (!passwordMatch) {
-              console.log('❌ Senha incorreta')
               return null
             }
 
-            console.log('✅ Autenticação bem-sucedida via banco de dados')
             return {
               id: user.id,
               email: user.email,
@@ -79,44 +127,7 @@ export const authOptions: NextAuthOptions = {
             throw new Error('Database connection failed')
           }
         } catch (error) {
-          console.log('⚠️ Banco de dados indisponível, usando autenticação mock')
-          console.log('Erro:', error instanceof Error ? error.message : 'Erro desconhecido')
-          
-          // Credenciais mock para desenvolvimento quando o banco não está acessível
-          const mockUsers = [
-            {
-              id: 'mock-admin-1',
-              email: 'admin@pmcell.com.br',
-              name: 'Admin PMCELL (Mock)',
-              password: '$2a$10$K7L1OJ0TfU0vSomRgbJYkuVTXfkVpIx8H8A6ghA0B.qY5wlFWGVWe', // senha: admin123
-              role: 'ADMIN'
-            },
-            {
-              id: 'mock-employee-1',
-              email: 'funcionario@pmcell.com.br',
-              name: 'Funcionário PMCELL (Mock)',
-              password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // senha: password
-              role: 'EMPLOYEE'
-            }
-          ]
-
-          const mockUser = mockUsers.find(user => user.email === credentials.email)
-          
-          if (mockUser) {
-            const passwordMatch = await bcrypt.compare(credentials.password, mockUser.password)
-            
-            if (passwordMatch) {
-              console.log(`✅ Autenticação mock bem-sucedida para ${mockUser.role}`)
-              return {
-                id: mockUser.id,
-                email: mockUser.email,
-                name: mockUser.name,
-                role: mockUser.role
-              }
-            }
-          }
-
-          console.log('❌ Credenciais mock inválidas')
+          console.error('Authentication failed:', error instanceof Error ? error.message : 'Unknown error')
           return null
         }
       }

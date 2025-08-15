@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, CheckCircle, Edit3, WhatsAppIcon, User, Package, ArrowLeft } from 'lucide-react'
+import { X, CheckCircle, Edit3, User, Package, ArrowLeft, MessageCircle } from 'lucide-react'
 import { formatPrice } from '@/lib/utils'
 import { useCartStore } from '@/stores/useCartStore'
 import { useSessionStore } from '@/stores/useSessionStore'
@@ -149,7 +149,7 @@ export function OrderCompletionSidebar({
       setIsSubmitting(false)
       
       // Aqui você pode mostrar uma mensagem de erro para o usuário
-      alert(`Erro ao enviar pedido: ${error.message}`)
+      alert(`Erro ao enviar pedido: ${error instanceof Error ? error.message : 'Erro desconhecido'}`)
     }
   }
 

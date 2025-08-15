@@ -1,0 +1,7 @@
+node_modules_bak
+**/node_modules_bak/**
+.git_backup
+pmcell-vendas/
+dev.log
+cookies*.txt
+test-*.js

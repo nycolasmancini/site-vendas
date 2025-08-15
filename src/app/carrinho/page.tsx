@@ -115,7 +115,7 @@ export default function CarrinhoPage() {
                   item.quantity >= item.specialQuantity && 
                   item.specialPrice
                 
-                const currentPrice = isWholesaleActive ? item.specialPrice : item.unitPrice
+                const currentPrice = isWholesaleActive ? (item.specialPrice || 0) : (item.unitPrice || 0)
 
                 return (
                   <div key={item.id} className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">

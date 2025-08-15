@@ -3,6 +3,37 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
+    // Em produção, usar conexão direta
+    if (process.env.NODE_ENV === 'production') {
+      const { Pool } = require('pg')
+      const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL
+      
+      const pool = new Pool({
+        connectionString: databaseUrl,
+        ssl: { rejectUnauthorized: false }
+      })
+
+      try {
+        const result = await pool.query('SELECT * FROM "CompanySettings" LIMIT 1')
+        let settings = result.rows[0]
+        
+        if (!settings) {
+          // Criar configurações padrão
+          const insertResult = await pool.query(`
+            INSERT INTO "CompanySettings" ("id", "companyName", "primaryColor", "createdAt", "updatedAt") 
+            VALUES ('default', 'PMCELL', '#FC6D36', NOW(), NOW()) 
+            RETURNING *
+          `)
+          settings = insertResult.rows[0]
+        }
+
+        return NextResponse.json(settings)
+      } finally {
+        await pool.end()
+      }
+    }
+
+    // Em desenvolvimento, usar Prisma
     let settings = await prisma.companySettings.findFirst()
     
     if (!settings) {

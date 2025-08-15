@@ -10,7 +10,17 @@ export async function GET(
     const product = await prisma.product.findUnique({
       where: { id },
       include: {
-        category: true,
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            order: true,
+            isActive: true,
+            createdAt: true,
+            updatedAt: true
+          }
+        },
         images: {
           orderBy: { order: 'asc' }
         },
@@ -145,7 +155,17 @@ export async function PUT(
         })
       },
       include: {
-        category: true,
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            order: true,
+            isActive: true,
+            createdAt: true,
+            updatedAt: true
+          }
+        },
         images: {
           orderBy: { order: 'asc' }
         }
@@ -227,7 +247,17 @@ export async function PATCH(
       where: { id },
       data: { isActive },
       include: {
-        category: true,
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            order: true,
+            isActive: true,
+            createdAt: true,
+            updatedAt: true
+          }
+        },
         images: {
           orderBy: { order: 'asc' }
         },

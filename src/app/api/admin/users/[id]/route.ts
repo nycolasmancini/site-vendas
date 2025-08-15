@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -17,7 +17,8 @@ export async function PUT(
 
     const body = await request.json()
     const { email, password, name, role, isActive } = body
-    const userId = params.id
+    const resolvedParams = await params
+    const userId = resolvedParams.id
 
     if (!email || !name || !role) {
       return NextResponse.json({ error: 'Email, nome e tipo são obrigatórios' }, { status: 400 })
@@ -84,7 +85,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -93,7 +94,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
     }
 
-    const userId = params.id
+    const resolvedParams = await params
+    const userId = resolvedParams.id
 
     // Não permitir que o usuário delete a si mesmo
     if (session.user.id === userId) {

@@ -3,10 +3,11 @@ import { prisma } from '@/lib/prisma'
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const resolvedParams = await params
+    const { id } = resolvedParams
     const body = await request.json()
     
     // Verificar se o pedido existe
@@ -96,10 +97,11 @@ export async function PATCH(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const resolvedParams = await params
+    const { id } = resolvedParams
 
     const order = await prisma.order.findUnique({
       where: { id },
@@ -132,10 +134,11 @@ export async function GET(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const resolvedParams = await params
+    const { id } = resolvedParams
 
     // Verificar se o pedido existe
     const existingOrder = await prisma.order.findUnique({
