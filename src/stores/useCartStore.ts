@@ -199,15 +199,33 @@ export const useCartStore = create<CartStore>()(
       
       getEligibleUpgrades: () => {
         return get().items.filter(item => {
-          // Verificar apenas specialPrice e specialQuantity (que é como os produtos são adicionados)
-          if (!item.specialPrice || !item.specialQuantity) return false
+          // Verificar preços especiais ou super atacado
+          const hasSpecialPrice = item.specialPrice && item.specialQuantity
+          const hasSuperWholesale = item.superWholesalePrice && item.superWholesaleQuantity
           
-          const neededQuantity = item.specialQuantity
-          const currentQuantity = item.quantity
-          const percentageComplete = (currentQuantity / neededQuantity) * 100
+          if (!hasSpecialPrice && !hasSuperWholesale) return false
           
-          // Só mostra produtos que estão entre 80% e 99% do valor necessário
-          return percentageComplete >= 80 && percentageComplete < 100
+          // Para produtos com preço especial
+          if (hasSpecialPrice) {
+            const currentQuantity = item.quantity
+            const neededQuantity = item.specialQuantity!
+            const percentageComplete = (currentQuantity / neededQuantity) * 100
+            
+            // Mostra se está entre 80% e 99% da quantidade necessária
+            if (percentageComplete >= 80 && percentageComplete < 100) return true
+          }
+          
+          // Para produtos com super atacado
+          if (hasSuperWholesale) {
+            const currentQuantity = item.quantity
+            const neededQuantity = item.superWholesaleQuantity!
+            const percentageComplete = (currentQuantity / neededQuantity) * 100
+            
+            // Mostra se está entre 80% e 99% da quantidade necessária
+            if (percentageComplete >= 80 && percentageComplete < 100) return true
+          }
+          
+          return false
         })
       },
 

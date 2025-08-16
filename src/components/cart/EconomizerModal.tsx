@@ -72,7 +72,7 @@ export function EconomizerModal({ isOpen, onClose, eligibleItems }: EconomizerMo
               </div>
               <div>
                 <h2 className="text-xl font-bold text-green-800">Economize levando mais!</h2>
-                <p className="text-sm text-green-600">Complete alguns itens e ganhe desconto na Caixa fechada</p>
+                <p className="text-sm text-green-600">Complete alguns itens e ganhe desconto especial</p>
               </div>
             </div>
             <button
@@ -86,16 +86,24 @@ export function EconomizerModal({ isOpen, onClose, eligibleItems }: EconomizerMo
           {/* Content */}
           <div className="p-6 space-y-6">
             {eligibleItems.map((item) => {
-              const neededQuantity = item.specialQuantity!
+              // Determinar se é preço especial ou super atacado
+              const hasSpecialPrice = item.specialPrice && item.specialQuantity
+              const hasSuperWholesale = item.superWholesalePrice && item.superWholesaleQuantity
+              
+              // Usar os valores corretos baseado no tipo de desconto
+              const neededQuantity = hasSpecialPrice ? item.specialQuantity! : item.superWholesaleQuantity!
+              const discountPrice = hasSpecialPrice ? item.specialPrice! : item.superWholesalePrice!
+              const discountType = hasSpecialPrice ? 'Preço Especial' : 'Super Atacado'
+              
               const currentQuantity = item.quantity
               const missingQuantity = neededQuantity - currentQuantity
               const percentageComplete = (currentQuantity / neededQuantity) * 100
               
               // Calcula a economia real que o cliente terá
               const regularTotalPrice = neededQuantity * item.unitPrice // Preço se comprasse tudo no preço normal
-              const superWholesaleTotal = neededQuantity * item.specialPrice! // Preço no super atacado
-              const totalSavings = regularTotalPrice - superWholesaleTotal // Economia total
-              const savingsPerUnit = item.unitPrice - item.specialPrice! // Economia por unidade
+              const discountTotal = neededQuantity * discountPrice // Preço com desconto
+              const totalSavings = regularTotalPrice - discountTotal // Economia total
+              const savingsPerUnit = item.unitPrice - discountPrice // Economia por unidade
 
               return (
                 <div key={item.id} className="border border-gray-200 rounded-lg p-4 hover:border-green-300 transition-colors">
@@ -138,8 +146,8 @@ export function EconomizerModal({ isOpen, onClose, eligibleItems }: EconomizerMo
                       <p className="text-xs text-red-600">por unidade</p>
                     </div>
                     <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <p className="text-xs font-medium text-green-800 uppercase tracking-wide">Caixa Fechada</p>
-                      <p className="text-lg font-bold text-green-600">{formatPrice(item.specialPrice!)}</p>
+                      <p className="text-xs font-medium text-green-800 uppercase tracking-wide">{discountType}</p>
+                      <p className="text-lg font-bold text-green-600">{formatPrice(discountPrice)}</p>
                       <p className="text-xs text-green-600">por unidade</p>
                     </div>
                   </div>

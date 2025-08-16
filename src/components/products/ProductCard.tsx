@@ -89,8 +89,6 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
     }
 
     const unitPrice = product.price
-    const specialPrice = product.superWholesalePrice
-    const specialQuantity = product.superWholesaleQuantity
     const finalQuantity = typeof quantity === 'string' ? parseInt(quantity) || 1 : quantity
     
     // Add to cart after short delay to show button animation
@@ -102,8 +100,8 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
         image: imageUrl,
         quantity: finalQuantity,
         unitPrice,
-        specialPrice,
-        specialQuantity,
+        specialPrice: product.specialPrice,
+        specialQuantity: product.specialQuantity,
         superWholesalePrice: product.superWholesalePrice,
         superWholesaleQuantity: product.superWholesaleQuantity
       })
