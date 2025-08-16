@@ -63,9 +63,10 @@ export async function GET(request: NextRequest) {
         // Query para produtos com imagens
         const productsQuery = `
           SELECT 
-            p.id, p.name, p.price, 
+            p.id, p.name, p.subname, p.description, p.brand, p.price, 
             p."superWholesalePrice" as "superWholesalePrice", 
             p."superWholesaleQuantity" as "superWholesaleQuantity",
+            p.cost, p."categoryId", p.featured, p."isModalProduct",
             p."isActive", p."createdAt",
             COALESCE(
               JSON_AGG(
@@ -110,17 +111,19 @@ export async function GET(request: NextRequest) {
           const product = {
             id: row.id,
             name: row.name,
+            subname: row.subname,
+            description: row.description,
+            brand: row.brand,
             price: parseFloat(row.price || 0),
             superWholesalePrice: row.superWholesalePrice ? parseFloat(row.superWholesalePrice) : null,
             superWholesaleQuantity: row.superWholesaleQuantity ? parseInt(row.superWholesaleQuantity) : null,
+            cost: row.cost ? parseFloat(row.cost) : null,
+            categoryId: row.categoryId,
+            featured: row.featured || false,
+            isModalProduct: row.isModalProduct || false,
             isActive: row.isActive,
             createdAt: row.createdAt,
-            // Add minimal required fields for frontend
-            subname: null,
-            description: null,
-            brand: null,
-            featured: false,
-            isModalProduct: false,
+            // Campos relacionais (não disponíveis na query simples)
             category: null,
             images: Array.isArray(row.images) ? row.images : [],
             suppliers: [],
@@ -220,17 +223,18 @@ export async function GET(request: NextRequest) {
         select: {
           id: true,
           name: true,
-          price: true,
-          superWholesalePrice: true,
-          superWholesaleQuantity: true,
-          isActive: true,
-          createdAt: true,
-          // Add minimal fields needed for frontend
           subname: true,
           description: true,
           brand: true,
+          price: true,
+          superWholesalePrice: true,
+          superWholesaleQuantity: true,
+          cost: true,
+          categoryId: true,
           featured: true,
           isModalProduct: true,
+          isActive: true,
+          createdAt: true,
           category: {
             select: {
               id: true,
@@ -245,7 +249,7 @@ export async function GET(request: NextRequest) {
     ])
 
 
-    // Simplificar produtos para produção
+    // Simplificar produtos para produção (manter dados, remover apenas relações complexas)
     const processedProducts = products.map((product: any) => ({
       ...product,
       images: [],
