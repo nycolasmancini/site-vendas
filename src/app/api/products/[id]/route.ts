@@ -46,6 +46,18 @@ export async function GET(
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
+    // Debug: Log produto retornado para edição
+    console.log('📤 Produto retornado para edição:', {
+      id: product.id,
+      name: product.name,
+      subname: product.subname,
+      brand: product.brand,
+      price: product.price,
+      superWholesalePrice: product.superWholesalePrice,
+      superWholesaleQuantity: product.superWholesaleQuantity,
+      cost: product.cost
+    })
+
     return NextResponse.json(product)
   } catch (error) {
     console.error('Error fetching product:', error)

@@ -377,12 +377,13 @@ export async function POST(request: NextRequest) {
 
     console.log(`Total de imagens processadas: ${uploadedImages.length}`)
 
-    if (uploadedImages.length === 0) {
-      return NextResponse.json(
-        { error: 'Nenhuma imagem válida foi enviada. Verifique se os arquivos não estão corrompidos.' },
-        { status: 400 }
-      )
-    }
+    // Permitir produtos sem imagens para teste
+    // if (uploadedImages.length === 0) {
+    //   return NextResponse.json(
+    //     { error: 'Nenhuma imagem válida foi enviada. Verifique se os arquivos não estão corrompidos.' },
+    //     { status: 400 }
+    //   )
+    // }
 
     // Criar produto no banco de dados
     const product = await prisma.product.create({
@@ -396,14 +397,17 @@ export async function POST(request: NextRequest) {
         superWholesaleQuantity,
         cost,
         categoryId,
-        images: {
-          create: uploadedImages.map((img, index) => ({
-            url: img.url,
-            fileName: img.fileName,
-            order: index,
-            isMain: img.isMain
-          }))
-        }
+        // Só criar imagens se houver alguma
+        ...(uploadedImages.length > 0 && {
+          images: {
+            create: uploadedImages.map((img, index) => ({
+              url: img.url,
+              fileName: img.fileName,
+              order: index,
+              isMain: img.isMain
+            }))
+          }
+        })
       },
       include: {
         category: {
@@ -419,6 +423,18 @@ export async function POST(request: NextRequest) {
         },
         images: true
       }
+    })
+
+    // Debug: Log produto criado
+    console.log('✅ Produto criado com sucesso:', {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      superWholesalePrice: product.superWholesalePrice,
+      superWholesaleQuantity: product.superWholesaleQuantity,
+      subname: product.subname,
+      brand: product.brand,
+      cost: product.cost
     })
 
     // Criar/associar fornecedor se fornecido
