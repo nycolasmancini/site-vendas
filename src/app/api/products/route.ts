@@ -285,21 +285,56 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
     
+    // Debug: Log todos os campos recebidos
+    console.log('🔍 FormData recebido:', {
+      name: formData.get('name'),
+      subname: formData.get('subname'),
+      description: formData.get('description'),
+      brand: formData.get('brand'),
+      price: formData.get('price'),
+      superWholesalePrice: formData.get('superWholesalePrice'),
+      superWholesaleQuantity: formData.get('superWholesaleQuantity'),
+      cost: formData.get('cost'),
+      categoryId: formData.get('categoryId'),
+      supplierName: formData.get('supplierName'),
+      supplierPhone: formData.get('supplierPhone')
+    })
+    
     // Extrair dados do formulário
     const name = formData.get('name') as string
-    const subname = formData.get('subname') as string || null
+    const subname = formData.get('subname') as string
+    const subnameValue = subname && subname.trim() !== '' ? subname : null
     const description = formData.get('description') as string
-    const brand = formData.get('brand') as string || null
+    const brand = formData.get('brand') as string
+    const brandValue = brand && brand.trim() !== '' ? brand : null
     const price = parseFloat(formData.get('price') as string)
-    const superWholesalePrice = formData.get('superWholesalePrice') ? 
-      parseFloat(formData.get('superWholesalePrice') as string) : null
-    const superWholesaleQuantity = formData.get('superWholesaleQuantity') ? 
-      parseInt(formData.get('superWholesaleQuantity') as string) : null
-    const cost = formData.get('cost') ? 
-      parseFloat(formData.get('cost') as string) : null
+    
+    const superWholesalePriceStr = formData.get('superWholesalePrice') as string
+    const superWholesalePrice = superWholesalePriceStr && superWholesalePriceStr.trim() !== '' ? 
+      parseFloat(superWholesalePriceStr) : null
+    
+    const superWholesaleQuantityStr = formData.get('superWholesaleQuantity') as string
+    const superWholesaleQuantity = superWholesaleQuantityStr && superWholesaleQuantityStr.trim() !== '' ? 
+      parseInt(superWholesaleQuantityStr) : null
+    
+    const costStr = formData.get('cost') as string
+    const cost = costStr && costStr.trim() !== '' ? parseFloat(costStr) : null
     const categoryId = formData.get('categoryId') as string
     const supplierName = formData.get('supplierName') as string || null
     const supplierPhone = formData.get('supplierPhone') as string || null
+
+    // Debug: Log dados processados
+    console.log('📋 Dados processados para criação:', {
+      name,
+      subname: subnameValue,
+      description,
+      brand: brandValue,
+      price,
+      superWholesalePrice,
+      superWholesaleQuantity,
+      cost,
+      categoryId
+    })
 
     // Processar imagens - Solução usando Buffer (Node.js)
     const imageFiles = formData.getAll('images') as File[]
@@ -353,9 +388,9 @@ export async function POST(request: NextRequest) {
     const product = await prisma.product.create({
       data: {
         name,
-        subname,
+        subname: subnameValue,
         description,
-        brand,
+        brand: brandValue,
         price,
         superWholesalePrice,
         superWholesaleQuantity,
