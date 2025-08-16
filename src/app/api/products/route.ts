@@ -106,28 +106,56 @@ export async function GET(request: NextRequest) {
           throw new Error('No data returned from products query')
         }
 
-        const products = productsResult.rows.map((row: any) => ({
-          id: row.id,
-          name: row.name,
-          price: parseFloat(row.price || 0),
-          superWholesalePrice: row.superWholesalePrice ? parseFloat(row.superWholesalePrice) : null,
-          superWholesaleQuantity: row.superWholesaleQuantity ? parseInt(row.superWholesaleQuantity) : null,
-          isActive: row.isActive,
-          createdAt: row.createdAt,
-          // Add minimal required fields for frontend
-          subname: null,
-          description: null,
-          brand: null,
-          featured: false,
-          isModalProduct: false,
-          category: null,
-          images: Array.isArray(row.images) ? row.images : [],
-          suppliers: [],
-          models: [],
-          hasModels: false
-        }))
+        const products = productsResult.rows.map((row: any) => {
+          const product = {
+            id: row.id,
+            name: row.name,
+            price: parseFloat(row.price || 0),
+            superWholesalePrice: row.superWholesalePrice ? parseFloat(row.superWholesalePrice) : null,
+            superWholesaleQuantity: row.superWholesaleQuantity ? parseInt(row.superWholesaleQuantity) : null,
+            isActive: row.isActive,
+            createdAt: row.createdAt,
+            // Add minimal required fields for frontend
+            subname: null,
+            description: null,
+            brand: null,
+            featured: false,
+            isModalProduct: false,
+            category: null,
+            images: Array.isArray(row.images) ? row.images : [],
+            suppliers: [],
+            models: [],
+            hasModels: false
+          }
+          
+          // Debug: Log produtos com super atacado
+          if (product.superWholesalePrice && product.superWholesaleQuantity) {
+            console.log('🔍 Produto com super atacado encontrado:', {
+              name: product.name,
+              superWholesalePrice: product.superWholesalePrice,
+              superWholesaleQuantity: product.superWholesaleQuantity,
+              rawData: { 
+                superWholesalePrice: row.superWholesalePrice, 
+                superWholesaleQuantity: row.superWholesaleQuantity 
+              }
+            })
+          }
+          
+          return product
+        })
 
         const total = parseInt(totalResult.rows[0].total)
+        
+        // Debug: Log resumo dos produtos
+        const comSuperAtacado = products.filter(p => p.superWholesalePrice && p.superWholesaleQuantity).length
+        console.log('📊 Produtos retornados da API:', {
+          total: products.length,
+          comSuperAtacado,
+          exemplos: products.slice(0, 2).map(p => ({
+            name: p.name,
+            hasSuperWholesale: !!(p.superWholesalePrice && p.superWholesaleQuantity)
+          }))
+        })
 
         return NextResponse.json({
           products,
