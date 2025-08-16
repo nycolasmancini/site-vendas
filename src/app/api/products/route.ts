@@ -306,12 +306,30 @@ export async function POST(request: NextRequest) {
     
     // Extrair dados do formulário
     const name = formData.get('name') as string
+    
+    // Validação obrigatória
+    if (!name || name.trim() === '') {
+      return NextResponse.json(
+        { error: 'Nome do produto é obrigatório' },
+        { status: 400 }
+      )
+    }
     const subname = formData.get('subname') as string
     const subnameValue = subname && subname.trim() !== '' ? subname : null
     const description = formData.get('description') as string
     const brand = formData.get('brand') as string
     const brandValue = brand && brand.trim() !== '' ? brand : null
-    const price = parseFloat(formData.get('price') as string)
+    
+    const priceStr = formData.get('price') as string
+    const price = parseFloat(priceStr)
+    
+    // Validação obrigatória
+    if (!priceStr || isNaN(price) || price <= 0) {
+      return NextResponse.json(
+        { error: 'Preço deve ser um número válido maior que zero' },
+        { status: 400 }
+      )
+    }
     
     const superWholesalePriceStr = formData.get('superWholesalePrice') as string
     const superWholesalePrice = superWholesalePriceStr && superWholesalePriceStr.trim() !== '' ? 
@@ -323,9 +341,23 @@ export async function POST(request: NextRequest) {
     
     const costStr = formData.get('cost') as string
     const cost = costStr && costStr.trim() !== '' ? parseFloat(costStr) : null
-    const categoryId = formData.get('categoryId') as string
-    const supplierName = formData.get('supplierName') as string || null
-    const supplierPhone = formData.get('supplierPhone') as string || null
+    
+    const categoryIdStr = formData.get('categoryId') as string
+    const categoryId = categoryIdStr && categoryIdStr.trim() !== '' ? categoryIdStr : null
+    
+    // Validação obrigatória
+    if (!categoryId) {
+      return NextResponse.json(
+        { error: 'Categoria é obrigatória' },
+        { status: 400 }
+      )
+    }
+    
+    const supplierNameStr = formData.get('supplierName') as string
+    const supplierName = supplierNameStr && supplierNameStr.trim() !== '' ? supplierNameStr : null
+    
+    const supplierPhoneStr = formData.get('supplierPhone') as string
+    const supplierPhone = supplierPhoneStr && supplierPhoneStr.trim() !== '' ? supplierPhoneStr : null
 
     // Debug: Log dados processados
     console.log('📋 Dados processados para criação:', {
@@ -443,28 +475,35 @@ export async function POST(request: NextRequest) {
 
     // Criar/associar fornecedor se fornecido
     if (supplierName) {
-      // Procurar fornecedor existente ou criar novo
-      let supplier = await prisma.supplier.findFirst({
-        where: { name: supplierName }
-      })
+      try {
+        // Procurar fornecedor existente ou criar novo
+        let supplier = await prisma.supplier.findFirst({
+          where: { name: supplierName }
+        })
 
-      if (!supplier) {
-        supplier = await prisma.supplier.create({
+        if (!supplier) {
+          supplier = await prisma.supplier.create({
+            data: {
+              name: supplierName,
+              phone: supplierPhone
+            }
+          })
+        }
+
+        // Associar produto ao fornecedor
+        await prisma.productSupplier.create({
           data: {
-            name: supplierName,
-            phone: supplierPhone
+            productId: product.id,
+            supplierId: supplier.id,
+            cost: cost || 0
           }
         })
+        
+        console.log('✅ Fornecedor associado ao produto:', supplierName)
+      } catch (supplierError) {
+        console.error('⚠️ Erro ao associar fornecedor (produto criado com sucesso):', supplierError)
+        // Não falhar a criação do produto por causa do supplier
       }
-
-      // Associar produto ao fornecedor
-      await prisma.productSupplier.create({
-        data: {
-          productId: product.id,
-          supplierId: supplier.id,
-          cost: cost || 0
-        }
-      })
     }
 
     return NextResponse.json(product)
