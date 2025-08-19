@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
       const prices = createdModels.map(m => m.price).filter(p => p > 0)
       const superWholesalePrices = createdModels
         .map(m => m.superWholesalePrice)
-        .filter(p => p && p > 0)
+        .filter((p): p is number => p !== null && p > 0)
       
       const updateData: any = {}
       
