@@ -126,7 +126,16 @@ export async function GET(request: NextRequest) {
           throw new Error('No data returned from products query')
         }
 
+        console.log('🔍 DEBUG: Primeira linha de produtos (raw):', JSON.stringify(productsResult.rows[0], null, 2))
+        
         const products = productsResult.rows.map((row: any) => {
+          console.log('🔍 DEBUG: Campos super atacado raw:', {
+            superWholesalePrice: row.superWholesalePrice,
+            superWholesaleQuantity: row.superWholesaleQuantity,
+            'row["superWholesalePrice"]': row["superWholesalePrice"],
+            'row["superWholesaleQuantity"]': row["superWholesaleQuantity"]
+          })
+          
           const models = Array.isArray(row.models) ? row.models : []
           const hasModels = models.length > 0
           
@@ -148,7 +157,7 @@ export async function GET(request: NextRequest) {
             }
           }
           
-          return {
+          const processedProduct = {
             id: row.id,
             name: row.name,
             subname: row.subname,
@@ -171,6 +180,14 @@ export async function GET(request: NextRequest) {
             hasModels,
             priceRange
           }
+          
+          console.log('🔍 DEBUG: Produto processado:', {
+            name: processedProduct.name,
+            superWholesalePrice: processedProduct.superWholesalePrice,
+            superWholesaleQuantity: processedProduct.superWholesaleQuantity
+          })
+          
+          return processedProduct
         })
 
         const total = parseInt(totalResult.rows[0].total)
