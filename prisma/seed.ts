@@ -328,54 +328,66 @@ async function main() {
   const cabosCategory = await prisma.category.findUnique({ where: { slug: 'cabos' } })
   
   if (cabosCategory) {
-    await prisma.product.upsert({
-      where: { name: 'Cabo USB-C Premium' },
-      update: {},
-      create: {
-        name: 'Cabo USB-C Premium',
-        subname: 'Carregamento rápido',
-        description: 'Cabo USB-C com tecnologia de carregamento rápido',
-        categoryId: cabosCategory.id,
-        price: 15.90,
-        superWholesalePrice: 12.50,
-        superWholesaleQuantity: 50,
-        cost: 8.00,
-        featured: true
-      }
+    const existingCaboUSBC = await prisma.product.findFirst({
+      where: { name: 'Cabo USB-C Premium', categoryId: cabosCategory.id }
     })
+    
+    if (!existingCaboUSBC) {
+      await prisma.product.create({
+        data: {
+          name: 'Cabo USB-C Premium',
+          subname: 'Carregamento rápido',
+          description: 'Cabo USB-C com tecnologia de carregamento rápido',
+          categoryId: cabosCategory.id,
+          price: 15.90,
+          superWholesalePrice: 12.50,
+          superWholesaleQuantity: 50,
+          cost: 8.00,
+          featured: true
+        }
+      })
+    }
 
-    await prisma.product.upsert({
-      where: { name: 'Cabo Lightning Certificado' },
-      update: {},
-      create: {
-        name: 'Cabo Lightning Certificado',
-        subname: 'MFi Apple',
-        description: 'Cabo Lightning certificado pela Apple',
-        categoryId: cabosCategory.id,
-        price: 24.90,
-        superWholesalePrice: 19.90,
-        superWholesaleQuantity: 30,
-        cost: 12.00
-      }
+    const existingCaboLightning = await prisma.product.findFirst({
+      where: { name: 'Cabo Lightning Certificado', categoryId: cabosCategory.id }
     })
+    
+    if (!existingCaboLightning) {
+      await prisma.product.create({
+        data: {
+          name: 'Cabo Lightning Certificado',
+          subname: 'MFi Apple',
+          description: 'Cabo Lightning certificado pela Apple',
+          categoryId: cabosCategory.id,
+          price: 24.90,
+          superWholesalePrice: 19.90,
+          superWholesaleQuantity: 30,
+          cost: 12.00
+        }
+      })
+    }
   }
 
   if (capasCategory) {
-    await prisma.product.upsert({
-      where: { name: 'Capa TPU Transparente' },
-      update: {},
-      create: {
-        name: 'Capa TPU Transparente',
-        subname: 'Anti-impacto',
-        description: 'Capa de silicone transparente com proteção anti-impacto',
-        categoryId: capasCategory.id,
-        price: 8.50,
-        superWholesalePrice: 6.90,
-        superWholesaleQuantity: 100,
-        cost: 4.50,
-        featured: true
-      }
+    const existingCapaTPU = await prisma.product.findFirst({
+      where: { name: 'Capa TPU Transparente', categoryId: capasCategory.id }
     })
+    
+    if (!existingCapaTPU) {
+      await prisma.product.create({
+        data: {
+          name: 'Capa TPU Transparente',
+          subname: 'Anti-impacto',
+          description: 'Capa de silicone transparente com proteção anti-impacto',
+          categoryId: capasCategory.id,
+          price: 8.50,
+          superWholesalePrice: 6.90,
+          superWholesaleQuantity: 100,
+          cost: 4.50,
+          featured: true
+        }
+      })
+    }
   }
 
   console.log('✅ Produtos com super atacado criados')
