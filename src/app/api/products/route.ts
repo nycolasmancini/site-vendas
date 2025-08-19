@@ -67,7 +67,8 @@ export async function GET(request: NextRequest) {
         const productsQuery = `
           SELECT 
             p.id, p.name, p.subname, p.description, p.brand, p.price, 
-            p."superWholesalePrice", p."superWholesaleQuantity",
+            p."superWholesalePrice" as "superWholesalePrice", 
+            p."superWholesaleQuantity" as "superWholesaleQuantity",
             p.cost, p."categoryId", p.featured, p."isModalProduct",
             p."isActive", p."createdAt",
             COALESCE(
@@ -133,7 +134,10 @@ export async function GET(request: NextRequest) {
             superWholesalePrice: row.superWholesalePrice,
             superWholesaleQuantity: row.superWholesaleQuantity,
             'row["superWholesalePrice"]': row["superWholesalePrice"],
-            'row["superWholesaleQuantity"]': row["superWholesaleQuantity"]
+            'row["superWholesaleQuantity"]': row["superWholesaleQuantity"],
+            'row.superWholesalePrice': row.superWholesalePrice,
+            'row.superWholesaleQuantity': row.superWholesaleQuantity,
+            'row keys': Object.keys(row).filter(k => k.toLowerCase().includes('super'))
           })
           
           const models = Array.isArray(row.models) ? row.models : []
