@@ -168,7 +168,7 @@ export function EconomizerModal({ isOpen, onClose, eligibleItems }: EconomizerMo
                     </div>
                     <div className="text-center">
                       <p className="text-xs text-green-600 font-medium">
-                        💡 Complete agora e pague apenas {formatPrice(superWholesaleTotal)} ao invés de {formatPrice(regularTotalPrice)}
+                        💡 Complete agora e pague apenas {formatPrice(discountTotal)} ao invés de {formatPrice(regularTotalPrice)}
                       </p>
                     </div>
                   </div>
