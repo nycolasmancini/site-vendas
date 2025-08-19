@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
             p."isActive", p."createdAt",
             COALESCE(
               JSON_AGG(
-                DISTINCT CASE WHEN i.id IS NOT NULL THEN
+                CASE WHEN i.id IS NOT NULL THEN
                   JSON_BUILD_OBJECT(
                     'id', i.id,
                     'url', i.url,
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
             ) as images,
             COALESCE(
               JSON_AGG(
-                DISTINCT CASE WHEN pm.id IS NOT NULL THEN
+                CASE WHEN pm.id IS NOT NULL THEN
                   JSON_BUILD_OBJECT(
                     'id', m.id,
                     'brandName', b.name,
