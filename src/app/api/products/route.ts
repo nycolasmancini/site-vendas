@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { supabase } from '@/lib/supabase'
+import { query as dbQuery, testConnection } from '@/lib/db'
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,16 +10,17 @@ export async function GET(request: NextRequest) {
     // Em produção, usar conexão direta por enquanto  
     if (process.env.NODE_ENV === 'production') {
       console.log('📊 Using production SQL query path')
-      const { Pool } = require('pg')
-      const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL
       
-      const pool = new Pool({
-        connectionString: databaseUrl,
-        ssl: { rejectUnauthorized: false },
-        max: 1, // Limit connections for serverless
-        idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 10000
-      })
+      // Testar conexão primeiro
+      const isConnected = await testConnection()
+      if (!isConnected) {
+        console.error('❌ Database connection test failed')
+        return NextResponse.json({ 
+          error: 'Database connection failed',
+          products: [],
+          pagination: { page: 1, limit: 12, total: 0, totalPages: 0 }
+        }, { status: 500 })
+      }
 
       try {
         const searchParams = request.nextUrl.searchParams
@@ -67,8 +69,8 @@ export async function GET(request: NextRequest) {
         const productsQuery = `
           SELECT 
             p.id, p.name, p.subname, p.description, p.brand, p.price, 
-            p."superWholesalePrice" as superwholesaleprice, 
-            p."superWholesaleQuantity" as superwholesalequantity,
+            p."superWholesalePrice", 
+            p."superWholesaleQuantity",
             p.cost, p."categoryId", p.featured, p."isModalProduct",
             p."isActive", p."createdAt",
             COALESCE(
@@ -119,26 +121,15 @@ export async function GET(request: NextRequest) {
         const countParams = queryParams.slice(0, -2) // Remove limit e offset
 
         const [productsResult, totalResult] = await Promise.all([
-          pool.query(productsQuery, queryParams),
-          pool.query(countQuery, countParams)
+          dbQuery(productsQuery, queryParams),
+          dbQuery(countQuery, countParams)
         ])
 
         if (!productsResult.rows) {
           throw new Error('No data returned from products query')
         }
 
-        console.log('🔍 DEBUG: Primeira linha de produtos (raw):', JSON.stringify(productsResult.rows[0], null, 2))
-        
         const products = productsResult.rows.map((row: any) => {
-          console.log('🔍 DEBUG: Campos super atacado raw:', {
-            superWholesalePrice: row.superWholesalePrice,
-            superWholesaleQuantity: row.superWholesaleQuantity,
-            'row["superWholesalePrice"]': row["superWholesalePrice"],
-            'row["superWholesaleQuantity"]': row["superWholesaleQuantity"],
-            'row.superWholesalePrice': row.superWholesalePrice,
-            'row.superWholesaleQuantity': row.superWholesaleQuantity,
-            'row keys': Object.keys(row).filter(k => k.toLowerCase().includes('super'))
-          })
           
           const models = Array.isArray(row.models) ? row.models : []
           const hasModels = models.length > 0
@@ -161,19 +152,9 @@ export async function GET(request: NextRequest) {
             }
           }
           
-          // Busca robusta dos valores - tenta todas as possibilidades
-          const allKeys = Object.keys(row);
-          const superPriceKey = allKeys.find(key => 
-            key.toLowerCase() === 'superwholesaleprice' || 
-            key === 'superWholesalePrice'
-          );
-          const superQtyKey = allKeys.find(key => 
-            key.toLowerCase() === 'superwholesalequantity' || 
-            key === 'superWholesaleQuantity'
-          );
-          
-          const superPrice = superPriceKey ? row[superPriceKey] : null;
-          const superQty = superQtyKey ? row[superQtyKey] : null;
+          // Acessar valores de super atacado com fallback
+          const superPrice = row.superWholesalePrice || row.superwholesaleprice || row['superWholesalePrice'] || null;
+          const superQty = row.superWholesaleQuantity || row.superwholesalequantity || row['superWholesaleQuantity'] || null;
           
           const processedProduct = {
             id: row.id,
@@ -199,41 +180,10 @@ export async function GET(request: NextRequest) {
             priceRange
           }
           
-          console.log('🔍 DEBUG: Produto processado:', {
-            name: processedProduct.name,
-            superPrice: superPrice,
-            superQty: superQty,
-            superWholesalePrice: processedProduct.superWholesalePrice,
-            superWholesaleQuantity: processedProduct.superWholesaleQuantity
-          })
-          
           return processedProduct
         })
 
         const total = parseInt(totalResult.rows[0].total)
-        
-        // Debug: Log resumo dos produtos
-        const comSuperAtacado = products.filter(p => p.superWholesalePrice && p.superWholesaleQuantity).length
-        console.log('📊 Produtos retornados da API:', {
-          total: products.length,
-          comSuperAtacado,
-          exemplos: products.slice(0, 2).map(p => ({
-            name: p.name,
-            superWholesalePrice: p.superWholesalePrice,
-            superWholesaleQuantity: p.superWholesaleQuantity,
-            hasSuperWholesale: !!(p.superWholesalePrice && p.superWholesaleQuantity)
-          }))
-        })
-        
-        // Log que aparecer no navegador para debug
-        if (products.length > 0) {
-          const firstProduct = products[0];
-          console.warn('🔍 VERCEL DEBUG - Primeiro produto:', {
-            name: firstProduct.name,
-            superWholesalePrice: firstProduct.superWholesalePrice,
-            superWholesaleQuantity: firstProduct.superWholesaleQuantity
-          });
-        }
 
         return NextResponse.json({
           products,
@@ -246,13 +196,17 @@ export async function GET(request: NextRequest) {
         })
       } catch (error) {
         console.error('Production query error:', error)
-        throw error
-      } finally {
-        try {
-          await pool.end()
-        } catch (endError) {
-          console.error('Error closing pool:', endError)
-        }
+        // Retornar resposta vazia em caso de erro ao invés de falhar completamente
+        return NextResponse.json({
+          products: [],
+          pagination: {
+            page: 1,
+            limit: 12,
+            total: 0,
+            totalPages: 0
+          },
+          error: 'Database connection failed'
+        })
       }
     }
 
