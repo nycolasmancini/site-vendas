@@ -263,9 +263,19 @@ export function CartSidebar() {
               {groupedItems.map((group, index) => {
                 if (group.type === 'single') {
                   const item = group.items[0]
-                  const currentPrice = item.specialQuantity && item.quantity >= item.specialQuantity && item.specialPrice
-                    ? item.specialPrice
-                    : item.unitPrice
+                  
+                  // Aplicar o melhor desconto disponível (menor preço)
+                  const reachedSpecialQuantity = item.specialQuantity && item.quantity >= item.specialQuantity
+                  const reachedSuperWholesaleQuantity = item.superWholesaleQuantity && item.quantity >= item.superWholesaleQuantity
+                  
+                  let currentPrice = item.unitPrice
+                  if (reachedSpecialQuantity && item.specialPrice && reachedSuperWholesaleQuantity && item.superWholesalePrice) {
+                    currentPrice = Math.min(item.specialPrice, item.superWholesalePrice)
+                  } else if (reachedSpecialQuantity && item.specialPrice) {
+                    currentPrice = item.specialPrice
+                  } else if (reachedSuperWholesaleQuantity && item.superWholesalePrice) {
+                    currentPrice = item.superWholesalePrice
+                  }
 
                   const isRemoving = removingItems.has(item.id)
                 
@@ -355,34 +365,52 @@ export function CartSidebar() {
                       <div className="flex items-center justify-between mt-2">
                         <div className="text-sm">
                           {(() => {
-                            const isWholesaleActive = item.specialQuantity && item.quantity >= item.specialQuantity && item.specialPrice
+                            const isSpecialActive = item.specialQuantity && item.quantity >= item.specialQuantity && item.specialPrice
+                            const isSuperWholesaleActive = item.superWholesaleQuantity && item.quantity >= item.superWholesaleQuantity && item.superWholesalePrice
+                            const isAnyDiscountActive = isSpecialActive || isSuperWholesaleActive
+                            
                             return (
-                              <span 
-                                key={`unit-${item.id}-${isWholesaleActive}`}
-                                className={`font-semibold transition-all duration-500 ease-in-out ${
-                                  isWholesaleActive ? 'text-green-600' : 'text-gray-900'
-                                }`}
-                                style={{
-                                  animation: isWholesaleActive ? 'priceChangeColor 0.6s ease-in-out, microBounce 0.4s ease-out 0.2s' : 'fadeInPrice 0.5s ease-in-out'
-                                }}
-                              >
-                                {formatPrice(currentPrice)}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span 
+                                  key={`unit-${item.id}-${isAnyDiscountActive}`}
+                                  className={`font-semibold transition-all duration-500 ease-in-out ${
+                                    isAnyDiscountActive ? 'text-green-600' : 'text-gray-900'
+                                  }`}
+                                  style={{
+                                    animation: isAnyDiscountActive ? 'priceChangeColor 0.6s ease-in-out, microBounce 0.4s ease-out 0.2s' : 'fadeInPrice 0.5s ease-in-out'
+                                  }}
+                                >
+                                  {formatPrice(currentPrice)}
+                                </span>
+                                <span className="text-gray-500">cada</span>
+                                {isSuperWholesaleActive && (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 animate-pulse">
+                                    Super Atacado
+                                  </span>
+                                )}
+                                {isSpecialActive && !isSuperWholesaleActive && (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    Atacado
+                                  </span>
+                                )}
+                              </div>
                             )
                           })()}
-                          <span className="text-gray-500 ml-1">cada</span>
                         </div>
                         <div className="text-sm font-semibold text-right">
                           {(() => {
-                            const isWholesaleActive = item.specialQuantity && item.quantity >= item.specialQuantity && item.specialPrice
+                            const isSpecialActive = item.specialQuantity && item.quantity >= item.specialQuantity && item.specialPrice
+                            const isSuperWholesaleActive = item.superWholesaleQuantity && item.quantity >= item.superWholesaleQuantity && item.superWholesalePrice
+                            const isAnyDiscountActive = isSpecialActive || isSuperWholesaleActive
+                            
                             return (
                               <span 
-                                key={`total-${item.id}-${isWholesaleActive}`}
+                                key={`total-${item.id}-${isAnyDiscountActive}`}
                                 className={`transition-all duration-500 ease-in-out ${
-                                  isWholesaleActive ? 'text-green-600' : 'text-gray-900'
+                                  isAnyDiscountActive ? 'text-green-600' : 'text-gray-900'
                                 }`}
                                 style={{
-                                  animation: isWholesaleActive ? 'priceChangeColor 0.6s ease-in-out, microBounce 0.4s ease-out 0.3s' : 'fadeInPrice 0.5s ease-in-out'
+                                  animation: isAnyDiscountActive ? 'priceChangeColor 0.6s ease-in-out, microBounce 0.4s ease-out 0.3s' : 'fadeInPrice 0.5s ease-in-out'
                                 }}
                               >
                                 {formatPrice(currentPrice * item.quantity)}

@@ -85,7 +85,8 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Processar modelos
+    // Processar modelos e coletar dados de preços
+    const createdModels = []
     for (const modelData of modelsData) {
       const { brandName, modelName, price, superWholesalePrice } = modelData
 
@@ -132,6 +133,41 @@ export async function POST(request: NextRequest) {
           superWholesalePrice: superWholesalePrice ? parseFloat(superWholesalePrice) : null
         }
       })
+      
+      // Coletar dados para atualização do produto
+      createdModels.push({
+        price: parseFloat(price),
+        superWholesalePrice: superWholesalePrice ? parseFloat(superWholesalePrice) : null
+      })
+    }
+
+    // Atualizar o produto com dados agregados dos modelos
+    if (createdModels.length > 0) {
+      const prices = createdModels.map(m => m.price).filter(p => p > 0)
+      const superWholesalePrices = createdModels
+        .map(m => m.superWholesalePrice)
+        .filter(p => p && p > 0)
+      
+      const updateData: any = {}
+      
+      if (prices.length > 0) {
+        // Usar preço mínimo como preço padrão do produto
+        updateData.price = Math.min(...prices)
+      }
+      
+      // Se há preços de super atacado, definir valores agregados
+      if (superWholesalePrices.length > 0) {
+        updateData.superWholesalePrice = Math.min(...superWholesalePrices)
+        // Usar uma quantidade padrão razoável para super atacado em produtos modais
+        updateData.superWholesaleQuantity = 50
+      }
+      
+      if (Object.keys(updateData).length > 0) {
+        await prisma.product.update({
+          where: { id: product.id },
+          data: updateData
+        })
+      }
     }
 
     return NextResponse.json({ 

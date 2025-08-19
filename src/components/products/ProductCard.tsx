@@ -128,9 +128,16 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
   const numericQuantity = typeof quantity === 'string' ? parseInt(quantity) || 1 : quantity
   const cartQuantity = getCartQuantity()
   
-  // Só mostra preço de super atacado se já atingiu a quantidade no carrinho
+  // Calcular preço que será aplicado considerando quantidade atual + nova quantidade
+  const totalQuantityAfterAdd = cartQuantity + numericQuantity
+  const willReachWholesaleQuantity = product.superWholesaleQuantity && totalQuantityAfterAdd >= product.superWholesaleQuantity
   const hasReachedWholesaleQuantity = product.superWholesaleQuantity && cartQuantity >= product.superWholesaleQuantity
+  
   const currentPrice = hasReachedWholesaleQuantity && product.superWholesalePrice
+    ? product.superWholesalePrice
+    : product.price
+    
+  const priceAfterAdd = willReachWholesaleQuantity && product.superWholesalePrice
     ? product.superWholesalePrice
     : product.price
 
@@ -231,13 +238,40 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                     </span>
                   </div>
                   
-                  {/* Preço de super atacado - aparece sempre abaixo */}
-                  {product.superWholesalePrice && product.superWholesaleQuantity && !hasReachedWholesaleQuantity && (
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--green)' }}></div>
-                      <p className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>
-                        +{Math.max(0, product.superWholesaleQuantity - cartQuantity)} un: {formatPrice(product.superWholesalePrice)}
-                      </p>
+                  {/* Preço de super atacado e preview */}
+                  {product.superWholesalePrice && product.superWholesaleQuantity && (
+                    <div>
+                      {!hasReachedWholesaleQuantity && (
+                        <div className="flex items-center gap-2 p-2 rounded-lg mb-2" style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
+                          <div className="w-2 h-2 rounded-full" style={{ background: 'var(--green)' }}></div>
+                          <div className="flex flex-col">
+                            <p className="text-xs font-medium" style={{ color: 'var(--green)' }}>
+                              A partir de {product.superWholesaleQuantity} unidades
+                            </p>
+                            <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                              {formatPrice(product.superWholesalePrice)} cada 
+                              <span style={{ color: 'var(--green)' }} className="ml-1 font-medium">
+                                (-{Math.round((1 - product.superWholesalePrice / product.price) * 100)}%)
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Preview do preço após adicionar */}
+                      {willReachWholesaleQuantity && !hasReachedWholesaleQuantity && numericQuantity > 1 && (
+                        <div className="flex items-center gap-2 p-2 rounded-lg mb-2" style={{ background: 'rgba(34, 197, 94, 0.15)', border: '1px solid var(--green)' }}>
+                          <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--green)' }}></div>
+                          <div className="flex flex-col">
+                            <p className="text-xs font-medium" style={{ color: 'var(--green)' }}>
+                              🎉 Super atacado será aplicado!
+                            </p>
+                            <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                              Total no carrinho: {totalQuantityAfterAdd} unidades
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

@@ -4,8 +4,11 @@ import { supabase } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
-    // Em produção, usar conexão direta por enquanto
+    console.log('🔍 NODE_ENV:', process.env.NODE_ENV)
+    
+    // Em produção, usar conexão direta por enquanto  
     if (process.env.NODE_ENV === 'production') {
+      console.log('📊 Using production SQL query path')
       const { Pool } = require('pg')
       const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL
       
@@ -60,17 +63,16 @@ export async function GET(request: NextRequest) {
         // Adicionar limit e offset aos parâmetros ANTES de construir a query
         queryParams.push(limit, offset)
 
-        // Query para produtos com imagens
+        // Query para produtos com imagens e modelos
         const productsQuery = `
           SELECT 
             p.id, p.name, p.subname, p.description, p.brand, p.price, 
-            p."superWholesalePrice" as "superWholesalePrice", 
-            p."superWholesaleQuantity" as "superWholesaleQuantity",
+            p."superWholesalePrice", p."superWholesaleQuantity",
             p.cost, p."categoryId", p.featured, p."isModalProduct",
             p."isActive", p."createdAt",
             COALESCE(
               JSON_AGG(
-                CASE WHEN i.id IS NOT NULL THEN
+                DISTINCT CASE WHEN i.id IS NOT NULL THEN
                   JSON_BUILD_OBJECT(
                     'id', i.id,
                     'url', i.url,
@@ -78,12 +80,29 @@ export async function GET(request: NextRequest) {
                     'order', i."order",
                     'isMain', i."isMain"
                   )
-                END ORDER BY i."order"
+                END ORDER BY JSON_BUILD_OBJECT('order', i."order", 'id', i.id)
               ) FILTER (WHERE i.id IS NOT NULL),
               '[]'::json
-            ) as images
+            ) as images,
+            COALESCE(
+              JSON_AGG(
+                DISTINCT CASE WHEN pm.id IS NOT NULL THEN
+                  JSON_BUILD_OBJECT(
+                    'id', m.id,
+                    'brandName', b.name,
+                    'modelName', m.name,
+                    'price', pm.price,
+                    'superWholesalePrice', pm."superWholesalePrice"
+                  )
+                END ORDER BY JSON_BUILD_OBJECT('id', m.id)
+              ) FILTER (WHERE pm.id IS NOT NULL),
+              '[]'::json
+            ) as models
           FROM "Product" p
           LEFT JOIN "ProductImage" i ON i."productId" = p.id
+          LEFT JOIN "ProductModel" pm ON pm."productId" = p.id
+          LEFT JOIN "Model" m ON m.id = pm."modelId"
+          LEFT JOIN "Brand" b ON b.id = m."brandId"
           ${whereClause}
           GROUP BY p.id
           ORDER BY p."createdAt" DESC
@@ -108,7 +127,28 @@ export async function GET(request: NextRequest) {
         }
 
         const products = productsResult.rows.map((row: any) => {
-          const product = {
+          const models = Array.isArray(row.models) ? row.models : []
+          const hasModels = models.length > 0
+          
+          // Para produtos modais, calcular price range baseado nos modelos
+          let priceRange = null
+          if (row.isModalProduct && hasModels) {
+            const prices = models.map((m: any) => m.price || 0).filter((p: number) => p > 0)
+            const superWholesalePrices = models
+              .map((m: any) => m.superWholesalePrice)
+              .filter((p: number) => p && p > 0)
+            
+            if (prices.length > 0) {
+              priceRange = {
+                min: Math.min(...prices),
+                max: Math.max(...prices),
+                superWholesaleMin: superWholesalePrices.length > 0 ? Math.min(...superWholesalePrices) : null,
+                superWholesaleMax: superWholesalePrices.length > 0 ? Math.max(...superWholesalePrices) : null
+              }
+            }
+          }
+          
+          return {
             id: row.id,
             name: row.name,
             subname: row.subname,
@@ -123,28 +163,14 @@ export async function GET(request: NextRequest) {
             isModalProduct: row.isModalProduct || false,
             isActive: row.isActive,
             createdAt: row.createdAt,
-            // Campos relacionais (não disponíveis na query simples)
+            // Campos relacionais
             category: null,
             images: Array.isArray(row.images) ? row.images : [],
             suppliers: [],
-            models: [],
-            hasModels: false
+            models,
+            hasModels,
+            priceRange
           }
-          
-          // Debug: Log produtos com super atacado
-          if (product.superWholesalePrice && product.superWholesaleQuantity) {
-            console.log('🔍 Produto com super atacado encontrado:', {
-              name: product.name,
-              superWholesalePrice: product.superWholesalePrice,
-              superWholesaleQuantity: product.superWholesaleQuantity,
-              rawData: { 
-                superWholesalePrice: row.superWholesalePrice, 
-                superWholesaleQuantity: row.superWholesaleQuantity 
-              }
-            })
-          }
-          
-          return product
         })
 
         const total = parseInt(totalResult.rows[0].total)
@@ -182,6 +208,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Em desenvolvimento, usar Prisma
+    console.log('📊 Using development Prisma query path')
     const searchParams = request.nextUrl.searchParams
     const categoryId = searchParams.get('categoryId')
     const featured = searchParams.get('featured')
@@ -220,26 +247,30 @@ export async function GET(request: NextRequest) {
         where,
         skip,
         take: limit,
-        select: {
-          id: true,
-          name: true,
-          subname: true,
-          description: true,
-          brand: true,
-          price: true,
-          superWholesalePrice: true,
-          superWholesaleQuantity: true,
-          cost: true,
-          categoryId: true,
-          featured: true,
-          isModalProduct: true,
-          isActive: true,
-          createdAt: true,
+        include: {
           category: {
             select: {
               id: true,
               name: true,
               slug: true
+            }
+          },
+          images: {
+            select: {
+              id: true,
+              url: true,
+              isMain: true,
+              order: true
+            },
+            orderBy: { order: 'asc' }
+          },
+          models: {
+            include: {
+              model: {
+                include: {
+                  brand: true
+                }
+              }
             }
           }
         },
@@ -248,15 +279,44 @@ export async function GET(request: NextRequest) {
       prisma.product.count({ where })
     ])
 
+    // Processar produtos com cálculo de price ranges para produtos modais
+    const processedProducts = products.map((product: any) => {
+      const hasModels = product.models && product.models.length > 0
+      
+      // Para produtos modais, calcular price range baseado nos modelos
+      let priceRange = null
+      if (product.isModalProduct && hasModels) {
+        const prices = product.models.map((pm: any) => pm.price || 0).filter((p: number) => p > 0)
+        const superWholesalePrices = product.models
+          .map((pm: any) => pm.superWholesalePrice)
+          .filter((p: number) => p && p > 0)
+        
+        if (prices.length > 0) {
+          priceRange = {
+            min: Math.min(...prices),
+            max: Math.max(...prices),
+            superWholesaleMin: superWholesalePrices.length > 0 ? Math.min(...superWholesalePrices) : null,
+            superWholesaleMax: superWholesalePrices.length > 0 ? Math.max(...superWholesalePrices) : null
+          }
+        }
+      }
+      
+      return {
+        ...product,
+        hasModels,
+        priceRange,
+        // Simplificar relacionamentos complexos mas manter dados essenciais
+        suppliers: [],
+        models: hasModels ? product.models.map((pm: any) => ({
+          id: pm.model.id,
+          brandName: pm.model.brand.name,
+          modelName: pm.model.name,
+          price: pm.price,
+          superWholesalePrice: pm.superWholesalePrice
+        })) : []
+      }
+    })
 
-    // Simplificar produtos para produção (manter dados, remover apenas relações complexas)
-    const processedProducts = products.map((product: any) => ({
-      ...product,
-      images: [],
-      suppliers: [],
-      models: [],
-      hasModels: false
-    }))
 
     return NextResponse.json({
       products: processedProducts,

@@ -162,7 +162,11 @@ export const useCartStore = create<CartStore>()(
           
           let price = item.unitPrice
           
-          if (reachedSpecialQuantity && item.specialPrice) {
+          // Aplicar o melhor desconto disponível (menor preço)
+          if (reachedSpecialQuantity && item.specialPrice && reachedSuperWholesaleQuantity && item.superWholesalePrice) {
+            // Se ambos os descontos se aplicam, usar o menor preço
+            price = Math.min(item.specialPrice, item.superWholesalePrice)
+          } else if (reachedSpecialQuantity && item.specialPrice) {
             price = item.specialPrice
           } else if (reachedSuperWholesaleQuantity && item.superWholesalePrice) {
             price = item.superWholesalePrice
@@ -179,18 +183,20 @@ export const useCartStore = create<CartStore>()(
       getSavings: () => {
         return get().items.reduce((total, item) => {
           let savings = 0
+          const regularTotal = item.unitPrice * item.quantity
           
-          // Calcular economia se atingiu quantidade especial
-          if (item.specialQuantity && item.quantity >= item.specialQuantity && item.specialPrice) {
-            const regularTotal = item.unitPrice * item.quantity
-            const specialTotal = item.specialPrice * item.quantity
-            savings = regularTotal - specialTotal
-          }
-          // Calcular economia se atingiu quantidade super atacado
-          else if (item.superWholesaleQuantity && item.quantity >= item.superWholesaleQuantity && item.superWholesalePrice) {
-            const regularTotal = item.unitPrice * item.quantity
-            const superWholesaleTotal = item.superWholesalePrice * item.quantity
-            savings = regularTotal - superWholesaleTotal
+          const reachedSpecialQuantity = item.specialQuantity && item.quantity >= item.specialQuantity
+          const reachedSuperWholesaleQuantity = item.superWholesaleQuantity && item.quantity >= item.superWholesaleQuantity
+          
+          // Calcular economia com base no melhor desconto aplicado
+          if (reachedSpecialQuantity && item.specialPrice && reachedSuperWholesaleQuantity && item.superWholesalePrice) {
+            // Se ambos se aplicam, usar o menor preço
+            const bestPrice = Math.min(item.specialPrice, item.superWholesalePrice)
+            savings = regularTotal - (bestPrice * item.quantity)
+          } else if (reachedSpecialQuantity && item.specialPrice) {
+            savings = regularTotal - (item.specialPrice * item.quantity)
+          } else if (reachedSuperWholesaleQuantity && item.superWholesalePrice) {
+            savings = regularTotal - (item.superWholesalePrice * item.quantity)
           }
           
           return total + savings
