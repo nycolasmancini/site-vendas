@@ -67,8 +67,8 @@ export async function GET(request: NextRequest) {
         const productsQuery = `
           SELECT 
             p.id, p.name, p.subname, p.description, p.brand, p.price, 
-            p."superWholesalePrice" as "superWholesalePrice", 
-            p."superWholesaleQuantity" as "superWholesaleQuantity",
+            p."superWholesalePrice" as superwholesaleprice, 
+            p."superWholesaleQuantity" as superwholesalequantity,
             p.cost, p."categoryId", p.featured, p."isModalProduct",
             p."isActive", p."createdAt",
             COALESCE(
@@ -161,6 +161,17 @@ export async function GET(request: NextRequest) {
             }
           }
           
+          // Acesso robusto aos campos que podem ter cases diferentes
+          const superPrice = row.superWholesalePrice || 
+                           row.superwholesaleprice || 
+                           row["superWholesalePrice"] || 
+                           row["superwholesaleprice"];
+                           
+          const superQty = row.superWholesaleQuantity || 
+                         row.superwholesalequantity || 
+                         row["superWholesaleQuantity"] || 
+                         row["superwholesalequantity"];
+          
           const processedProduct = {
             id: row.id,
             name: row.name,
@@ -168,8 +179,8 @@ export async function GET(request: NextRequest) {
             description: row.description,
             brand: row.brand,
             price: parseFloat(row.price || 0),
-            superWholesalePrice: row.superWholesalePrice ? parseFloat(row.superWholesalePrice) : null,
-            superWholesaleQuantity: row.superWholesaleQuantity ? parseInt(row.superWholesaleQuantity) : null,
+            superWholesalePrice: superPrice ? parseFloat(superPrice) : null,
+            superWholesaleQuantity: superQty ? parseInt(superQty) : null,
             cost: row.cost ? parseFloat(row.cost) : null,
             categoryId: row.categoryId,
             featured: row.featured || false,
@@ -187,6 +198,8 @@ export async function GET(request: NextRequest) {
           
           console.log('🔍 DEBUG: Produto processado:', {
             name: processedProduct.name,
+            superPrice: superPrice,
+            superQty: superQty,
             superWholesalePrice: processedProduct.superWholesalePrice,
             superWholesaleQuantity: processedProduct.superWholesaleQuantity
           })
