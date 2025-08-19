@@ -161,16 +161,19 @@ export async function GET(request: NextRequest) {
             }
           }
           
-          // Acesso robusto aos campos que podem ter cases diferentes
-          const superPrice = row.superWholesalePrice || 
-                           row.superwholesaleprice || 
-                           row["superWholesalePrice"] || 
-                           row["superwholesaleprice"];
-                           
-          const superQty = row.superWholesaleQuantity || 
-                         row.superwholesalequantity || 
-                         row["superWholesaleQuantity"] || 
-                         row["superwholesalequantity"];
+          // Busca robusta dos valores - tenta todas as possibilidades
+          const allKeys = Object.keys(row);
+          const superPriceKey = allKeys.find(key => 
+            key.toLowerCase() === 'superwholesaleprice' || 
+            key === 'superWholesalePrice'
+          );
+          const superQtyKey = allKeys.find(key => 
+            key.toLowerCase() === 'superwholesalequantity' || 
+            key === 'superWholesaleQuantity'
+          );
+          
+          const superPrice = superPriceKey ? row[superPriceKey] : null;
+          const superQty = superQtyKey ? row[superQtyKey] : null;
           
           const processedProduct = {
             id: row.id,
@@ -216,9 +219,21 @@ export async function GET(request: NextRequest) {
           comSuperAtacado,
           exemplos: products.slice(0, 2).map(p => ({
             name: p.name,
+            superWholesalePrice: p.superWholesalePrice,
+            superWholesaleQuantity: p.superWholesaleQuantity,
             hasSuperWholesale: !!(p.superWholesalePrice && p.superWholesaleQuantity)
           }))
         })
+        
+        // Log que aparecer no navegador para debug
+        if (products.length > 0) {
+          const firstProduct = products[0];
+          console.warn('🔍 VERCEL DEBUG - Primeiro produto:', {
+            name: firstProduct.name,
+            superWholesalePrice: firstProduct.superWholesalePrice,
+            superWholesaleQuantity: firstProduct.superWholesaleQuantity
+          });
+        }
 
         return NextResponse.json({
           products,
