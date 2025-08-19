@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
                     'order', i."order",
                     'isMain', i."isMain"
                   )
-                END ORDER BY JSON_BUILD_OBJECT('order', i."order", 'id', i.id)
+                END ORDER BY i."order", i.id
               ) FILTER (WHERE i.id IS NOT NULL),
               '[]'::json
             ) as images,
@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
                     'price', pm.price,
                     'superWholesalePrice', pm."superWholesalePrice"
                   )
-                END ORDER BY JSON_BUILD_OBJECT('id', m.id)
+                END ORDER BY m.id
               ) FILTER (WHERE pm.id IS NOT NULL),
               '[]'::json
             ) as models
