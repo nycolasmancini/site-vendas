@@ -133,7 +133,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
   const willReachWholesaleQuantity = product.superWholesaleQuantity && totalQuantityAfterAdd >= product.superWholesaleQuantity
   const hasReachedWholesaleQuantity = product.superWholesaleQuantity && cartQuantity >= product.superWholesaleQuantity
   
-  const currentPrice = hasReachedWholesaleQuantity && product.superWholesalePrice
+  const currentPrice = (hasReachedWholesaleQuantity || willReachWholesaleQuantity) && product.superWholesalePrice
     ? product.superWholesalePrice
     : product.price
     
@@ -230,7 +230,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                       key={`${product.id}-${currentPrice}`}
                       className="text-lg sm:text-xl font-bold transition-all duration-500 ease-in-out animate-price-change"
                       style={{
-                        color: 'var(--foreground)',
+                        color: (hasReachedWholesaleQuantity || willReachWholesaleQuantity) && product.superWholesalePrice ? 'var(--green)' : 'var(--foreground)',
                         animation: 'fadeInPrice 0.5s ease-in-out'
                       }}
                     >
@@ -244,7 +244,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                   {/* Preço de super atacado e preview */}
                   {product.superWholesalePrice && product.superWholesaleQuantity && (
                     <div>
-                      {!hasReachedWholesaleQuantity && (
+                      {!hasReachedWholesaleQuantity && !willReachWholesaleQuantity && (
                         <div className="p-2 rounded-lg mb-2" style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
                           <div className="flex flex-col">
                             <p className="text-xs font-medium" style={{ color: 'var(--green)' }}>
@@ -261,20 +261,6 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                         </div>
                       )}
                       
-                      {/* Preview do preço após adicionar */}
-                      {willReachWholesaleQuantity && !hasReachedWholesaleQuantity && numericQuantity > 1 && (
-                        <div className="flex items-center gap-2 p-2 rounded-lg mb-2" style={{ background: 'rgba(34, 197, 94, 0.15)', border: '1px solid var(--green)' }}>
-                          <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--green)' }}></div>
-                          <div className="flex flex-col">
-                            <p className="text-xs font-medium" style={{ color: 'var(--green)' }}>
-                              🎉 Super atacado será aplicado!
-                            </p>
-                            <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                              Total no carrinho: {totalQuantityAfterAdd} unidades
-                            </p>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
