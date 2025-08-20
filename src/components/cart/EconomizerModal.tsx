@@ -138,7 +138,7 @@ export function EconomizerModal({ isOpen, onClose, eligibleItems }: EconomizerMo
       {/* Modal */}
       <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={onClose}>
         <div 
-          className={`bg-white rounded-xl shadow-2xl w-full max-w-lg h-[600px] flex flex-col transition-all duration-300 ease-out transform ${
+          className={`bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] min-h-[500px] flex flex-col transition-all duration-300 ease-out transform ${
             isVisible 
               ? 'opacity-100 scale-100 translate-y-0' 
               : 'opacity-0 scale-95 translate-y-4'
@@ -146,16 +146,8 @@ export function EconomizerModal({ isOpen, onClose, eligibleItems }: EconomizerMo
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-xl">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                <TrendingUp className="w-4 h-4 text-green-600" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-green-800">Economize levando mais!</h2>
-                <p className="text-xs text-green-600">{currentIndex + 1} de {eligibleItems.length} produtos</p>
-              </div>
-            </div>
+          <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-xl">
+            <p className="text-sm font-semibold text-green-700">{currentIndex + 1} de {eligibleItems.length} produtos</p>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -165,7 +157,7 @@ export function EconomizerModal({ isOpen, onClose, eligibleItems }: EconomizerMo
           </div>
 
           {/* Carousel Container */}
-          <div className="flex-1 relative overflow-hidden">
+          <div className="flex-1 relative overflow-hidden overflow-y-auto">
             {/* Navigation Arrows */}
             {eligibleItems.length > 1 && (
               <>
@@ -225,9 +217,9 @@ export function EconomizerModal({ isOpen, onClose, eligibleItems }: EconomizerMo
                   const itemSavingsPerUnit = item.unitPrice - itemDiscountPrice
 
                   return (
-                    <div key={item.id} className="w-full flex-shrink-0 p-6 flex flex-col justify-between">
+                    <div key={item.id} className="w-full flex-shrink-0 p-4 flex flex-col justify-between min-h-full">
                       {/* Product Info */}
-                      <div className="flex items-start gap-3 mb-4">
+                      <div className="flex items-start gap-3 mb-3">
                         <div className="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                           {item.image ? (
                             <img
@@ -252,7 +244,7 @@ export function EconomizerModal({ isOpen, onClose, eligibleItems }: EconomizerMo
                       </div>
 
                       {/* Progress */}
-                      <div className="mb-4">
+                      <div className="mb-3">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-lg font-bold text-green-600">
                             {Math.round(itemPercentageComplete)}%
@@ -270,17 +262,17 @@ export function EconomizerModal({ isOpen, onClose, eligibleItems }: EconomizerMo
                       </div>
 
                       {/* Price Comparison */}
-                      <div className="grid grid-cols-2 gap-3 mb-4">
-                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center shadow-sm">
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-2 text-center shadow-sm">
                           <p className="text-xs font-medium text-gray-600 uppercase">ATUAL</p>
-                          <p className="text-lg font-bold text-gray-700">
+                          <p className="text-base font-bold text-gray-700">
                             {formatPrice(item.unitPrice)} 
                             <span className="text-sm font-normal text-gray-500">/un.</span>
                           </p>
                         </div>
-                        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center shadow-sm">
+                        <div className="bg-orange-50 border border-orange-200 rounded-lg p-2 text-center shadow-sm">
                           <p className="text-xs font-medium text-orange-600 uppercase">ATACADO</p>
-                          <p className="text-lg font-bold text-orange-600">
+                          <p className="text-base font-bold text-orange-600">
                             {formatPrice(itemDiscountPrice)} 
                             <span className="text-sm font-normal text-orange-400">/un.</span>
                           </p>
@@ -288,7 +280,7 @@ export function EconomizerModal({ isOpen, onClose, eligibleItems }: EconomizerMo
                       </div>
 
                       {/* Savings */}
-                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 mb-4 text-center">
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-3 mb-3 text-center">
                         <p className="font-bold text-green-800 mb-1">Você vai economizar:</p>
                         <p className="text-2xl font-black text-green-600 mb-2">{formatPrice(itemTotalSavings)}</p>
                         <p className="text-xs text-green-600">
@@ -312,7 +304,7 @@ export function EconomizerModal({ isOpen, onClose, eligibleItems }: EconomizerMo
 
           {/* Dots Indicator */}
           {eligibleItems.length > 1 && (
-            <div className="flex justify-center items-center py-4 gap-2">
+            <div className="flex justify-center items-center py-3 gap-2">
               {eligibleItems.map((_, index) => (
                 <button
                   key={index}
