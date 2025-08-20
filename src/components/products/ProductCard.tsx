@@ -280,29 +280,40 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
             </div>
 
             {product.isModalProduct ? (
-              <button
-                ref={buttonRef}
-                onClick={handleAddToCart}
-                className="btn-primary w-full interactive flex items-center justify-center gap-2"
-                style={{ 
-                  background: 'var(--primary)', 
-                  color: 'var(--primary-foreground)'
-                }}
-              >
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="16" 
-                  height="16" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="1.5"
+              <div className="space-y-2 sm:space-y-3">
+                {/* Espaçamento invisível equivalente aos controles de quantidade */}
+                <div className="flex items-center justify-center">
+                  <div className="invisible flex items-center rounded-lg overflow-hidden" style={{ border: '1px solid transparent' }}>
+                    <div className="px-3 sm:px-4 py-2 sm:py-2.5 text-base font-bold">-</div>
+                    <div className="w-12 sm:w-14 text-center py-2 sm:py-2.5 text-base font-medium">1</div>
+                    <div className="px-3 sm:px-4 py-2 sm:py-2.5 text-base font-bold">+</div>
+                  </div>
+                </div>
+                
+                <button
+                  ref={buttonRef}
+                  onClick={handleAddToCart}
+                  className="btn-primary w-full interactive flex items-center justify-center gap-2"
+                  style={{ 
+                    background: 'var(--primary)', 
+                    color: 'var(--primary-foreground)'
+                  }}
                 >
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                  <path d="M9 9h6v6H9z"/>
-                </svg>
-                <span className="font-medium">Escolher</span>
-              </button>
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="1.5"
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <path d="M9 9h6v6H9z"/>
+                  </svg>
+                  <span className="font-medium">Escolher</span>
+                </button>
+              </div>
             ) : (
               <div className="space-y-2 sm:space-y-3">
                 {/* Quantidade */}
