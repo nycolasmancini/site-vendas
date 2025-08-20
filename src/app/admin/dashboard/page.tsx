@@ -27,11 +27,15 @@ interface Product {
     id: string
     price: number
     superWholesalePrice?: number
-    model: {
+    // Formato aninhado (Prisma/desenvolvimento)
+    model?: {
       id: string
       name: string
       brand: { name: string }
     }
+    // Formato plano (SQL direto/produção)
+    brandName?: string
+    modelName?: string
   }>
   createdAt: string
 }
@@ -1671,10 +1675,10 @@ export default function AdminDashboard() {
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
                         <div>
                           <p className="font-medium text-gray-900">
-                            {productModel.model.brand.name}
+                            {productModel.brandName || productModel.model?.brand?.name}
                           </p>
                           <p className="text-sm text-gray-600">
-                            {productModel.model.name}
+                            {productModel.modelName || productModel.model?.name}
                           </p>
                         </div>
                         <div>
