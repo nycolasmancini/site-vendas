@@ -32,6 +32,13 @@ export function EconomizerModal({ isOpen, onClose, eligibleItems }: EconomizerMo
     }
   }, [isOpen, eligibleItems.length])
 
+  // Close modal automatically if no more eligible items while modal is open
+  useEffect(() => {
+    if (isOpen && eligibleItems.length === 0) {
+      onClose()
+    }
+  }, [isOpen, eligibleItems.length, onClose])
+
   // Navigation functions
   const goToNext = () => {
     if (currentIndex < eligibleItems.length - 1) {
@@ -99,6 +106,10 @@ export function EconomizerModal({ isOpen, onClose, eligibleItems }: EconomizerMo
     const item = eligibleItems.find(i => i.id === itemId)
     if (item) {
       updateQuantity(itemId, item.quantity + additionalQuantity)
+      // Close modal after successfully adding quantity
+      setTimeout(() => {
+        onClose()
+      }, 500) // Small delay to let user see the action completed
     }
   }
 
