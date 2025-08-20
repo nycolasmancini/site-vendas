@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { query as dbQuery, testConnection } from '@/lib/db'
+import { query as dbQuery, testConnection, findOrCreateBrand, findOrCreateModel, createProductModel } from '@/lib/db'
 
 export async function GET(
   request: NextRequest,
@@ -82,6 +82,158 @@ export async function GET(
 
   } catch (error) {
     console.error('Erro ao buscar modelos do produto:', error)
+    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
+  }
+}
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: productId } = await params
+    const body = await request.json()
+    const { brandName, modelName, price, superWholesalePrice } = body
+
+    // Validar dados obrigatórios
+    if (!brandName || !modelName || !price) {
+      return NextResponse.json(
+        { error: 'Marca, modelo e preço são obrigatórios' },
+        { status: 400 }
+      )
+    }
+
+    // Verificar se o produto existe e é um produto modal
+    let product
+    if (process.env.NODE_ENV === 'production') {
+      const productResult = await dbQuery('SELECT * FROM "Product" WHERE "id" = $1', [productId])
+      product = productResult.rows[0]
+    } else {
+      product = await prisma.product.findUnique({
+        where: { id: productId }
+      })
+    }
+
+    if (!product) {
+      return NextResponse.json({ error: 'Produto não encontrado' }, { status: 404 })
+    }
+
+    if (!product.isModalProduct) {
+      return NextResponse.json({ error: 'Apenas produtos modais podem ter modelos adicionados' }, { status: 400 })
+    }
+
+    let brand, model, productModel
+
+    // Em produção, usar SQL direto para evitar problemas com Prisma Accelerate
+    if (process.env.NODE_ENV === 'production') {
+      console.log('📊 Using production SQL direct insert for new model')
+      
+      // Testar conexão primeiro
+      const isConnected = await testConnection()
+      if (!isConnected) {
+        return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
+      }
+      
+      // Encontrar ou criar marca
+      brand = await findOrCreateBrand(brandName)
+      
+      // Encontrar ou criar modelo
+      model = await findOrCreateModel(modelName, brand.id)
+      
+      // Verificar se já existe uma relação ProductModel para este produto e modelo
+      const existingResult = await dbQuery(
+        'SELECT id FROM "ProductModel" WHERE "productId" = $1 AND "modelId" = $2',
+        [productId, model.id]
+      )
+      
+      if (existingResult.rows.length > 0) {
+        return NextResponse.json(
+          { error: 'Este modelo já está cadastrado para este produto' },
+          { status: 400 }
+        )
+      }
+      
+      // Criar relação produto-modelo com preços
+      productModel = await createProductModel({
+        productId,
+        modelId: model.id,
+        price: parseFloat(price),
+        superWholesalePrice: superWholesalePrice ? parseFloat(superWholesalePrice) : null
+      })
+      
+    } else {
+      console.log('📊 Using development Prisma create for new model')
+      
+      // Em desenvolvimento, usar Prisma normalmente
+      // Encontrar ou criar marca
+      brand = await prisma.brand.findUnique({
+        where: { name: brandName }
+      })
+
+      if (!brand) {
+        brand = await prisma.brand.create({
+          data: { name: brandName }
+        })
+      }
+
+      // Encontrar ou criar modelo
+      model = await prisma.model.findUnique({
+        where: {
+          brandId_name: {
+            brandId: brand.id,
+            name: modelName
+          }
+        }
+      })
+
+      if (!model) {
+        model = await prisma.model.create({
+          data: {
+            name: modelName,
+            brandId: brand.id
+          }
+        })
+      }
+
+      // Verificar se já existe uma relação ProductModel para este produto e modelo
+      const existingProductModel = await prisma.productModel.findFirst({
+        where: {
+          productId,
+          modelId: model.id
+        }
+      })
+
+      if (existingProductModel) {
+        return NextResponse.json(
+          { error: 'Este modelo já está cadastrado para este produto' },
+          { status: 400 }
+        )
+      }
+
+      // Criar relação produto-modelo com preços
+      productModel = await prisma.productModel.create({
+        data: {
+          productId,
+          modelId: model.id,
+          price: parseFloat(price),
+          superWholesalePrice: superWholesalePrice ? parseFloat(superWholesalePrice) : null
+        }
+      })
+    }
+
+    // Retornar dados no formato esperado pelo frontend
+    const responseData = {
+      id: model.id,
+      brandName: brand.name,
+      modelName: model.name,
+      price: parseFloat(price),
+      superWholesalePrice: superWholesalePrice ? parseFloat(superWholesalePrice) : null
+    }
+
+    return NextResponse.json(responseData, { status: 201 })
+
+  } catch (error) {
+    console.error('Erro ao adicionar modelo ao produto:', error)
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
   }
 }

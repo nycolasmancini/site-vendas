@@ -63,6 +63,13 @@ export default function AdminDashboard() {
   const [showEditForm, setShowEditForm] = useState(false)
   const [showManageModels, setShowManageModels] = useState(false)
   const [managingProduct, setManagingProduct] = useState<Product | null>(null)
+  const [showAddModelForm, setShowAddModelForm] = useState(false)
+  const [newModelData, setNewModelData] = useState({
+    brandName: '',
+    modelName: '',
+    price: '',
+    superWholesalePrice: ''
+  })
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [selectedImages, setSelectedImages] = useState<File[]>([])
   const [logoFile, setLogoFile] = useState<File | null>(null)
@@ -588,6 +595,68 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Erro ao alterar disponibilidade do produto:', error)
       alert('Erro ao alterar disponibilidade do produto')
+    }
+  }
+
+  const handleAddNewModel = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!managingProduct) return
+    
+    if (!newModelData.brandName || !newModelData.modelName || !newModelData.price) {
+      alert('Por favor, preencha marca, modelo e preço')
+      return
+    }
+    
+    try {
+      const response = await fetch(`/api/products/${managingProduct.id}/models`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          brandName: newModelData.brandName,
+          modelName: newModelData.modelName,
+          price: parseFloat(newModelData.price),
+          superWholesalePrice: newModelData.superWholesalePrice ? parseFloat(newModelData.superWholesalePrice) : null
+        }),
+      })
+
+      if (response.ok) {
+        const newModel = await response.json()
+        
+        // Atualizar o produto em gestão com o novo modelo
+        setManagingProduct(prev => {
+          if (!prev) return prev
+          return {
+            ...prev,
+            models: [
+              ...(prev.models || []),
+              newModel
+            ]
+          }
+        })
+        
+        // Limpar formulário e fechar
+        setNewModelData({
+          brandName: '',
+          modelName: '',
+          price: '',
+          superWholesalePrice: ''
+        })
+        setShowAddModelForm(false)
+        
+        alert('Modelo adicionado com sucesso!')
+        
+        // Atualizar lista de produtos
+        await fetchProducts()
+      } else {
+        const errorData = await response.json()
+        alert(`Erro ao adicionar modelo: ${errorData.error || 'Erro desconhecido'}`)
+      }
+    } catch (error) {
+      console.error('Erro ao adicionar modelo:', error)
+      alert('Erro ao adicionar modelo')
     }
   }
 
@@ -1722,11 +1791,102 @@ export default function AdminDashboard() {
                 </div>
                 
                 <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                  <h5 className="font-medium text-blue-900 mb-2">Adicionar Novos Modelos</h5>
-                  <p className="text-sm text-blue-700 mb-4">
-                    Para adicionar novos modelos, use o formulário "Produto Modal" no menu principal.
-                    Você pode criar um produto temporário só com os novos modelos e depois transferir os modelos para este produto.
-                  </p>
+                  <div className="flex justify-between items-center mb-3">
+                    <h5 className="font-medium text-blue-900">Adicionar Novos Modelos</h5>
+                    <button
+                      onClick={() => setShowAddModelForm(!showAddModelForm)}
+                      className="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                    >
+                      {showAddModelForm ? 'Cancelar' : '+ Adicionar Modelo'}
+                    </button>
+                  </div>
+                  
+                  {showAddModelForm ? (
+                    <form onSubmit={handleAddNewModel} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Marca do Celular *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={newModelData.brandName}
+                            onChange={(e) => setNewModelData({ ...newModelData, brandName: e.target.value })}
+                            className="w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            placeholder="Ex: Samsung, Apple, Xiaomi..."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Modelo do Celular *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={newModelData.modelName}
+                            onChange={(e) => setNewModelData({ ...newModelData, modelName: e.target.value })}
+                            className="w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            placeholder="Ex: Galaxy S23, iPhone 14 Pro..."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Preço Atacado *
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            required
+                            value={newModelData.price}
+                            onChange={(e) => setNewModelData({ ...newModelData, price: e.target.value })}
+                            className="w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            placeholder="0.00"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Preço Super Atacado
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={newModelData.superWholesalePrice}
+                            onChange={(e) => setNewModelData({ ...newModelData, superWholesalePrice: e.target.value })}
+                            className="w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            placeholder="0.00 (opcional)"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-end space-x-2 pt-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowAddModelForm(false)
+                            setNewModelData({
+                              brandName: '',
+                              modelName: '',
+                              price: '',
+                              superWholesalePrice: ''
+                            })
+                          }}
+                          className="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
+                        >
+                          Salvar Modelo
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <p className="text-sm text-blue-700">
+                      Clique em "Adicionar Modelo" para cadastrar um novo modelo para este produto.
+                    </p>
+                  )}
                 </div>
               </div>
             ) : (
@@ -1735,9 +1895,100 @@ export default function AdminDashboard() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
                 <h4 className="mt-2 text-lg font-medium text-gray-900">Nenhum modelo cadastrado</h4>
-                <p className="mt-2 text-sm text-gray-500">
-                  Use o formulário "Produto Modal" para adicionar modelos a este produto.
+                <p className="mt-2 text-sm text-gray-500 mb-4">
+                  Adicione o primeiro modelo para este produto.
                 </p>
+                <button
+                  onClick={() => setShowAddModelForm(true)}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                >
+                  + Adicionar Primeiro Modelo
+                </button>
+                
+                {showAddModelForm && (
+                  <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                    <form onSubmit={handleAddNewModel} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Marca do Celular *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={newModelData.brandName}
+                            onChange={(e) => setNewModelData({ ...newModelData, brandName: e.target.value })}
+                            className="w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            placeholder="Ex: Samsung, Apple, Xiaomi..."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Modelo do Celular *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={newModelData.modelName}
+                            onChange={(e) => setNewModelData({ ...newModelData, modelName: e.target.value })}
+                            className="w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            placeholder="Ex: Galaxy S23, iPhone 14 Pro..."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Preço Atacado *
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            required
+                            value={newModelData.price}
+                            onChange={(e) => setNewModelData({ ...newModelData, price: e.target.value })}
+                            className="w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            placeholder="0.00"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Preço Super Atacado
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={newModelData.superWholesalePrice}
+                            onChange={(e) => setNewModelData({ ...newModelData, superWholesalePrice: e.target.value })}
+                            className="w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            placeholder="0.00 (opcional)"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-end space-x-2 pt-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowAddModelForm(false)
+                            setNewModelData({
+                              brandName: '',
+                              modelName: '',
+                              price: '',
+                              superWholesalePrice: ''
+                            })
+                          }}
+                          className="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
+                        >
+                          Salvar Modelo
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
               </div>
             )}
 
