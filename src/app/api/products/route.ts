@@ -72,6 +72,7 @@ export async function GET(request: NextRequest) {
             p."superWholesalePrice", 
             p."superWholesaleQuantity",
             p.cost, p."categoryId", p.featured, p."isModalProduct",
+            p."quickAddIncrement",
             p."isActive", p."createdAt",
             COALESCE(
               JSON_AGG(
@@ -169,6 +170,7 @@ export async function GET(request: NextRequest) {
             categoryId: row.categoryId,
             featured: row.featured || false,
             isModalProduct: row.isModalProduct || false,
+            quickAddIncrement: row.quickAddIncrement || row.quickaddincrement || null,
             isActive: row.isActive,
             createdAt: row.createdAt,
             // Campos relacionais
