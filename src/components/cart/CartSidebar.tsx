@@ -40,16 +40,44 @@ export function CartSidebar() {
     setMounted(true)
   }, [])
 
-  // Control body scroll when cart is open
+  // Control body scroll when cart is open (mobile-friendly)
   useEffect(() => {
     if (isOpen) {
+      // Save current scroll position
+      const scrollY = window.scrollY
+      
+      // Apply styles to prevent scrolling (works on mobile too)
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${scrollY}px`
+      document.body.style.width = '100%'
       document.body.style.overflow = 'hidden'
+      
+      // For iOS - also apply to html element
+      document.documentElement.style.overflow = 'hidden'
     } else {
+      // Get the scroll position from the fixed body
+      const scrollY = document.body.style.top
+      
+      // Remove all scroll-blocking styles
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.width = ''
       document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+      
+      // Restore scroll position
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1)
+      }
     }
     
     return () => {
+      // Cleanup on unmount
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.width = ''
       document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
     }
   }, [isOpen])
 
