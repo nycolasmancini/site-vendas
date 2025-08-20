@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useCartStore } from '@/stores/useCartStore'
 import { formatPrice } from '@/lib/utils'
+import { debounce } from '@/utils/debounce'
 
 interface ProductModel {
   id: string
@@ -41,6 +42,8 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
   const [expandedBrands, setExpandedBrands] = useState<Record<string, boolean>>({})
   const [loading, setLoading] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
+  // Estado local para valores temporários dos inputs
+  const [tempInputValues, setTempInputValues] = useState<Record<string, string>>({})
   const modalRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
   const addItem = useCartStore((state) => state.addItem)
@@ -51,6 +54,8 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
   const handleClose = useCallback(() => {
     if (isAnimating) return
     setIsAnimating(true)
+    // Limpar valores temporários ao fechar
+    setTempInputValues({})
     setTimeout(() => {
       onClose()
       setIsAnimating(false)
@@ -186,6 +191,13 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
   }
 
   const incrementQuantity = (modelId: string, amount: number = 1) => {
+    // Limpar valor temporário se existir
+    setTempInputValues(prev => {
+      const newValues = { ...prev }
+      delete newValues[modelId]
+      return newValues
+    })
+
     const model = models.find(m => m.id === modelId)
     if (!model) return
 
@@ -215,6 +227,13 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
   }
 
   const decrementQuantity = (modelId: string, amount: number = 1) => {
+    // Limpar valor temporário se existir
+    setTempInputValues(prev => {
+      const newValues = { ...prev }
+      delete newValues[modelId]
+      return newValues
+    })
+
     const existingItem = getCartItemByModel(modelId)
     if (!existingItem) return
 
@@ -254,6 +273,52 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
         modelName: `${model.brandName} ${model.modelName}`
       })
     }
+  }
+
+  // Função debounced para atualizar carrinho após digitação
+  const debouncedSetQuantity = useCallback(
+    debounce((modelId: string, newQuantity: number) => {
+      setQuantityDirectly(modelId, newQuantity)
+    }, 500), // 500ms de delay após parar de digitar
+    [models, product]
+  )
+
+  // Função para lidar com mudanças no input
+  const handleInputChange = (modelId: string, value: string) => {
+    // Atualizar valor temporário no estado local
+    setTempInputValues(prev => ({
+      ...prev,
+      [modelId]: value
+    }))
+
+    // Aplicar debounce na atualização do carrinho
+    const numValue = parseInt(value) || 0
+    debouncedSetQuantity(modelId, numValue)
+  }
+
+  // Função para lidar com blur (quando o campo perde o foco)
+  const handleInputBlur = (modelId: string) => {
+    const tempValue = tempInputValues[modelId]
+    if (tempValue !== undefined) {
+      const numValue = parseInt(tempValue) || 0
+      setQuantityDirectly(modelId, numValue)
+      // Limpar o valor temporário após aplicar
+      setTempInputValues(prev => {
+        const newValues = { ...prev }
+        delete newValues[modelId]
+        return newValues
+      })
+    }
+  }
+
+  // Função para obter o valor a ser exibido no input
+  const getDisplayValue = (modelId: string): string => {
+    // Se existe valor temporário sendo digitado, usar ele
+    if (tempInputValues[modelId] !== undefined) {
+      return tempInputValues[modelId]
+    }
+    // Caso contrário, usar valor do carrinho
+    return getCartQuantityByModel(modelId).toString()
   }
 
 
@@ -530,11 +595,9 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                                 </button>
                                 <input
                                   type="number"
-                                  value={currentQuantity}
-                                  onChange={(e) => {
-                                    const value = parseInt(e.target.value) || 0
-                                    setQuantityDirectly(model.id, value)
-                                  }}
+                                  value={getDisplayValue(model.id)}
+                                  onChange={(e) => handleInputChange(model.id, e.target.value)}
+                                  onBlur={() => handleInputBlur(model.id)}
                                   className="w-12 sm:w-16 text-center py-1.5 sm:py-2 text-sm font-semibold border-x border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-200"
                                   min="0"
                                   aria-label={`Quantidade para ${model.modelName}`}
