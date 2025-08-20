@@ -279,7 +279,7 @@ export function EconomizerModal({ isOpen, onClose, eligibleItems }: EconomizerMo
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-3">
                           <div 
-                            className="bg-gradient-to-r from-green-400 to-green-500 h-full rounded-full transition-all duration-300"
+                            className="bg-gradient-to-r from-green-400 to-green-500 h-full rounded-full transition-all duration-[400ms] ease-out"
                             style={{ width: `${itemPercentageComplete}%` }}
                           />
                         </div>

@@ -244,7 +244,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                   {/* Preço de super atacado e preview */}
                   {product.superWholesalePrice && product.superWholesaleQuantity && (
                     <div>
-                      {!hasReachedWholesaleQuantity && !willReachWholesaleQuantity && (
+                      {(
                         <div className="p-2 rounded-lg mb-2" style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
                           <div className="flex flex-col">
                             <p className="text-xs font-medium" style={{ color: 'var(--green)' }}>

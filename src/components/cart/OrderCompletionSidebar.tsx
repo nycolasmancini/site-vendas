@@ -6,6 +6,8 @@ import { formatPrice } from '@/lib/utils'
 import { useCartStore } from '@/stores/useCartStore'
 import { useSessionStore } from '@/stores/useSessionStore'
 import { useSession } from '@/contexts/SessionContext'
+import { useToast } from '@/hooks/useToast'
+import Toast from '@/components/ui/Toast'
 
 interface OrderCompletionSidebarProps {
   isOpen: boolean
@@ -27,6 +29,7 @@ export function OrderCompletionSidebar({
   const { clearCart, items } = useCartStore()
   const { whatsapp: storeWhatsapp, customerName: storeCustomerName } = useSessionStore()
   const { whatsapp: contextWhatsapp } = useSession()
+  const { toasts, showToast, removeToast } = useToast()
   
   const [customerName, setCustomerName] = useState('')
   const [whatsappNumber, setWhatsappNumber] = useState('')
@@ -135,6 +138,12 @@ export function OrderCompletionSidebar({
       const order = await response.json()
       console.log('Pedido criado com sucesso:', order)
       
+      // Mostrar toast de sucesso
+      showToast(
+        'Pedido enviado com sucesso! Em breve um de nossos vendedores entrará em contato.',
+        'success'
+      )
+      
       // Limpar carrinho após sucesso
       clearCart()
       setIsSubmitting(false)
@@ -142,7 +151,7 @@ export function OrderCompletionSidebar({
       // Fechar modal após envio
       setTimeout(() => {
         onClose()
-      }, 1000)
+      }, 2000)
       
     } catch (error) {
       console.error('Erro ao enviar pedido:', error)
@@ -392,6 +401,16 @@ export function OrderCompletionSidebar({
           </p>
         </div>
       </div>
+      
+      {/* Toast notifications */}
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
     </>
   )
 }

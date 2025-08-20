@@ -141,7 +141,7 @@ export default function CarrinhoPage() {
                           <div className="flex items-center bg-gray-50 rounded-lg border">
                             <button
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              className="px-3 py-2 hover:bg-gray-100 font-bold text-gray-600"
+                              className="min-w-[44px] h-[44px] flex items-center justify-center hover:bg-gray-100 font-bold text-gray-600"
                             >
                               -
                             </button>
@@ -153,7 +153,7 @@ export default function CarrinhoPage() {
                             />
                             <button
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              className="px-3 py-2 hover:bg-gray-100 font-bold text-gray-600"
+                              className="min-w-[44px] h-[44px] flex items-center justify-center hover:bg-gray-100 font-bold text-gray-600"
                             >
                               +
                             </button>
