@@ -211,12 +211,17 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                   {/* Range de preços super atacado */}
                   {product.priceRange.superWholesaleMin && product.priceRange.superWholesaleMax && (
                     <div className="p-2 rounded-lg mb-2" style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
-                      <p className="text-xs font-medium" style={{ color: 'var(--green)' }}>
-                        Caixa fechada: {product.priceRange.superWholesaleMin === product.priceRange.superWholesaleMax
-                          ? formatPrice(product.priceRange.superWholesaleMin)
-                          : `${formatPrice(product.priceRange.superWholesaleMin)} - ${formatPrice(product.priceRange.superWholesaleMax)}`
-                        }
-                      </p>
+                      <div className="flex flex-col">
+                        <p className="text-xs font-medium" style={{ color: 'var(--green)' }}>
+                          Caixa fechada
+                        </p>
+                        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                          {product.priceRange.superWholesaleMin === product.priceRange.superWholesaleMax
+                            ? formatPrice(product.priceRange.superWholesaleMin)
+                            : `${formatPrice(product.priceRange.superWholesaleMin)} - ${formatPrice(product.priceRange.superWholesaleMax)}`
+                          } / un
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
