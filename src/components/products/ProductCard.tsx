@@ -145,7 +145,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
   const imageUrl = product.images?.find(img => img.isMain)?.url || product.images?.[0]?.url || product.image
 
   return (
-    <div className="card hover:shadow-lg transition-all duration-300 overflow-hidden group animate-fade-in sm:w-full md:min-w-[280px]">
+    <div className="card hover:shadow-lg transition-all duration-300 overflow-hidden group animate-fade-in w-full">
       <div className="aspect-square relative" style={{ background: 'var(--muted)' }}>
         {imageUrl ? (
           <Image
