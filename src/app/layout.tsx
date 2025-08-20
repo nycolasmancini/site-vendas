@@ -5,7 +5,11 @@ import { SessionProvider } from "@/contexts/SessionContext";
 import { NextAuthProvider } from "@/components/NextAuthProvider";
 import { CartSidebar } from "@/components/cart/CartSidebar";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ 
+  subsets: ["latin"],
+  display: 'swap',
+  variable: '--font-inter'
+});
 
 export const metadata: Metadata = {
   title: "PMCELL São Paulo - Acessórios para Celular no Atacado",
@@ -22,7 +26,7 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.variable} font-sans`}>
         <NextAuthProvider>
           <SessionProvider>
             {children}

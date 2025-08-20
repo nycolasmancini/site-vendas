@@ -25,13 +25,171 @@
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-foreground: var(--foreground);
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: var(--font-inter), 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Typography Hierarchy */
+h1 {
+  font-size: 20px; /* Mobile first */
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  margin-top: 1.5rem;
+}
+
+h2 {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+h3 {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+  margin-top: 1rem;
+}
+
+h4, h5, h6 {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+p {
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+/* Responsive typography for larger screens */
+@media (min-width: 768px) {
+  h1 {
+    font-size: 24px;
+    margin-bottom: 1.5rem;
+    margin-top: 2rem;
+  }
+  
+  h2 {
+    font-size: 18px;
+    margin-bottom: 1rem;
+    margin-top: 1.5rem;
+  }
+  
+  h3 {
+    font-size: 16px;
+    margin-bottom: 0.75rem;
+    margin-top: 1.25rem;
+  }
+}
+
+/* Typography utility classes */
+.text-display {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  margin-top: 1.5rem;
+}
+
+/* First heading in container has less top margin */
+.text-display:first-child,
+h1:first-child {
+  margin-top: 0;
+}
+
+.text-title:first-child,
+h2:first-child {
+  margin-top: 0;
+}
+
+.text-subtitle:first-child,
+h3:first-child {
+  margin-top: 0;
+}
+
+/* Large headings with enhanced spacing */
+.heading-large {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+  margin-top: 2rem;
+  letter-spacing: -0.02em;
+}
+
+@media (min-width: 768px) {
+  .heading-large {
+    font-size: 28px;
+    margin-bottom: 2rem;
+    margin-top: 2.5rem;
+  }
+}
+
+.text-title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.text-subtitle {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+  margin-top: 1rem;
+}
+
+.text-body {
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.text-small {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.text-xs {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+/* Responsive typography utilities */
+@media (min-width: 768px) {
+  .text-display {
+    font-size: 24px;
+    margin-bottom: 1.5rem;
+    margin-top: 2rem;
+  }
+  
+  .text-title {
+    font-size: 18px;
+    margin-bottom: 1rem;
+    margin-top: 1.5rem;
+  }
+  
+  .text-subtitle {
+    font-size: 16px;
+    margin-bottom: 0.75rem;
+    margin-top: 1.25rem;
+  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  font-size: 14px; /* Base font size */
+  line-height: 1.5;
   font-feature-settings: 'rlig' 1, 'calt' 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
