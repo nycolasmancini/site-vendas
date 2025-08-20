@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { testConnection, createProduct, createProductImage, findOrCreateBrand, findOrCreateModel, createProductModel, updateProduct, query as dbQuery } from '@/lib/db'
 
 export async function POST(request: NextRequest) {
   try {
@@ -65,25 +66,64 @@ export async function POST(request: NextRequest) {
     }
 
     // Criar produto principal de modal
-    const product = await prisma.product.create({
-      data: {
+    let product
+    
+    // Em produção, usar SQL direto para evitar problemas com Prisma Accelerate
+    if (process.env.NODE_ENV === 'production') {
+      console.log('📊 Using production SQL direct insert for modal product')
+      
+      // Testar conexão primeiro
+      const isConnected = await testConnection()
+      if (!isConnected) {
+        return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
+      }
+      
+      // Criar produto via SQL direto
+      product = await createProduct({
         name,
         description,
         categoryId,
         isModalProduct: true,
         quickAddIncrement,
-        price: 0, // Será definido pelos modelos
-        isActive: true,
-        images: {
-          create: uploadedImages.map((img, index) => ({
-            url: img.url,
-            fileName: img.fileName,
-            order: index,
-            isMain: img.isMain
-          }))
-        }
+        price: 0 // Será definido pelos modelos
+      })
+      
+      // Criar imagens
+      for (let i = 0; i < uploadedImages.length; i++) {
+        const img = uploadedImages[i]
+        await createProductImage({
+          productId: product.id,
+          url: img.url,
+          fileName: img.fileName,
+          order: i,
+          isMain: img.isMain
+        })
       }
-    })
+      
+    } else {
+      console.log('📊 Using development Prisma create for modal product')
+      
+      // Em desenvolvimento, usar Prisma normalmente
+      product = await prisma.product.create({
+        data: {
+          name,
+          description,
+          categoryId,
+          isModalProduct: true,
+          quickAddIncrement,
+          price: 0, // Será definido pelos modelos
+          isActive: true,
+          images: {
+            create: uploadedImages.map((img, index) => ({
+              url: img.url,
+              fileName: img.fileName,
+              order: index,
+              isMain: img.isMain
+            }))
+          }
+        }
+      })
+    }
 
     // Processar modelos e coletar dados de preços
     const createdModels = []
@@ -94,45 +134,66 @@ export async function POST(request: NextRequest) {
         continue // Pular modelos incompletos
       }
 
-      // Encontrar ou criar marca
-      let brand = await prisma.brand.findUnique({
-        where: { name: brandName }
-      })
-
-      if (!brand) {
-        brand = await prisma.brand.create({
-          data: { name: brandName }
-        })
-      }
-
-      // Encontrar ou criar modelo
-      let model = await prisma.model.findUnique({
-        where: {
-          brandId_name: {
-            brandId: brand.id,
-            name: modelName
-          }
-        }
-      })
-
-      if (!model) {
-        model = await prisma.model.create({
-          data: {
-            name: modelName,
-            brandId: brand.id
-          }
-        })
-      }
-
-      // Criar relação produto-modelo com preços
-      await prisma.productModel.create({
-        data: {
+      let brand, model
+      
+      // Em produção, usar SQL direto para evitar problemas com Prisma Accelerate
+      if (process.env.NODE_ENV === 'production') {
+        // Encontrar ou criar marca
+        brand = await findOrCreateBrand(brandName)
+        
+        // Encontrar ou criar modelo
+        model = await findOrCreateModel(modelName, brand.id)
+        
+        // Criar relação produto-modelo com preços
+        await createProductModel({
           productId: product.id,
           modelId: model.id,
           price: parseFloat(price),
           superWholesalePrice: superWholesalePrice ? parseFloat(superWholesalePrice) : null
+        })
+        
+      } else {
+        // Em desenvolvimento, usar Prisma normalmente
+        // Encontrar ou criar marca
+        brand = await prisma.brand.findUnique({
+          where: { name: brandName }
+        })
+
+        if (!brand) {
+          brand = await prisma.brand.create({
+            data: { name: brandName }
+          })
         }
-      })
+
+        // Encontrar ou criar modelo
+        model = await prisma.model.findUnique({
+          where: {
+            brandId_name: {
+              brandId: brand.id,
+              name: modelName
+            }
+          }
+        })
+
+        if (!model) {
+          model = await prisma.model.create({
+            data: {
+              name: modelName,
+              brandId: brand.id
+            }
+          })
+        }
+
+        // Criar relação produto-modelo com preços
+        await prisma.productModel.create({
+          data: {
+            productId: product.id,
+            modelId: model.id,
+            price: parseFloat(price),
+            superWholesalePrice: superWholesalePrice ? parseFloat(superWholesalePrice) : null
+          }
+        })
+      }
       
       // Coletar dados para atualização do produto
       createdModels.push({
@@ -163,10 +224,15 @@ export async function POST(request: NextRequest) {
       }
       
       if (Object.keys(updateData).length > 0) {
-        await prisma.product.update({
-          where: { id: product.id },
-          data: updateData
-        })
+        // Em produção, usar SQL direto para evitar problemas com Prisma Accelerate
+        if (process.env.NODE_ENV === 'production') {
+          await updateProduct(product.id, updateData)
+        } else {
+          await prisma.product.update({
+            where: { id: product.id },
+            data: updateData
+          })
+        }
       }
     }
 

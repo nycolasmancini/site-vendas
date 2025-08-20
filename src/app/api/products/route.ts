@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { supabase } from '@/lib/supabase'
-import { query as dbQuery, testConnection } from '@/lib/db'
+import { query as dbQuery, testConnection, createProduct, createProductImage } from '@/lib/db'
 
 export async function GET(request: NextRequest) {
   try {
@@ -485,8 +485,20 @@ export async function POST(request: NextRequest) {
     // }
 
     // Criar produto no banco de dados
-    const product = await prisma.product.create({
-      data: {
+    let product
+    
+    // Em produção, usar SQL direto para evitar problemas com Prisma Accelerate
+    if (process.env.NODE_ENV === 'production') {
+      console.log('📊 Using production SQL direct insert for product')
+      
+      // Testar conexão primeiro
+      const isConnected = await testConnection()
+      if (!isConnected) {
+        return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
+      }
+      
+      // Criar produto via SQL direto
+      product = await createProduct({
         name,
         subname: subnameValue,
         description,
@@ -495,34 +507,66 @@ export async function POST(request: NextRequest) {
         superWholesalePrice,
         superWholesaleQuantity,
         cost,
-        categoryId,
-        // Só criar imagens se houver alguma
-        ...(uploadedImages.length > 0 && {
-          images: {
-            create: uploadedImages.map((img, index) => ({
-              url: img.url,
-              fileName: img.fileName,
-              order: index,
-              isMain: img.isMain
-            }))
-          }
-        })
-      },
-      include: {
-        category: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            order: true,
-            isActive: true,
-            createdAt: true,
-            updatedAt: true
-          }
-        },
-        images: true
+        categoryId
+      })
+      
+      // Criar imagens se houver alguma
+      if (uploadedImages.length > 0) {
+        for (let i = 0; i < uploadedImages.length; i++) {
+          const image = uploadedImages[i]
+          await createProductImage({
+            productId: product.id,
+            url: image.url,
+            fileName: image.fileName,
+            order: i,
+            isMain: image.isMain
+          })
+        }
       }
-    })
+      
+    } else {
+      console.log('📊 Using development Prisma create for product')
+      
+      // Em desenvolvimento, usar Prisma normalmente
+      product = await prisma.product.create({
+        data: {
+          name,
+          subname: subnameValue,
+          description,
+          brand: brandValue,
+          price,
+          superWholesalePrice,
+          superWholesaleQuantity,
+          cost,
+          categoryId,
+          // Só criar imagens se houver alguma
+          ...(uploadedImages.length > 0 && {
+            images: {
+              create: uploadedImages.map((img, index) => ({
+                url: img.url,
+                fileName: img.fileName,
+                order: index,
+                isMain: img.isMain
+              }))
+            }
+          })
+        },
+        include: {
+          category: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              order: true,
+              isActive: true,
+              createdAt: true,
+              updatedAt: true
+            }
+          },
+          images: true
+        }
+      })
+    }
 
     // Debug: Log produto criado
     console.log('✅ Produto criado com sucesso:', {
