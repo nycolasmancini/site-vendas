@@ -22,6 +22,8 @@ export function CartSidebar() {
   const [previousUpgradesLength, setPreviousUpgradesLength] = useState(-1) // Start with -1 to detect initial state
   const [buttonState, setButtonState] = useState<'hidden' | 'entering' | 'visible' | 'exiting'>('hidden')
   const [removingItems, setRemovingItems] = useState<Set<string>>(new Set())
+  const [editingQuantity, setEditingQuantity] = useState<string | null>(null)
+  const [tempQuantityValues, setTempQuantityValues] = useState<Record<string, string>>({})
   const { toasts, showToast, removeToast } = useToast()
   const minimumOrderRef = useRef<HTMLParagraphElement>(null)
   const scrollPositionRef = useRef<number>(0)
@@ -231,6 +233,49 @@ export function CartSidebar() {
     }, 500) // Match animation duration
   }, [removeItem])
 
+  // Handle quantity editing
+  const handleQuantityClick = useCallback((itemId: string, currentQuantity: number) => {
+    setEditingQuantity(itemId)
+    setTempQuantityValues(prev => ({
+      ...prev,
+      [itemId]: currentQuantity.toString()
+    }))
+  }, [])
+
+  const handleQuantityChange = useCallback((itemId: string, value: string) => {
+    // Only allow numeric input
+    const numericValue = value.replace(/\D/g, '')
+    setTempQuantityValues(prev => ({
+      ...prev,
+      [itemId]: numericValue
+    }))
+  }, [])
+
+  const handleQuantitySubmit = useCallback((itemId: string) => {
+    const value = tempQuantityValues[itemId]
+    const quantity = parseInt(value, 10)
+    
+    if (quantity > 0 && quantity <= 999) {
+      updateQuantity(itemId, quantity)
+    }
+    
+    setEditingQuantity(null)
+    setTempQuantityValues(prev => {
+      const newValues = { ...prev }
+      delete newValues[itemId]
+      return newValues
+    })
+  }, [tempQuantityValues, updateQuantity])
+
+  const handleQuantityCancel = useCallback((itemId: string) => {
+    setEditingQuantity(null)
+    setTempQuantityValues(prev => {
+      const newValues = { ...prev }
+      delete newValues[itemId]
+      return newValues
+    })
+  }, [])
+
   // Simple button styling
   const getButtonClasses = () => {
     const baseClasses = "w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white py-3 rounded-lg font-semibold hover:from-green-600 hover:to-emerald-600 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] mb-2 relative overflow-hidden"
@@ -373,9 +418,36 @@ export function CartSidebar() {
                           >
                             <Minus className="w-3 h-3" />
                           </button>
-                          <span className={`w-8 text-center text-sm font-medium transition-all duration-200 ${
-                            isRemoving ? 'opacity-50' : ''
-                          }`}>{item.quantity}</span>
+                          
+                          {editingQuantity === item.id ? (
+                            <input
+                              type="text"
+                              value={tempQuantityValues[item.id] || ''}
+                              onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                              onBlur={() => handleQuantitySubmit(item.id)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleQuantitySubmit(item.id)
+                                } else if (e.key === 'Escape') {
+                                  handleQuantityCancel(item.id)
+                                }
+                              }}
+                              className="w-8 text-center text-sm font-medium bg-white border rounded px-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              autoFocus
+                              maxLength={3}
+                            />
+                          ) : (
+                            <span 
+                              className={`w-8 text-center text-sm font-medium transition-all duration-200 cursor-pointer hover:bg-gray-100 hover:text-blue-600 rounded px-1 ${
+                                isRemoving ? 'opacity-50' : ''
+                              }`}
+                              onClick={() => !isRemoving && handleQuantityClick(item.id, item.quantity)}
+                              title="Clique para editar a quantidade"
+                            >
+                              {item.quantity}
+                            </span>
+                          )}
+                          
                           <button
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             disabled={isRemoving}
