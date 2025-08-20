@@ -13,6 +13,28 @@ interface UnlockPricesModalProps {
 export default function UnlockPricesModal({ isOpen, onClose }: UnlockPricesModalProps) {
   const { unlockPrices } = useSession()
   const [whatsapp, setWhatsapp] = useState('')
+
+  // Aplicar máscara brasileira para telefone
+  const applyPhoneMask = (value: string): string => {
+    const numbers = value.replace(/\D/g, '');
+    
+    if (numbers.length <= 2) {
+      return `(${numbers}`;
+    } else if (numbers.length <= 6) {
+      return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+    } else if (numbers.length <= 10) {
+      // Format para 10 dígitos: (XX) XXXX-XXXX
+      return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6, 10)}`;
+    } else {
+      // Format para 11 dígitos: (XX) XXXXX-XXXX
+      return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+    }
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const maskedValue = applyPhoneMask(e.target.value);
+    setWhatsapp(maskedValue);
+  };
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -84,7 +106,7 @@ export default function UnlockPricesModal({ isOpen, onClose }: UnlockPricesModal
             Veja os Melhores Preços!
           </h2>
           <p className="text-gray-600">
-            Informe seu WhatsApp para liberar os preços exclusivos de atacado
+            Informe seu WhatsApp (com ou sem o 9) para liberar os preços exclusivos de atacado
           </p>
         </div>
 
@@ -97,8 +119,8 @@ export default function UnlockPricesModal({ isOpen, onClose }: UnlockPricesModal
               type="tel"
               id="whatsapp"
               value={whatsapp}
-              onChange={(e) => setWhatsapp(e.target.value)}
-              placeholder="(11) 99999-9999"
+              onChange={handlePhoneChange}
+              placeholder="(11) 9999-9999 ou (11) 99999-9999"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               required
             />

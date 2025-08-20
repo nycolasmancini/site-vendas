@@ -44,7 +44,13 @@ export function validateWhatsApp(phone: string): boolean {
 
 export function validateBrazilianWhatsApp(phone: string): boolean {
   const clean = phone.replace(/\D/g, '')
-  // Deve começar com 55 e ter 12 ou 13 dígitos
+  // Aceita números brasileiros com 10 ou 11 dígitos (com ou sem código do país)
+  if (clean.length === 10 || clean.length === 11) {
+    // Número sem código do país: valida se tem DDD válido (11-99)
+    const ddd = clean.substring(0, 2)
+    return parseInt(ddd) >= 11 && parseInt(ddd) <= 99
+  }
+  // Deve começar com 55 e ter 12 ou 13 dígitos (com código do país)
   return /^55\d{10,11}$/.test(clean)
 }
 
