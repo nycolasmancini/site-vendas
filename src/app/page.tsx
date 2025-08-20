@@ -365,27 +365,22 @@ export default function Home() {
           {/* Products Grid */}
           <main className="flex-1">
             <div className="card mb-8 p-6 animate-slide-up">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-4 mb-2">
-                    {selectedCategory ? (
-                      <div style={{ color: 'var(--orange)' }}>
-                        {getCategoryIcon(categories.find(c => c.id === selectedCategory), 28)}
-                      </div>
-                    ) : (
-                      <TodosProdutosIcon size={28} className="text-[#f97316]" />
-                    )}
-                    <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
-                      {selectedCategory
-                        ? categories.find(c => c.id === selectedCategory)?.name
-                        : 'Catálogo Completo'}
-                    </h1>
-                  </div>
-                  <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-                    {products.length} produtos disponíveis
-                  </p>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-4 mb-4">
+                  {selectedCategory ? (
+                    <div style={{ color: 'var(--orange)' }}>
+                      {getCategoryIcon(categories.find(c => c.id === selectedCategory), 28)}
+                    </div>
+                  ) : (
+                    <TodosProdutosIcon size={28} className="text-[#f97316]" />
+                  )}
+                  <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
+                    {selectedCategory
+                      ? categories.find(c => c.id === selectedCategory)?.name
+                      : 'Catálogo Completo'}
+                  </h1>
                 </div>
-                <div className="text-right">
+                <div className="text-center">
                   <div className="text-xs font-medium mb-1" style={{ color: 'var(--muted-foreground)' }}>
                     Pedido mínimo
                   </div>

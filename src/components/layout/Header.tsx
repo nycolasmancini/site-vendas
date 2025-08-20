@@ -165,17 +165,6 @@ export function Header({
               )}
             </button>
             
-            {/* Mobile Menu */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="rounded-lg p-2 hover:bg-gray-100 transition-colors md:hidden"
-            >
-              {isMenuOpen ? (
-                <X className="h-6 w-6 text-gray-700" />
-              ) : (
-                <Menu className="h-6 w-6 text-gray-700" />
-              )}
-            </button>
           </div>
         </div>
         

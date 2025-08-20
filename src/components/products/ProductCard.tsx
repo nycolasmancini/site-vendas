@@ -203,9 +203,6 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                         : `${formatPrice(product.priceRange.min)} - ${formatPrice(product.priceRange.max)}`
                       }
                     </span>
-                    <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                      atacado
-                    </span>
                   </div>
                   
                   {/* Range de preços super atacado */}
