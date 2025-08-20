@@ -197,7 +197,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                 <div>
                   {/* Range de preços atacado */}
                   <div className="flex items-baseline gap-2 mb-2">
-                    <span className="text-xl font-bold" style={{ color: 'var(--foreground)' }}>
+                    <span className="text-lg sm:text-xl font-bold" style={{ color: 'var(--foreground)' }}>
                       {product.priceRange.min === product.priceRange.max 
                         ? formatPrice(product.priceRange.min)
                         : `${formatPrice(product.priceRange.min)} - ${formatPrice(product.priceRange.max)}`
@@ -210,9 +210,8 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                   
                   {/* Range de preços super atacado */}
                   {product.priceRange.superWholesaleMin && product.priceRange.superWholesaleMax && (
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--green)' }}></div>
-                      <p className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>
+                    <div className="p-2 rounded-lg mb-2" style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
+                      <p className="text-xs font-medium" style={{ color: 'var(--green)' }}>
                         Caixa fechada: {product.priceRange.superWholesaleMin === product.priceRange.superWholesaleMax
                           ? formatPrice(product.priceRange.superWholesaleMin)
                           : `${formatPrice(product.priceRange.superWholesaleMin)} - ${formatPrice(product.priceRange.superWholesaleMax)}`
@@ -244,17 +243,16 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                   {product.superWholesalePrice && product.superWholesaleQuantity && (
                     <div>
                       {!hasReachedWholesaleQuantity && (
-                        <div className="flex items-center gap-2 p-2 rounded-lg mb-2" style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
-                          <div className="w-2 h-2 rounded-full" style={{ background: 'var(--green)' }}></div>
+                        <div className="p-2 rounded-lg mb-2" style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
                           <div className="flex flex-col">
                             <p className="text-xs font-medium" style={{ color: 'var(--green)' }}>
                               <span className="sm:hidden">+{product.superWholesaleQuantity} unidades</span>
                               <span className="hidden sm:inline">A partir de {product.superWholesaleQuantity} unidades</span>
                             </p>
                             <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                              {formatPrice(product.superWholesalePrice)} cada 
+                              {formatPrice(product.superWholesalePrice)} / un 
                               <span style={{ color: 'var(--green)' }} className="ml-1 font-medium">
-                                (-{Math.round((1 - product.superWholesalePrice / product.price) * 100)}%)
+                                ({Math.round((1 - product.superWholesalePrice / product.price) * 100)}%)
                               </span>
                             </p>
                           </div>
@@ -315,7 +313,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                         const currentNum = typeof quantity === 'string' ? parseInt(quantity) || 1 : quantity
                         setQuantity(Math.max(1, currentNum - 1))
                       }}
-                      className="interactive px-2 sm:px-3 py-1 sm:py-1.5 hover:bg-accent text-sm font-medium"
+                      className="interactive px-3 sm:px-4 py-2 sm:py-2.5 hover:bg-accent text-base font-bold"
                       style={{ color: 'var(--muted-foreground)' }}
                     >
                       -
@@ -344,7 +342,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                         }
                       }}
                       min="1"
-                      className="w-10 sm:w-12 text-center py-1 sm:py-1.5 text-sm font-medium border-x"
+                      className="w-12 sm:w-14 text-center py-2 sm:py-2.5 text-base font-medium border-x"
                       style={{ 
                         background: 'var(--surface)',
                         borderColor: 'var(--border)',
@@ -356,7 +354,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                         const currentNum = typeof quantity === 'string' ? parseInt(quantity) || 1 : quantity
                         setQuantity(currentNum + 1)
                       }}
-                      className="interactive px-2 sm:px-3 py-1 sm:py-1.5 hover:bg-accent text-sm font-medium"
+                      className="interactive px-3 sm:px-4 py-2 sm:py-2.5 hover:bg-accent text-base font-bold"
                       style={{ color: 'var(--muted-foreground)' }}
                     >
                       +
