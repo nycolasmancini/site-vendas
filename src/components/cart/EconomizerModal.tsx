@@ -106,9 +106,22 @@ export function EconomizerModal({ isOpen, onClose, eligibleItems }: EconomizerMo
     const item = eligibleItems.find(i => i.id === itemId)
     if (item) {
       updateQuantity(itemId, item.quantity + additionalQuantity)
-      // Close modal after successfully adding quantity
+      
+      // Check if there are more items to navigate to
       setTimeout(() => {
-        onClose()
+        const updatedEligibleItems = eligibleItems.filter(i => i.id !== itemId)
+        
+        if (updatedEligibleItems.length > 0) {
+          // Navigate to next item or back to first if at the end
+          if (currentIndex < eligibleItems.length - 1) {
+            setCurrentIndex(currentIndex + 1)
+          } else {
+            setCurrentIndex(0)
+          }
+        } else {
+          // Close modal if no more eligible items
+          onClose()
+        }
       }, 500) // Small delay to let user see the action completed
     }
   }
