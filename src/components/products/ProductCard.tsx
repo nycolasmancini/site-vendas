@@ -145,7 +145,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
   const imageUrl = product.images?.find(img => img.isMain)?.url || product.images?.[0]?.url || product.image
 
   return (
-    <div className="card hover:shadow-lg transition-all duration-300 overflow-hidden group animate-fade-in w-full">
+    <div className="card hover:shadow-lg transition-all duration-300 overflow-hidden group animate-fade-in w-full flex flex-col h-full">
       <div className="aspect-square relative" style={{ background: 'var(--muted)' }}>
         {imageUrl ? (
           <Image
@@ -178,7 +178,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
         
       </div>
 
-      <div className="p-3 sm:p-4">
+      <div className="p-3 sm:p-4 flex flex-col flex-grow">
         <h3 className="font-semibold line-clamp-2 mb-1 text-sm sm:text-base" style={{ color: 'var(--foreground)' }}>
           {product.name}
         </h3>
@@ -189,7 +189,9 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
         )}
 
         {unlocked ? (
-          <div className="mt-3">
+          <div className="mt-3 flex flex-col flex-grow">
+            <div className="flex-grow"></div>
+            <div className="mt-auto">
             <div className="mb-4">
               {product.isModalProduct && product.priceRange ? (
                 <div>
@@ -246,7 +248,8 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                           <div className="w-2 h-2 rounded-full" style={{ background: 'var(--green)' }}></div>
                           <div className="flex flex-col">
                             <p className="text-xs font-medium" style={{ color: 'var(--green)' }}>
-                              A partir de {product.superWholesaleQuantity} unidades
+                              <span className="sm:hidden">+{product.superWholesaleQuantity} unidades</span>
+                              <span className="hidden sm:inline">A partir de {product.superWholesaleQuantity} unidades</span>
                             </p>
                             <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                               {formatPrice(product.superWholesalePrice)} cada 
@@ -300,15 +303,12 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                   <path d="M9 9h6v6H9z"/>
                 </svg>
-                <span className="font-medium">Escolher Modelo</span>
+                <span className="font-medium">Escolher</span>
               </button>
             ) : (
               <div className="space-y-2 sm:space-y-3">
                 {/* Quantidade */}
-                <div className="flex items-center justify-between">
-                  <span className="text-xs sm:text-sm font-medium" style={{ color: 'var(--muted-foreground)' }}>
-                    Quantidade
-                  </span>
+                <div className="flex items-center justify-center">
                   <div className="flex items-center rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
                     <button
                       onClick={() => {
@@ -408,7 +408,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                         <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                       </svg>
                       <span className="font-medium text-sm sm:text-base">
-                        {product.hasModels || product.isModalProduct ? 'Escolher Modelo' : (isAnimating ? 'Adicionando...' : 'Adicionar')}
+                        {product.hasModels || product.isModalProduct ? 'Escolher' : (isAnimating ? 'Adicionando...' : 'Adicionar')}
                       </span>
                       {typeof quantity === 'number' && quantity > 1 && !isAnimating && (
                         <span 
@@ -423,9 +423,12 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                 </button>
               </div>
             )}
+            </div>
           </div>
         ) : (
-          <div className="mt-3">
+          <div className="mt-3 flex flex-col flex-grow">
+            <div className="flex-grow"></div>
+            <div className="mt-auto">
             <div className="text-center p-4" style={{ background: 'var(--muted)', borderRadius: '8px' }}>
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto mb-3" style={{ color: 'var(--muted-foreground)' }}>
                 <rect x="3" y="11" width="18" height="10" rx="2" ry="2"/>
@@ -441,6 +444,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
               >
                 Liberar Preços
               </button>
+            </div>
             </div>
           </div>
         )}
