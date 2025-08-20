@@ -421,7 +421,11 @@ export function CartSidebar() {
                           
                           {editingQuantity === item.id ? (
                             <input
-                              type="text"
+                              type="number"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              min="1"
+                              max="999"
                               value={tempQuantityValues[item.id] || ''}
                               onChange={(e) => handleQuantityChange(item.id, e.target.value)}
                               onBlur={() => handleQuantitySubmit(item.id)}
@@ -438,7 +442,7 @@ export function CartSidebar() {
                             />
                           ) : (
                             <span 
-                              className={`w-8 text-center text-sm font-medium transition-all duration-200 cursor-pointer hover:bg-gray-100 hover:text-blue-600 rounded px-1 ${
+                              className={`w-8 text-center text-sm font-medium transition-all duration-200 cursor-pointer bg-white border border-gray-200 hover:border-blue-500 hover:text-blue-600 rounded px-1 ${
                                 isRemoving ? 'opacity-50' : ''
                               }`}
                               onClick={() => !isRemoving && handleQuantityClick(item.id, item.quantity)}
