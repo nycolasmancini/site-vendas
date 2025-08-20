@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import OptimizedImage from '@/components/ui/OptimizedImage'
 
 export default function Configuracoes() {
   const { data: session, status } = useSession()
@@ -172,15 +173,15 @@ export default function Configuracoes() {
             <div>
               <h3 className="text-sm font-medium text-gray-700 mb-2">Foto atual:</h3>
               <div className="max-w-md">
-                <img
-                  src="/pmcell-loja.jpg"
+                <OptimizedImage
+                  src="/optimized/pmcell-loja-1200.webp"
                   alt="Foto atual da loja"
+                  width={400}
+                  height={192}
                   className="w-full h-48 object-cover rounded-lg border"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3QgeD0iMyIgeT0iMyIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iMiIgcnk9IjIiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjIiLz4KPGF5cmNsZSBjeD0iOSIgY3k9IjkiIHI9IjIiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjIiLz4KPHN0cm9rZSBkPSJtMjEgMTUtMy4wODYtMy4wODZhMiAyIDAgMCAwLTIuODI4IDBMNiAyMSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIvPgo8L3N2Zz4K';
-                    target.className = 'w-full h-48 object-contain rounded-lg border bg-gray-100 p-8';
-                  }}
+                  priority={false}
+                  quality={85}
+                  sizes="(max-width: 768px) 100vw, 400px"
                 />
                 <p className="text-xs text-gray-500 mt-2">
                   Esta é a foto exibida na seção "Nossa Localização" da página Sobre Nós

@@ -2,6 +2,7 @@
 
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+import OptimizedImage from '@/components/ui/OptimizedImage'
 
 function getClientCount() {
   const baseCount = 3700
@@ -69,26 +70,15 @@ export default function SobreNos() {
             >
               <div className="flex items-start gap-6">
                 <div className="w-24 h-20 rounded-lg overflow-hidden flex-shrink-0">
-                  <img 
-                    src="/pmcell-loja.jpg" 
-                    alt="Loja PMCELL na 25 de Março" 
+                  <OptimizedImage
+                    src="/optimized/pmcell-loja-800.webp"
+                    alt="Loja PMCELL na 25 de Março"
+                    width={96}
+                    height={80}
                     className="w-full h-full object-cover"
-                    onError={(e) => {
-                      // Fallback para o ícone laranja se a imagem não carregar
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      const parent = target.parentElement;
-                      if (parent) {
-                        parent.innerHTML = `
-                          <div class="w-24 h-20 rounded-lg flex items-center justify-center" style="background: var(--orange)">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                              <circle cx="12" cy="10" r="3"/>
-                            </svg>
-                          </div>
-                        `;
-                      }
-                    }}
+                    priority={true}
+                    quality={90}
+                    sizes="96px"
                   />
                 </div>
                 <div className="flex-1">
