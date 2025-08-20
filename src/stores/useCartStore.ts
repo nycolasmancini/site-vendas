@@ -171,12 +171,12 @@ export const useCartStore = create<CartStore>()(
           // Para produtos modais (com modelId), verificar quantidade agregada do modelo
           if (item.modelId) {
             const totalModelQuantity = getTotalQuantityByModel(item.productId, item.modelId)
-            reachedSpecialQuantity = item.specialQuantity && totalModelQuantity >= item.specialQuantity
-            reachedSuperWholesaleQuantity = item.superWholesaleQuantity && totalModelQuantity >= item.superWholesaleQuantity
+            reachedSpecialQuantity = item.specialQuantity ? totalModelQuantity >= item.specialQuantity : false
+            reachedSuperWholesaleQuantity = item.superWholesaleQuantity ? totalModelQuantity >= item.superWholesaleQuantity : false
           } else {
             // Para produtos normais, verificar quantidade individual
-            reachedSpecialQuantity = item.specialQuantity && item.quantity >= item.specialQuantity
-            reachedSuperWholesaleQuantity = item.superWholesaleQuantity && item.quantity >= item.superWholesaleQuantity
+            reachedSpecialQuantity = item.specialQuantity ? item.quantity >= item.specialQuantity : false
+            reachedSuperWholesaleQuantity = item.superWholesaleQuantity ? item.quantity >= item.superWholesaleQuantity : false
           }
           
           let price = item.unitPrice
@@ -219,12 +219,12 @@ export const useCartStore = create<CartStore>()(
           // Para produtos modais (com modelId), verificar quantidade agregada do modelo
           if (item.modelId) {
             const totalModelQuantity = getTotalQuantityByModel(item.productId, item.modelId)
-            reachedSpecialQuantity = item.specialQuantity && totalModelQuantity >= item.specialQuantity
-            reachedSuperWholesaleQuantity = item.superWholesaleQuantity && totalModelQuantity >= item.superWholesaleQuantity
+            reachedSpecialQuantity = item.specialQuantity ? totalModelQuantity >= item.specialQuantity : false
+            reachedSuperWholesaleQuantity = item.superWholesaleQuantity ? totalModelQuantity >= item.superWholesaleQuantity : false
           } else {
             // Para produtos normais, verificar quantidade individual
-            reachedSpecialQuantity = item.specialQuantity && item.quantity >= item.specialQuantity
-            reachedSuperWholesaleQuantity = item.superWholesaleQuantity && item.quantity >= item.superWholesaleQuantity
+            reachedSpecialQuantity = item.specialQuantity ? item.quantity >= item.specialQuantity : false
+            reachedSuperWholesaleQuantity = item.superWholesaleQuantity ? item.quantity >= item.superWholesaleQuantity : false
           }
           
           // Calcular economia com base no melhor desconto aplicado
