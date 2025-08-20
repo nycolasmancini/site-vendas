@@ -40,6 +40,19 @@ export function CartSidebar() {
     setMounted(true)
   }, [])
 
+  // Control body scroll when cart is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen])
+
   const subtotal = getSubtotal()
   const savings = getSavings()
   const eligibleUpgrades = getEligibleUpgrades()
@@ -385,7 +398,7 @@ export function CartSidebar() {
                                 <span className="text-gray-500">cada</span>
                                 {isSuperWholesaleActive && (
                                   <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 animate-pulse">
-                                    Super Atacado
+                                    Caixa
                                   </span>
                                 )}
                                 {isSpecialActive && !isSuperWholesaleActive && (
@@ -577,12 +590,14 @@ export function CartSidebar() {
               {totalQuantity >= 30 ? 'Finalizar Pedido' : `⚠️ Faltam ${30 - totalQuantity} itens`}
             </button>
             
-            <p 
-              ref={minimumOrderRef}
-              className="text-xs text-gray-500 text-center transition-all duration-300"
-            >
-              Pedido mínimo: 30 peças
-            </p>
+            {totalQuantity < 30 && (
+              <p 
+                ref={minimumOrderRef}
+                className="text-xs text-gray-500 text-center transition-all duration-300"
+              >
+                Pedido mínimo: 30 peças
+              </p>
+            )}
           </div>
         )}
       </div>
