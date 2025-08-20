@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { query as dbQuery, testConnection } from '@/lib/db'
 
 export async function GET(
   request: Request,
@@ -87,13 +88,30 @@ export async function PUT(
     })
     
     // Verificar se o produto existe
-    const existingProduct = await prisma.product.findUnique({
-      where: { id },
-      include: {
-        images: true,
-        suppliers: true
+    let existingProduct
+    if (process.env.NODE_ENV === 'production') {
+      console.log('📊 Using production SQL direct query for product update')
+      
+      // Testar conexão primeiro
+      const isConnected = await testConnection()
+      if (!isConnected) {
+        return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
       }
-    })
+
+      const productResult = await dbQuery(
+        'SELECT * FROM "Product" WHERE "id" = $1', 
+        [id]
+      )
+      existingProduct = productResult.rows[0]
+    } else {
+      existingProduct = await prisma.product.findUnique({
+        where: { id },
+        include: {
+          images: true,
+          suppliers: true
+        }
+      })
+    }
 
     if (!existingProduct) {
       return NextResponse.json({ error: 'Produto não encontrado' }, { status: 404 })
@@ -175,50 +193,154 @@ export async function PUT(
     }
 
     // Atualizar produto no banco de dados
-    const updatedProduct = await prisma.product.update({
-      where: { id },
-      data: {
+    let updatedProduct
+    if (process.env.NODE_ENV === 'production') {
+      // Atualizar produto via SQL direto
+      const updateQuery = `
+        UPDATE "Product" 
+        SET 
+          "name" = $1,
+          "subname" = $2,
+          "description" = $3,
+          "brand" = $4,
+          "price" = $5,
+          "superWholesalePrice" = $6,
+          "superWholesaleQuantity" = $7,
+          "cost" = $8,
+          "categoryId" = $9,
+          "updatedAt" = $10
+        WHERE "id" = $11
+        RETURNING *
+      `
+      
+      const updateParams = [
         name,
-        subname: subnameValue,
+        subnameValue,
         description,
-        brand: brandValue,
+        brandValue,
         price,
         superWholesalePrice,
         superWholesaleQuantity,
         cost,
         categoryId,
-        // Adicionar novas imagens se houver
-        ...(uploadedImages.length > 0 && {
-          images: {
-            create: uploadedImages.map((img, index) => ({
-              url: img.url,
-              fileName: img.fileName,
-              order: existingProduct.images.length + index,
-              isMain: img.isMain
-            }))
-          }
-        })
-      },
-      include: {
-        category: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            order: true,
-            isActive: true,
-            createdAt: true,
-            updatedAt: true
-          }
-        },
-        images: {
-          orderBy: { order: 'asc' }
+        new Date(),
+        id
+      ]
+      
+      const updateResult = await dbQuery(updateQuery, updateParams)
+      updatedProduct = updateResult.rows[0]
+      
+      // Adicionar novas imagens se houver
+      if (uploadedImages.length > 0) {
+        // Buscar número de imagens existentes
+        const countResult = await dbQuery(
+          'SELECT COUNT(*) as count FROM "ProductImage" WHERE "productId" = $1',
+          [id]
+        )
+        const existingImageCount = parseInt(countResult.rows[0].count)
+        
+        // Inserir novas imagens
+        for (let i = 0; i < uploadedImages.length; i++) {
+          const img = uploadedImages[i]
+          const imageId = `cm${Math.random().toString(36).substring(2, 15)}`
+          
+          await dbQuery(`
+            INSERT INTO "ProductImage" ("id", "productId", "url", "fileName", "order", "isMain", "createdAt")
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+          `, [
+            imageId,
+            id,
+            img.url,
+            img.fileName,
+            existingImageCount + i,
+            img.isMain,
+            new Date()
+          ])
         }
       }
-    })
+      
+      // Buscar produto com categoria e imagens para retorno
+      const fullProductQuery = `
+        SELECT 
+          p.*,
+          json_build_object(
+            'id', c.id,
+            'name', c.name,
+            'slug', c.slug,
+            'order', c.order,
+            'isActive', c."isActive",
+            'createdAt', c."createdAt",
+            'updatedAt', c."updatedAt"
+          ) as category,
+          COALESCE(
+            json_agg(
+              json_build_object(
+                'id', i.id,
+                'url', i.url,
+                'fileName', i."fileName",
+                'order', i.order,
+                'isMain', i."isMain"
+              ) ORDER BY i.order
+            ) FILTER (WHERE i.id IS NOT NULL),
+            '[]'::json
+          ) as images
+        FROM "Product" p
+        LEFT JOIN "Category" c ON c.id = p."categoryId"
+        LEFT JOIN "ProductImage" i ON i."productId" = p.id
+        WHERE p.id = $1
+        GROUP BY p.id, c.id, c.name, c.slug, c.order, c."isActive", c."createdAt", c."updatedAt"
+      `
+      
+      const fullProductResult = await dbQuery(fullProductQuery, [id])
+      updatedProduct = fullProductResult.rows[0]
+      
+    } else {
+      // Em desenvolvimento, usar Prisma normalmente
+      updatedProduct = await prisma.product.update({
+        where: { id },
+        data: {
+          name,
+          subname: subnameValue,
+          description,
+          brand: brandValue,
+          price,
+          superWholesalePrice,
+          superWholesaleQuantity,
+          cost,
+          categoryId,
+          // Adicionar novas imagens se houver
+          ...(uploadedImages.length > 0 && {
+            images: {
+              create: uploadedImages.map((img, index) => ({
+                url: img.url,
+                fileName: img.fileName,
+                order: existingProduct.images.length + index,
+                isMain: img.isMain
+              }))
+            }
+          })
+        },
+        include: {
+          category: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              order: true,
+              isActive: true,
+              createdAt: true,
+              updatedAt: true
+            }
+          },
+          images: {
+            orderBy: { order: 'asc' }
+          }
+        }
+      })
+    }
 
-    // Atualizar/criar fornecedor se fornecido
-    if (supplierName) {
+    // Atualizar/criar fornecedor se fornecido (apenas em desenvolvimento por simplicidade)
+    if (supplierName && process.env.NODE_ENV !== 'production') {
       // Procurar fornecedor existente ou criar novo
       let supplier = await prisma.supplier.findFirst({
         where: { name: supplierName }
