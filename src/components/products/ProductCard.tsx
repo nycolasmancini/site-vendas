@@ -133,7 +133,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
   const willReachWholesaleQuantity = product.superWholesaleQuantity && totalQuantityAfterAdd >= product.superWholesaleQuantity
   const hasReachedWholesaleQuantity = product.superWholesaleQuantity && cartQuantity >= product.superWholesaleQuantity
   
-  const currentPrice = (hasReachedWholesaleQuantity || willReachWholesaleQuantity) && product.superWholesalePrice
+  const currentPrice = hasReachedWholesaleQuantity && product.superWholesalePrice
     ? product.superWholesalePrice
     : product.price
     
@@ -230,7 +230,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                       key={`${product.id}-${currentPrice}`}
                       className="text-lg sm:text-xl font-bold transition-all duration-500 ease-in-out animate-price-change"
                       style={{
-                        color: (hasReachedWholesaleQuantity || willReachWholesaleQuantity) && product.superWholesalePrice ? 'var(--green)' : 'var(--foreground)',
+                        color: hasReachedWholesaleQuantity && product.superWholesalePrice ? 'var(--green)' : 'var(--foreground)',
                         animation: 'fadeInPrice 0.5s ease-in-out'
                       }}
                     >
