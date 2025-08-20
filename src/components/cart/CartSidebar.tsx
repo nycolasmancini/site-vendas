@@ -543,7 +543,7 @@ export function CartSidebar() {
                   }`} />
                   <span className="font-bold">Economize levando mais!</span>
                   <span className="bg-green-700 bg-opacity-80 px-2 py-1 rounded-full text-xs text-green-50">
-                    em {upgradesLength} {upgradesLength === 1 ? 'produto' : 'produtos'}
+                    {upgradesLength} {upgradesLength === 1 ? 'produto' : 'produtos'}
                   </span>
                 </div>
 
