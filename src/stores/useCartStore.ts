@@ -157,10 +157,10 @@ export const useCartStore = create<CartStore>()(
       getSubtotal: () => {
         const state = get()
         
-        // Função auxiliar para calcular quantidade total do produto (todos os modelos)
-        const getTotalQuantityByProduct = (productId: string): number => {
+        // Função auxiliar para calcular quantidade total por modelo específico
+        const getTotalQuantityByModel = (productId: string, modelId: string): number => {
           return state.items
-            .filter(item => item.productId === productId && item.modelId) // apenas produtos modais
+            .filter(item => item.productId === productId && item.modelId === modelId)
             .reduce((sum, item) => sum + item.quantity, 0)
         }
         
@@ -168,11 +168,11 @@ export const useCartStore = create<CartStore>()(
           let reachedSpecialQuantity = false
           let reachedSuperWholesaleQuantity = false
           
-          // Para produtos modais (com modelId), verificar quantidade agregada do PRODUTO INTEIRO
+          // Para produtos modais (com modelId), verificar quantidade agregada do MODELO ESPECÍFICO
           if (item.modelId) {
-            const totalProductQuantity = getTotalQuantityByProduct(item.productId)
-            reachedSpecialQuantity = item.specialQuantity ? totalProductQuantity >= item.specialQuantity : false
-            reachedSuperWholesaleQuantity = item.superWholesaleQuantity ? totalProductQuantity >= item.superWholesaleQuantity : false
+            const totalModelQuantity = getTotalQuantityByModel(item.productId, item.modelId)
+            reachedSpecialQuantity = item.specialQuantity ? totalModelQuantity >= item.specialQuantity : false
+            reachedSuperWholesaleQuantity = item.superWholesaleQuantity ? totalModelQuantity >= item.superWholesaleQuantity : false
           } else {
             // Para produtos normais, verificar quantidade individual
             reachedSpecialQuantity = item.specialQuantity ? item.quantity >= item.specialQuantity : false
@@ -202,10 +202,10 @@ export const useCartStore = create<CartStore>()(
       getSavings: () => {
         const state = get()
         
-        // Função auxiliar para calcular quantidade total do produto (todos os modelos)
-        const getTotalQuantityByProduct = (productId: string): number => {
+        // Função auxiliar para calcular quantidade total por modelo específico
+        const getTotalQuantityByModel = (productId: string, modelId: string): number => {
           return state.items
-            .filter(item => item.productId === productId && item.modelId) // apenas produtos modais
+            .filter(item => item.productId === productId && item.modelId === modelId)
             .reduce((sum, item) => sum + item.quantity, 0)
         }
         
@@ -216,11 +216,11 @@ export const useCartStore = create<CartStore>()(
           let reachedSpecialQuantity = false
           let reachedSuperWholesaleQuantity = false
           
-          // Para produtos modais (com modelId), verificar quantidade agregada do PRODUTO INTEIRO
+          // Para produtos modais (com modelId), verificar quantidade agregada do MODELO ESPECÍFICO
           if (item.modelId) {
-            const totalProductQuantity = getTotalQuantityByProduct(item.productId)
-            reachedSpecialQuantity = item.specialQuantity ? totalProductQuantity >= item.specialQuantity : false
-            reachedSuperWholesaleQuantity = item.superWholesaleQuantity ? totalProductQuantity >= item.superWholesaleQuantity : false
+            const totalModelQuantity = getTotalQuantityByModel(item.productId, item.modelId)
+            reachedSpecialQuantity = item.specialQuantity ? totalModelQuantity >= item.specialQuantity : false
+            reachedSuperWholesaleQuantity = item.superWholesaleQuantity ? totalModelQuantity >= item.superWholesaleQuantity : false
           } else {
             // Para produtos normais, verificar quantidade individual
             reachedSpecialQuantity = item.specialQuantity ? item.quantity >= item.specialQuantity : false
@@ -245,10 +245,10 @@ export const useCartStore = create<CartStore>()(
       getEligibleUpgrades: () => {
         const state = get()
         
-        // Função auxiliar para calcular quantidade total do produto (todos os modelos)
-        const getTotalQuantityByProduct = (productId: string): number => {
+        // Função auxiliar para calcular quantidade total por modelo específico
+        const getTotalQuantityByModel = (productId: string, modelId: string): number => {
           return state.items
-            .filter(item => item.productId === productId && item.modelId) // apenas produtos modais
+            .filter(item => item.productId === productId && item.modelId === modelId)
             .reduce((sum, item) => sum + item.quantity, 0)
         }
         
@@ -259,9 +259,9 @@ export const useCartStore = create<CartStore>()(
           
           if (!hasSpecialPrice && !hasSuperWholesale) return false
           
-          // Obter quantidade correta (agregada do produto inteiro para modais, individual para normais)
+          // Obter quantidade correta (agregada do modelo específico para modais, individual para normais)
           const currentQuantity = item.modelId 
-            ? getTotalQuantityByProduct(item.productId)
+            ? getTotalQuantityByModel(item.productId, item.modelId)
             : item.quantity
           
           // Para produtos com preço especial
