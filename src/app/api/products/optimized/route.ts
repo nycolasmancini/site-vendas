@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const includeImages = searchParams.get('includeImages') === 'true'
 
     // Gerar chave de cache e ETag
-    const cacheKey = getCacheKey('products', categoryId || 'all', featured || 'all', search || 'none', admin || 'public', page, limit, includeImages)
+    const cacheKey = getCacheKey('products', categoryId || 'all', featured || 'all', search || 'none', admin || 'public', page, limit, includeImages ? 'with-images' : 'no-images')
     const etag = generateETag({ categoryId, featured, search, admin, page, limit, includeImages })
 
     // Verificar se o cliente já tem a versão mais recente (304 Not Modified)
