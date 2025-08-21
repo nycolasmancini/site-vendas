@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn } from 'next-auth/react'
+import { signIn, getSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
 export default function AdminLogin() {
@@ -32,23 +32,42 @@ export default function AdminLogin() {
       } else if (result?.ok) {
         console.log('Login bem-sucedido, verificando sessão...')
         
-        // Aguardar um pouco para a sessão ser estabelecida
-        setTimeout(async () => {
-          // Verificar se a sessão foi criada corretamente
-          const response = await fetch('/api/auth/session')
-          const session = await response.json()
+        // Forçar atualização da sessão e aguardar
+        let attempts = 0
+        const maxAttempts = 5
+        
+        const checkSession = async () => {
+          attempts++
+          console.log(`Tentativa ${attempts} de verificar sessão...`)
           
-          console.log('Sessão após login:', session)
+          try {
+            // Usar getSession() do next-auth que é mais confiável
+            const session = await getSession()
+            console.log('Sessão verificada:', session)
+            
+            if (session?.user) {
+              console.log('Sessão válida encontrada, redirecionando...')
+              setLoading(false)
+              router.push('/admin/dashboard')
+              return
+            }
+          } catch (error) {
+            console.error('Erro ao verificar sessão:', error)
+          }
           
-          if (session?.user) {
-            console.log('Sessão válida, redirecionando para dashboard...')
-            router.push('/admin/dashboard')
+          // Se não conseguiu a sessão e ainda há tentativas
+          if (attempts < maxAttempts) {
+            console.log(`Sessão não encontrada, tentando novamente em 500ms...`)
+            setTimeout(checkSession, 500)
           } else {
-            console.error('Sessão não foi criada corretamente')
-            setError('Erro ao estabelecer sessão. Tente novamente.')
+            console.error('Não foi possível estabelecer sessão após', maxAttempts, 'tentativas')
+            setError('Erro ao estabelecer sessão. Verifique suas credenciais e tente novamente.')
             setLoading(false)
           }
-        }, 1000)
+        }
+        
+        // Iniciar verificação após pequeno delay
+        setTimeout(checkSession, 300)
       } else {
         console.error('Login falhou sem error específico:', result)
         setError('Erro inesperado no login')

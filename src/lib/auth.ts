@@ -5,6 +5,39 @@ import bcrypt from 'bcryptjs'
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
+  // Configuração de cookies para produção
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === 'production' ? '__Secure-next-auth.session-token' : 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production'
+        // Removendo domain para funcionar melhor com Vercel
+      }
+    },
+    callbackUrl: {
+      name: process.env.NODE_ENV === 'production' ? '__Secure-next-auth.callback-url' : 'next-auth.callback-url',
+      options: {
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production'
+        // Removendo domain para funcionar melhor com Vercel
+      }
+    },
+    csrfToken: {
+      name: process.env.NODE_ENV === 'production' ? '__Host-next-auth.csrf-token' : 'next-auth.csrf-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production'
+      }
+    }
+  },
+  // Usar cookies seguros automaticamente em produção
+  useSecureCookies: process.env.NODE_ENV === 'production',
   providers: [
     CredentialsProvider({
       name: 'credentials',
@@ -161,11 +194,25 @@ export const authOptions: NextAuthOptions = {
       return token
     },
     async session({ session, token }) {
-      if (session.user) {
+      console.log('Session callback iniciado - Token:', { id: token.id, role: token.role })
+      console.log('Session callback iniciado - Session inicial:', session)
+      
+      if (session.user && token.id && token.role) {
         session.user.id = token.id as string
         session.user.role = token.role as string
-        console.log('Session callback - Sessão criada:', { id: session.user.id, email: session.user.email, role: session.user.role })
+        console.log('Session callback - Sessão processada:', { 
+          id: session.user.id, 
+          email: session.user.email, 
+          role: session.user.role 
+        })
+      } else {
+        console.error('Session callback - Dados incompletos:', {
+          hasSessionUser: !!session.user,
+          hasTokenId: !!token.id,
+          hasTokenRole: !!token.role
+        })
       }
+      
       return session
     },
     async redirect({ url, baseUrl }) {
