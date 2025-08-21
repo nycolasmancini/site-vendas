@@ -218,7 +218,7 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
         onClick={handleOverlayClick}
       >
         <div 
-          className={`bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col transition-all duration-300 ease-out transform ${
+          className={`bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col transition-all duration-300 ease-out transform ${
             isVisible 
               ? 'opacity-100 scale-100 translate-y-0' 
               : 'opacity-0 scale-95 translate-y-4'
@@ -243,7 +243,7 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
           {/* Conteúdo */}
           <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
             {/* Galeria de Imagens */}
-            <div className="flex-1 lg:w-3/5 relative bg-gray-50 flex items-center justify-center">
+            <div className="flex-1 lg:w-2/3 relative bg-gray-50 flex items-center justify-center">
               {currentImage ? (
                 <div 
                   className="relative w-full h-full flex items-center justify-center"
@@ -320,6 +320,18 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
                       ))}
                     </div>
                   )}
+
+                  {/* Brand badge floating on image */}
+                  {product.brand && (
+                    <div className="absolute top-4 right-4 z-10">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100/90 text-blue-800 backdrop-blur-sm shadow-lg border border-white/20">
+                        <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                        {product.brand}
+                      </span>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="w-full h-64 flex items-center justify-center text-gray-400">
@@ -331,61 +343,52 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
             </div>
 
             {/* Informações do Produto */}
-            <div className="flex-1 lg:w-2/5 p-6 overflow-y-auto">
-              <div className="space-y-4">
-                {/* Nome */}
+            <div className="flex-1 lg:w-1/3 p-4 lg:p-6 overflow-y-auto">
+              <div className="space-y-3">
+                {/* Nome e Subnome na mesma linha */}
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                  <h1 className="text-xl font-bold text-gray-900 leading-tight mb-2">
                     {product.name}
+                    {product.subname && (
+                      <span className="text-lg text-gray-600 font-normal ml-2">
+                        {product.subname}
+                      </span>
+                    )}
                   </h1>
-                  {product.subname && (
-                    <p className="text-lg text-gray-600">
-                      {product.subname}
-                    </p>
-                  )}
                 </div>
 
-                {/* Marca e Categoria */}
-                {(product.brand || product.category) && (
+                {/* Categoria */}
+                {product.category && (
                   <div className="flex flex-wrap gap-2">
-                    {product.brand && (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                        <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                        </svg>
-                        {product.brand}
-                      </span>
-                    )}
-                    {product.category && (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                        <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
-                        {product.category}
-                      </span>
-                    )}
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                      <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                      {product.category}
+                    </span>
                   </div>
                 )}
 
                 {/* Descrição */}
                 {product.description && (
-                  <div>
+                  <div className="max-h-48 overflow-y-auto">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
                       Descrição
                     </h3>
-                    <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    <div className="text-gray-700 leading-relaxed whitespace-pre-wrap text-sm">
                       {product.description}
                     </div>
                   </div>
                 )}
 
-                {/* Informações adicionais */}
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <p className="text-sm text-gray-500">
-                    Clique nas setas ou use as teclas do teclado para navegar entre as imagens.
-                    {sortedImages.length > 1 && ` (${currentImageIndex + 1} de ${sortedImages.length})`}
-                  </p>
-                </div>
+                {/* Contador de imagens */}
+                {sortedImages.length > 1 && (
+                  <div className="mt-6 pt-4 border-t border-gray-200">
+                    <p className="text-sm text-gray-500 text-center">
+                      {currentImageIndex + 1} de {sortedImages.length}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
