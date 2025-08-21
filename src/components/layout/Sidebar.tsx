@@ -101,22 +101,6 @@ export function Sidebar() {
             </div>
           ) : (
             <nav className="p-2">
-              {/* Link para Todos os Produtos */}
-              <Link
-                href="/produtos"
-                className={cn(
-                  "flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-all duration-300 ease-out transform hover:scale-[1.02]",
-                  pathname === "/produtos"
-                    ? "bg-[#FC6D36] text-white shadow-md"
-                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                )}
-              >
-                <span className="flex items-center">
-                  <TodosProdutosIcon size={20} />
-                  <span className="ml-2">Todos os Produtos</span>
-                </span>
-                <ChevronRight className="h-4 w-4" />
-              </Link>
               
               {/* Link para Kits */}
               <Link

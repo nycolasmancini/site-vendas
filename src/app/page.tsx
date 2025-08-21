@@ -115,6 +115,7 @@ export default function Home() {
   const { unlocked } = useSession()
   const analytics = useAnalytics()
   const { isLoading: cartSyncLoading } = useCartSync()
+  const cartItems = useCartStore((state) => state.items)
   const [showUnlockModal, setShowUnlockModal] = useState(false)
   const [products, setProducts] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
@@ -126,6 +127,9 @@ export default function Home() {
   const [selectedProductForVariation, setSelectedProductForVariation] = useState<any>(null)
   const [showVariationModal, setShowVariationModal] = useState(false)
   const [navigationTimer, setNavigationTimer] = useState<NodeJS.Timeout | null>(null)
+
+  // Calcular quantidade total no carrinho
+  const totalCartQuantity = cartItems.reduce((total, item) => total + item.quantity, 0)
 
   // Evitar problemas de hidratação
   useEffect(() => {
@@ -366,7 +370,7 @@ export default function Home() {
           <main className="flex-1">
             <div className="card mb-8 p-6 animate-slide-up">
               <div className="flex flex-col">
-                <div className="flex items-center gap-4 mb-4">
+                <div className={`flex items-center gap-4 mb-4 ${selectedCategory ? 'justify-center' : ''}`}>
                   {selectedCategory ? (
                     <div style={{ color: 'var(--orange)' }}>
                       {getCategoryIcon(categories.find(c => c.id === selectedCategory), 28)}
@@ -380,14 +384,16 @@ export default function Home() {
                       : 'Catálogo Completo'}
                   </h1>
                 </div>
-                <div className="text-center">
-                  <div className="text-xs font-medium mb-1" style={{ color: 'var(--muted-foreground)' }}>
-                    Pedido mínimo
+                {totalCartQuantity < 30 && (
+                  <div className="text-center">
+                    <div className="text-xs font-medium mb-1" style={{ color: 'var(--muted-foreground)' }}>
+                      Pedido mínimo
+                    </div>
+                    <div className="text-xl font-bold" style={{ color: 'var(--orange)' }}>
+                      30 peças
+                    </div>
                   </div>
-                  <div className="text-xl font-bold" style={{ color: 'var(--orange)' }}>
-                    30 peças
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 
