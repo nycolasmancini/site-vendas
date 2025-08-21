@@ -197,7 +197,13 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                 <div>
                   {/* Range de preços atacado */}
                   <div className="flex items-baseline gap-2 mb-2">
-                    <span className="text-lg sm:text-xl font-bold" style={{ color: 'var(--foreground)' }}>
+                    <span 
+                      className={`font-bold ${product.priceRange.min !== product.priceRange.max ? 'product-card-price-range' : 'text-lg sm:text-xl'}`}
+                      style={{ 
+                        color: 'var(--foreground)',
+                        ...(product.priceRange.min !== product.priceRange.max ? {} : {})
+                      }}
+                    >
                       {product.priceRange.min === product.priceRange.max 
                         ? formatPrice(product.priceRange.min)
                         : `${formatPrice(product.priceRange.min)} - ${formatPrice(product.priceRange.max)}`

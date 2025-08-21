@@ -1307,6 +1307,29 @@ input[type="number"] {
   }
 }
 
+/* Product card price range - more aggressive font scaling for smaller spaces */
+.product-card-price-range {
+  font-size: clamp(0.75rem, 3.5vw, 1rem) !important;
+  white-space: nowrap !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  line-height: 1.2;
+  max-width: 100%;
+}
+
+@media (min-width: 640px) {
+  .product-card-price-range {
+    font-size: clamp(0.875rem, 3vw, 1.125rem) !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .product-card-price-range {
+    font-size: clamp(1rem, 2.5vw, 1.25rem) !important;
+  }
+}
+
 /* Desabilitar zoom e seleção de texto */
 * {
   -webkit-user-select: none;
