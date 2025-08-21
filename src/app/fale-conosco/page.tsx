@@ -99,63 +99,37 @@ export default function FaleConosco() {
               Outros Canais de Atendimento
             </h2>
             
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-6">
               {/* Email */}
-              <div className="bg-blue-50 rounded-lg p-4">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'var(--blue)' }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                      <polyline points="22,6 12,13 2,6"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
-                      📧 Email do Gerente
-                    </h3>
-                    <a 
-                      href="mailto:nycolas@pmcellsaopaulo.com.br?subject=Contato via Site PMCELL"
-                      className="text-blue-600 hover:text-blue-700 font-semibold text-base block mb-2"
-                    >
-                      nycolas@pmcellsaopaulo.com.br
-                    </a>
-                    <p className="text-sm mb-3" style={{ color: 'var(--muted-foreground)' }}>
-                      Para dúvidas e reclamações diretamente com o gerente
-                    </p>
-                    <div className="bg-blue-100 rounded-md px-3 py-1 inline-block">
-                      <span className="text-xs font-medium text-blue-800">Atendimento Direto</span>
-                    </div>
-                  </div>
-                </div>
+              <div className="text-center">
+                <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
+                  📧 Email do Gerente
+                </h3>
+                <a 
+                  href="mailto:nycolas@pmcellsaopaulo.com.br?subject=Contato via Site PMCELL"
+                  className="text-blue-600 hover:text-blue-700 font-medium text-sm block mb-2 break-all"
+                >
+                  nycolas@pmcellsaopaulo.com.br
+                </a>
+                <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                  Para dúvidas e reclamações diretamente com o gerente
+                </p>
               </div>
 
               {/* Loja Física */}
-              <div className="bg-purple-50 rounded-lg p-4">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'var(--purple)' }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                      <circle cx="12" cy="10" r="3"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
-                      🏪 Loja Física
-                    </h3>
-                    <p className="text-sm font-semibold mb-1" style={{ color: 'var(--foreground)' }}>
-                      Rua Comendador Abdo Schahin, 62 - Loja 4
-                    </p>
-                    <p className="text-sm mb-1" style={{ color: 'var(--muted-foreground)' }}>
-                      Centro, São Paulo - SP, CEP: 01023-050
-                    </p>
-                    <p className="text-sm mb-3" style={{ color: 'var(--muted-foreground)' }}>
-                      Próximo à 25 de Março, na rua de trás
-                    </p>
-                    <div className="bg-purple-100 rounded-md px-3 py-1 inline-block">
-                      <span className="text-xs font-medium text-purple-800">Atendimento Presencial</span>
-                    </div>
-                  </div>
-                </div>
+              <div className="text-center">
+                <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
+                  🏪 Loja Física
+                </h3>
+                <p className="text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+                  Rua Comendador Abdo Schahin, 62 - Loja 4
+                </p>
+                <p className="text-xs mb-1" style={{ color: 'var(--muted-foreground)' }}>
+                  Centro, São Paulo - SP, CEP: 01023-050
+                </p>
+                <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                  Próximo à 25 de Março, na rua de trás
+                </p>
               </div>
             </div>
           </section>

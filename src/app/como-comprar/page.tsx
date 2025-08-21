@@ -32,14 +32,10 @@ export default function ComoComprar() {
             <div className="space-y-6">
               {/* Passo 1 */}
               <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4 border-l-4" style={{ borderColor: 'var(--blue)' }}>
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-xl" style={{ background: 'var(--blue)' }}>
-                    1
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
-                      🌐 Navegue pelo Nosso Catálogo Online
-                    </h3>
+                <div>
+                  <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
+                    🌐 Navegue pelo Nosso Catálogo Online
+                  </h3>
                     <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--muted-foreground)' }}>
                       <strong>Este site é nosso catálogo oficial!</strong> Navegue pelas categorias, 
                       veja produtos, preços e especificações. Todo o estoque está sempre atualizado.
@@ -55,20 +51,15 @@ export default function ComoComprar() {
                         <li>• Anote os produtos e quantidades desejadas</li>
                       </ul>
                     </div>
-                  </div>
                 </div>
               </div>
 
               {/* Passo 2 */}
-              <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-6 border-l-4" style={{ borderColor: 'var(--green)' }}>
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-xl" style={{ background: 'var(--green)' }}>
-                    2
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
-                      💬 Entre em Contato via WhatsApp
-                    </h3>
+              <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4 border-l-4" style={{ borderColor: 'var(--green)' }}>
+                <div>
+                  <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
+                    💬 Entre em Contato via WhatsApp
+                  </h3>
                     <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--muted-foreground)' }}>
                       Após escolher os produtos, <strong>entre em contato via WhatsApp</strong> com nossa equipe. 
                       Envie a lista dos produtos e quantidades desejadas.
@@ -105,20 +96,15 @@ export default function ComoComprar() {
                         </button>
                       </div>
                     </div>
-                  </div>
                 </div>
               </div>
 
               {/* Passo 3 */}
-              <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-6 border-l-4" style={{ borderColor: 'var(--orange)' }}>
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-xl" style={{ background: 'var(--orange)' }}>
-                    3
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
-                      👨‍💼 Atendimento Personalizado
-                    </h3>
+              <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-4 border-l-4" style={{ borderColor: 'var(--orange)' }}>
+                <div>
+                  <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
+                    👨‍💼 Atendimento Personalizado
+                  </h3>
                     <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--muted-foreground)' }}>
                       <strong>Um de nossos vendedores entrará em contato</strong> via WhatsApp para confirmar 
                       todos os detalhes do seu pedido.
@@ -158,20 +144,15 @@ export default function ComoComprar() {
                         </ul>
                       </div>
                     </div>
-                  </div>
                 </div>
               </div>
 
               {/* Passo 4 */}
-              <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-6 border-l-4" style={{ borderColor: 'var(--purple)' }}>
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-xl" style={{ background: '#6B21A8' }}>
-                    4
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
-                      💳 Finalize o Pagamento
-                    </h3>
+              <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4 border-l-4" style={{ borderColor: 'var(--purple)' }}>
+                <div>
+                  <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
+                    💳 Finalize o Pagamento
+                  </h3>
                     <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--muted-foreground)' }}>
                       Com todos os detalhes confirmados, <strong>realize o pagamento</strong> através da 
                       forma escolhida: PIX, cartão parcelado ou dinheiro na loja.
@@ -213,20 +194,15 @@ export default function ComoComprar() {
                         </div>
                       </div>
                     </div>
-                  </div>
                 </div>
               </div>
 
               {/* Passo 5 */}
-              <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-lg p-6 border-l-4" style={{ borderColor: 'var(--red)' }}>
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-xl" style={{ background: '#C2410C' }}>
-                    5
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
-                      📦 Separação e Envio
-                    </h3>
+              <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-lg p-4 border-l-4" style={{ borderColor: 'var(--red)' }}>
+                <div>
+                  <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
+                    📦 Separação e Envio
+                  </h3>
                     <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--muted-foreground)' }}>
                       <strong>Após a aprovação do pagamento</strong>, seu pedido entra imediatamente na fila 
                       de separação. Trabalhamos com agilidade para enviar rapidamente.
@@ -260,20 +236,15 @@ export default function ComoComprar() {
                         </div>
                       </div>
                     </div>
-                  </div>
                 </div>
               </div>
 
               {/* Passo 6 */}
-              <div className="bg-gradient-to-r from-teal-50 to-teal-100 rounded-lg p-6 border-l-4" style={{ borderColor: 'var(--teal)' }}>
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-xl" style={{ background: 'var(--teal)', backgroundColor: '#14B8A6' }}>
-                    6
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
-                      📍 Acompanhe seu Pedido
-                    </h3>
+              <div className="bg-gradient-to-r from-teal-50 to-teal-100 rounded-lg p-4 border-l-4" style={{ borderColor: 'var(--teal)' }}>
+                <div>
+                  <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
+                    📍 Acompanhe seu Pedido
+                  </h3>
                     <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--muted-foreground)' }}>
                       <strong>Receba o código de rastreamento</strong> e acompanhe sua encomenda em tempo real 
                       através do site da transportadora escolhida.
@@ -305,7 +276,6 @@ export default function ComoComprar() {
                         </ul>
                       </div>
                     </div>
-                  </div>
                 </div>
               </div>
             </div>
