@@ -9,13 +9,13 @@ export default function ComoComprar() {
       <Header showSearchBar={false} />
       
       <div className="max-w-4xl mx-auto px-6 py-12">
-        <div className="card p-8 animate-slide-up">
+        <div className="card p-6 animate-slide-up">
           {/* Header da Página */}
           <div className="text-center mb-12">
-            <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--foreground)' }}>
+            <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--foreground)' }}>
               Como Comprar
             </h1>
-            <p className="text-lg" style={{ color: 'var(--muted-foreground)' }}>
+            <p className="text-base" style={{ color: 'var(--muted-foreground)' }}>
               Guia completo para fazer seu primeiro pedido na PMCELL São Paulo
             </p>
             <p className="text-sm mt-2" style={{ color: 'var(--muted-foreground)' }}>
@@ -24,31 +24,31 @@ export default function ComoComprar() {
           </div>
 
           {/* Processo Passo a Passo */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-8 text-center" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-6 text-center" style={{ color: 'var(--foreground)' }}>
               📋 Passo a Passo Completo
             </h2>
             
             <div className="space-y-6">
               {/* Passo 1 */}
-              <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-6 border-l-4" style={{ borderColor: 'var(--blue)' }}>
+              <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4 border-l-4" style={{ borderColor: 'var(--blue)' }}>
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-xl" style={{ background: 'var(--blue)' }}>
                     1
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-xl mb-3" style={{ color: 'var(--foreground)' }}>
+                    <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
                       🌐 Navegue pelo Nosso Catálogo Online
                     </h3>
-                    <p className="text-base leading-relaxed mb-4" style={{ color: 'var(--muted-foreground)' }}>
+                    <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--muted-foreground)' }}>
                       <strong>Este site é nosso catálogo oficial!</strong> Navegue pelas categorias, 
                       veja produtos, preços e especificações. Todo o estoque está sempre atualizado.
                     </p>
-                    <div className="bg-white rounded-lg p-4">
-                      <h4 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
+                    <div className="bg-white rounded-lg p-3">
+                      <h4 className="font-semibold text-sm mb-2" style={{ color: 'var(--foreground)' }}>
                         ✨ Dicas para Navegar:
                       </h4>
-                      <ul className="space-y-1 text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                      <ul className="space-y-1 text-xs" style={{ color: 'var(--muted-foreground)' }}>
                         <li>• Use o filtro por categorias na lateral</li>
                         <li>• Utilize a barra de busca para produtos específicos</li>
                         <li>• Clique em "Liberar Preços" para ver valores de atacado</li>
@@ -66,16 +66,16 @@ export default function ComoComprar() {
                     2
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-xl mb-3" style={{ color: 'var(--foreground)' }}>
+                    <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
                       💬 Entre em Contato via WhatsApp
                     </h3>
-                    <p className="text-base leading-relaxed mb-4" style={{ color: 'var(--muted-foreground)' }}>
+                    <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--muted-foreground)' }}>
                       Após escolher os produtos, <strong>entre em contato via WhatsApp</strong> com nossa equipe. 
                       Envie a lista dos produtos e quantidades desejadas.
                     </p>
                     <div className="grid md:grid-cols-2 gap-4">
-                      <div className="bg-white rounded-lg p-4">
-                        <h4 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
+                      <div className="bg-white rounded-lg p-3">
+                        <h4 className="font-semibold text-sm mb-2" style={{ color: 'var(--foreground)' }}>
                           📱 WhatsApp 1
                         </h4>
                         <p className="text-lg font-bold text-green-600 mb-2">(11) 91130-4693</p>
@@ -89,8 +89,8 @@ export default function ComoComprar() {
                           Clique para conversar
                         </button>
                       </div>
-                      <div className="bg-white rounded-lg p-4">
-                        <h4 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
+                      <div className="bg-white rounded-lg p-3">
+                        <h4 className="font-semibold text-sm mb-2" style={{ color: 'var(--foreground)' }}>
                           📱 WhatsApp 2
                         </h4>
                         <p className="text-lg font-bold text-green-600 mb-2">(11) 98132-6609</p>
@@ -116,14 +116,14 @@ export default function ComoComprar() {
                     3
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-xl mb-3" style={{ color: 'var(--foreground)' }}>
+                    <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
                       👨‍💼 Atendimento Personalizado
                     </h3>
-                    <p className="text-base leading-relaxed mb-4" style={{ color: 'var(--muted-foreground)' }}>
+                    <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--muted-foreground)' }}>
                       <strong>Um de nossos vendedores entrará em contato</strong> via WhatsApp para confirmar 
                       todos os detalhes do seu pedido.
                     </p>
-                    <div className="bg-white rounded-lg p-4">
+                    <div className="bg-white rounded-lg p-3">
                       <h4 className="font-semibold text-base mb-3" style={{ color: 'var(--foreground)' }}>
                         📝 O que o vendedor confirmará:
                       </h4>
@@ -169,14 +169,14 @@ export default function ComoComprar() {
                     4
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-xl mb-3" style={{ color: 'var(--foreground)' }}>
+                    <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
                       💳 Finalize o Pagamento
                     </h3>
-                    <p className="text-base leading-relaxed mb-4" style={{ color: 'var(--muted-foreground)' }}>
+                    <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--muted-foreground)' }}>
                       Com todos os detalhes confirmados, <strong>realize o pagamento</strong> através da 
                       forma escolhida: PIX, cartão parcelado ou dinheiro na loja.
                     </p>
-                    <div className="bg-white rounded-lg p-4">
+                    <div className="bg-white rounded-lg p-3">
                       <h4 className="font-semibold text-base mb-3" style={{ color: 'var(--foreground)' }}>
                         💰 Formas de Pagamento Aceitas:
                       </h4>
@@ -224,23 +224,23 @@ export default function ComoComprar() {
                     5
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-xl mb-3" style={{ color: 'var(--foreground)' }}>
+                    <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
                       📦 Separação e Envio
                     </h3>
-                    <p className="text-base leading-relaxed mb-4" style={{ color: 'var(--muted-foreground)' }}>
+                    <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--muted-foreground)' }}>
                       <strong>Após a aprovação do pagamento</strong>, seu pedido entra imediatamente na fila 
                       de separação. Trabalhamos com agilidade para enviar rapidamente.
                     </p>
-                    <div className="bg-white rounded-lg p-4">
+                    <div className="bg-white rounded-lg p-3">
                       <h4 className="font-semibold text-base mb-3" style={{ color: 'var(--foreground)' }}>
                         🚀 O que acontece após o pagamento:
                       </h4>
                       <div className="grid md:grid-cols-2 gap-4">
                         <div>
-                          <h4 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
+                          <h4 className="font-semibold text-sm mb-2" style={{ color: 'var(--foreground)' }}>
                             ⚡ Processo Ágil:
                           </h4>
-                          <ul className="space-y-1 text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                          <ul className="space-y-1 text-xs" style={{ color: 'var(--muted-foreground)' }}>
                             <li>• Separação em até 24h úteis</li>
                             <li>• Embalagem cuidadosa</li>
                             <li>• Etiqueta de rastreamento</li>
@@ -248,10 +248,10 @@ export default function ComoComprar() {
                           </ul>
                         </div>
                         <div>
-                          <h4 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
+                          <h4 className="font-semibold text-sm mb-2" style={{ color: 'var(--foreground)' }}>
                             📋 Cadastro Automático:
                           </h4>
-                          <ul className="space-y-1 text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                          <ul className="space-y-1 text-xs" style={{ color: 'var(--muted-foreground)' }}>
                             <li>• Cadastro criado automaticamente</li>
                             <li>• Histórico de pedidos</li>
                             <li>• Cliente preferencial</li>
@@ -271,14 +271,14 @@ export default function ComoComprar() {
                     6
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-xl mb-3" style={{ color: 'var(--foreground)' }}>
+                    <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
                       📍 Acompanhe seu Pedido
                     </h3>
-                    <p className="text-base leading-relaxed mb-4" style={{ color: 'var(--muted-foreground)' }}>
+                    <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--muted-foreground)' }}>
                       <strong>Receba o código de rastreamento</strong> e acompanhe sua encomenda em tempo real 
                       através do site da transportadora escolhida.
                     </p>
-                    <div className="bg-white rounded-lg p-4">
+                    <div className="bg-white rounded-lg p-3">
                       <h4 className="font-semibold text-base mb-3" style={{ color: 'var(--foreground)' }}>
                         🚚 Formas de Acompanhamento:
                       </h4>
@@ -312,7 +312,7 @@ export default function ComoComprar() {
           </section>
 
           {/* Informações Importantes */}
-          <section className="mb-12">
+          <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-6 text-center" style={{ color: 'var(--foreground)' }}>
               ⚠️ Informações Importantes
             </h2>
@@ -378,7 +378,7 @@ export default function ComoComprar() {
           </section>
 
           {/* Resumo Visual */}
-          <section className="mb-12">
+          <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-6 text-center" style={{ color: 'var(--foreground)' }}>
               🚀 Resumo do Processo
             </h2>

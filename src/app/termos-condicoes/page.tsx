@@ -9,13 +9,13 @@ export default function TermosCondicoes() {
       <Header showSearchBar={false} />
       
       <div className="max-w-4xl mx-auto px-6 py-12">
-        <div className="card p-8 animate-slide-up">
+        <div className="card p-6 animate-slide-up">
           {/* Header da Página */}
           <div className="text-center mb-12">
-            <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--foreground)' }}>
+            <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--foreground)' }}>
               Termos e Condições de Uso
             </h1>
-            <p className="text-lg" style={{ color: 'var(--muted-foreground)' }}>
+            <p className="text-base" style={{ color: 'var(--muted-foreground)' }}>
               Regras e condições para compras na PMCELL São Paulo
             </p>
             <p className="text-sm mt-2" style={{ color: 'var(--muted-foreground)' }}>
@@ -24,7 +24,7 @@ export default function TermosCondicoes() {
           </div>
 
           {/* Introdução */}
-          <section className="mb-8">
+          <section className="mb-6">
             <p className="text-base leading-relaxed mb-4" style={{ color: 'var(--muted-foreground)' }}>
               Bem-vindo à PMCELL São Paulo! Estes Termos e Condições de Uso estabelecem as regras 
               para utilização de nossos serviços e realização de compras. Ao utilizar nossos serviços, 
@@ -33,15 +33,15 @@ export default function TermosCondicoes() {
           </section>
 
           {/* Seção 1 - Pedido Mínimo */}
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-6">
+            <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
               1. Pedido Mínimo
             </h2>
             
             <div className="bg-orange-50 rounded-lg p-6">
               <div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-3" style={{ color: 'var(--foreground)' }}>
+                  <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
                     Quantidade Mínima: 30 Peças
                   </h3>
                   <p className="text-base leading-relaxed mb-3" style={{ color: 'var(--muted-foreground)' }}>
@@ -60,8 +60,8 @@ export default function TermosCondicoes() {
           </section>
 
           {/* Seção 2 - Formas de Pagamento */}
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-6">
+            <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
               2. Formas de Pagamento
             </h2>
             
@@ -101,8 +101,8 @@ export default function TermosCondicoes() {
           </section>
 
           {/* Seção 3 - Política de Preços */}
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-6">
+            <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
               3. Política de Preços
             </h2>
             
@@ -110,7 +110,7 @@ export default function TermosCondicoes() {
               <div className="bg-yellow-50 rounded-lg p-6 border-l-4" style={{ borderColor: 'var(--orange)' }}>
                 <div>
                   <div>
-                    <h3 className="font-semibold text-lg mb-3" style={{ color: 'var(--foreground)' }}>
+                    <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
                       ⚠️ Preços Sujeitos a Alteração
                     </h3>
                     <p className="text-base leading-relaxed mb-3" style={{ color: 'var(--muted-foreground)' }}>
@@ -145,15 +145,15 @@ export default function TermosCondicoes() {
           </section>
 
           {/* Seção 4 - Cobertura de Entrega */}
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-6">
+            <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
               4. Cobertura de Entrega
             </h2>
             
             <div className="bg-blue-50 rounded-lg p-6">
               <div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-3" style={{ color: 'var(--foreground)' }}>
+                  <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
                     🇧🇷 Entregamos para Todo o Brasil
                   </h3>
                   <p className="text-base leading-relaxed mb-3" style={{ color: 'var(--muted-foreground)' }}>
@@ -183,15 +183,15 @@ export default function TermosCondicoes() {
           </section>
 
           {/* Seção 5 - Restrições de Idade */}
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-6">
+            <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
               5. Política de Idade
             </h2>
             
             <div className="bg-green-50 rounded-lg p-6">
               <div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-3" style={{ color: 'var(--foreground)' }}>
+                  <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
                     ✅ Sem Restrições de Idade
                   </h3>
                   <p className="text-base leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
@@ -204,15 +204,15 @@ export default function TermosCondicoes() {
           </section>
 
           {/* Seção 6 - Responsabilidades */}
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-6">
+            <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
               6. Responsabilidades do Cliente
             </h2>
             
             <div className="bg-purple-50 rounded-lg p-6">
               <div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-3" style={{ color: 'var(--foreground)' }}>
+                  <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
                     ✅ Processo Simplificado
                   </h3>
                   <p className="text-base leading-relaxed mb-4" style={{ color: 'var(--muted-foreground)' }}>
@@ -245,8 +245,8 @@ export default function TermosCondicoes() {
           </section>
 
           {/* Seção 7 - Disponibilidade de Produtos */}
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-6">
+            <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
               7. Disponibilidade de Produtos
             </h2>
             
@@ -260,8 +260,8 @@ export default function TermosCondicoes() {
           </section>
 
           {/* Seção 8 - Modificações dos Termos */}
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-6">
+            <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
               8. Modificações destes Termos
             </h2>
             
@@ -277,7 +277,7 @@ export default function TermosCondicoes() {
           {/* Contato */}
           <section className="text-center">
             <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-6">
-              <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
+              <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
                 Dúvidas sobre os Termos?
               </h2>
               <p className="text-base leading-relaxed max-w-3xl mx-auto mb-6" style={{ color: 'var(--muted-foreground)' }}>

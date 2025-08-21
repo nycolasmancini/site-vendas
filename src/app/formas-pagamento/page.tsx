@@ -9,13 +9,13 @@ export default function FormasPagamento() {
       <Header showSearchBar={false} />
       
       <div className="max-w-4xl mx-auto px-6 py-12">
-        <div className="card p-8 animate-slide-up">
+        <div className="card p-6 animate-slide-up">
           {/* Header da Página */}
           <div className="text-center mb-12">
-            <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--foreground)' }}>
+            <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--foreground)' }}>
               Formas de Pagamento
             </h1>
-            <p className="text-lg" style={{ color: 'var(--muted-foreground)' }}>
+            <p className="text-base" style={{ color: 'var(--muted-foreground)' }}>
               Escolha a forma de pagamento que melhor se adequa ao seu negócio
             </p>
             <p className="text-sm mt-2" style={{ color: 'var(--muted-foreground)' }}>
@@ -24,11 +24,11 @@ export default function FormasPagamento() {
           </div>
 
           {/* PIX em Destaque */}
-          <section className="mb-12">
+          <section className="mb-8">
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border-2 border-green-200">
               <div className="flex items-start gap-6">
                 <div className="flex-1">
-                  <h2 className="text-2xl font-bold mb-3" style={{ color: 'var(--foreground)' }}>
+                  <h2 className="text-xl font-bold mb-3" style={{ color: 'var(--foreground)' }}>
                     💚 PIX - Nossa Recomendação
                   </h2>
                   <p className="text-lg leading-relaxed mb-4" style={{ color: 'var(--muted-foreground)' }}>
@@ -65,8 +65,8 @@ export default function FormasPagamento() {
           </section>
 
           {/* Cartão de Crédito */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-3" style={{ color: 'var(--foreground)' }}>
               Cartão de Crédito
             </h2>
             
@@ -126,8 +126,8 @@ export default function FormasPagamento() {
           </section>
 
           {/* Pagamento em Dinheiro */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-3" style={{ color: 'var(--foreground)' }}>
               Pagamento Presencial
             </h2>
             
@@ -158,8 +158,8 @@ export default function FormasPagamento() {
           </section>
 
           {/* Processo de Pagamento */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-3" style={{ color: 'var(--foreground)' }}>
               Como Funciona o Processo
             </h2>
             
@@ -267,7 +267,7 @@ export default function FormasPagamento() {
           </section>
 
           {/* Informações Importantes */}
-          <section className="mb-12">
+          <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-6 text-center" style={{ color: 'var(--foreground)' }}>
               📋 Informações Importantes
             </h2>

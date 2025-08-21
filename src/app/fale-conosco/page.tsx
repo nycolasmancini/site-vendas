@@ -19,13 +19,13 @@ export default function FaleConosco() {
       <Header showSearchBar={false} />
       
       <div className="max-w-6xl mx-auto px-6 py-12">
-        <div className="card p-8 animate-slide-up">
+        <div className="card p-6 animate-slide-up">
           {/* Header da Página */}
           <div className="text-center mb-12">
-            <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--foreground)' }}>
+            <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--foreground)' }}>
               Fale Conosco
             </h1>
-            <p className="text-lg" style={{ color: 'var(--muted-foreground)' }}>
+            <p className="text-base" style={{ color: 'var(--muted-foreground)' }}>
               Entre em contato com nossa equipe e tire suas dúvidas
             </p>
             <p className="text-sm mt-2" style={{ color: 'var(--muted-foreground)' }}>
@@ -34,13 +34,13 @@ export default function FaleConosco() {
           </div>
 
           {/* Destaque WhatsApp */}
-          <section className="mb-12">
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border-2 border-green-200">
+          <section className="mb-8">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border-2 border-green-200">
               <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold mb-3" style={{ color: 'var(--foreground)' }}>
+                <h2 className="text-xl font-bold mb-3" style={{ color: 'var(--foreground)' }}>
                   💬 Atendimento via WhatsApp
                 </h2>
-                <p className="text-lg" style={{ color: 'var(--muted-foreground)' }}>
+                <p className="text-base" style={{ color: 'var(--muted-foreground)' }}>
                   Nosso canal principal para pedidos, dúvidas e suporte
                 </p>
               </div>
@@ -48,7 +48,7 @@ export default function FaleConosco() {
               <div className="grid md:grid-cols-2 gap-4">
                 <button
                   onClick={() => openWhatsApp('(11) 91130-4693')}
-                  className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-all duration-200 transform hover:-translate-y-1"
+                  className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-200 transform hover:-translate-y-1"
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'var(--green)' }}>
@@ -57,11 +57,11 @@ export default function FaleConosco() {
                       </svg>
                     </div>
                     <div className="text-left">
-                      <h3 className="font-semibold text-lg" style={{ color: 'var(--foreground)' }}>
+                      <h3 className="font-semibold text-base" style={{ color: 'var(--foreground)' }}>
                         WhatsApp 1
                       </h3>
-                      <p className="text-xl font-bold text-green-600">(11) 91130-4693</p>
-                      <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                      <p className="text-lg font-bold text-green-600">(11) 91130-4693</p>
+                      <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                         Clique para conversar
                       </p>
                     </div>
@@ -70,7 +70,7 @@ export default function FaleConosco() {
 
                 <button
                   onClick={() => openWhatsApp('(11) 98132-6609')}
-                  className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-all duration-200 transform hover:-translate-y-1"
+                  className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-200 transform hover:-translate-y-1"
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'var(--green)' }}>
@@ -79,11 +79,11 @@ export default function FaleConosco() {
                       </svg>
                     </div>
                     <div className="text-left">
-                      <h3 className="font-semibold text-lg" style={{ color: 'var(--foreground)' }}>
+                      <h3 className="font-semibold text-base" style={{ color: 'var(--foreground)' }}>
                         WhatsApp 2
                       </h3>
-                      <p className="text-xl font-bold text-green-600">(11) 98132-6609</p>
-                      <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                      <p className="text-lg font-bold text-green-600">(11) 98132-6609</p>
+                      <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                         Clique para conversar
                       </p>
                     </div>
@@ -94,14 +94,14 @@ export default function FaleConosco() {
           </section>
 
           {/* Outras Formas de Contato */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-6 text-center" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4 text-center" style={{ color: 'var(--foreground)' }}>
               Outros Canais de Atendimento
             </h2>
             
             <div className="grid md:grid-cols-2 gap-6">
               {/* Email */}
-              <div className="bg-blue-50 rounded-lg p-6">
+              <div className="bg-blue-50 rounded-lg p-4">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'var(--blue)' }}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
@@ -110,12 +110,12 @@ export default function FaleConosco() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
+                    <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
                       📧 Email do Gerente
                     </h3>
                     <a 
                       href="mailto:nycolas@pmcellsaopaulo.com.br?subject=Contato via Site PMCELL"
-                      className="text-blue-600 hover:text-blue-700 font-semibold text-lg block mb-2"
+                      className="text-blue-600 hover:text-blue-700 font-semibold text-base block mb-2"
                     >
                       nycolas@pmcellsaopaulo.com.br
                     </a>
@@ -130,7 +130,7 @@ export default function FaleConosco() {
               </div>
 
               {/* Loja Física */}
-              <div className="bg-purple-50 rounded-lg p-6">
+              <div className="bg-purple-50 rounded-lg p-4">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'var(--purple)' }}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
@@ -139,10 +139,10 @@ export default function FaleConosco() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
+                    <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
                       🏪 Loja Física
                     </h3>
-                    <p className="text-base font-semibold mb-1" style={{ color: 'var(--foreground)' }}>
+                    <p className="text-sm font-semibold mb-1" style={{ color: 'var(--foreground)' }}>
                       Rua Comendador Abdo Schahin, 62 - Loja 4
                     </p>
                     <p className="text-sm mb-1" style={{ color: 'var(--muted-foreground)' }}>
@@ -161,12 +161,12 @@ export default function FaleConosco() {
           </section>
 
           {/* Horário de Funcionamento */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-6 text-center" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4 text-center" style={{ color: 'var(--foreground)' }}>
               ⏰ Horários de Funcionamento
             </h2>
             
-            <div className="bg-orange-50 rounded-lg p-6">
+            <div className="bg-orange-50 rounded-lg p-4">
               <div className="text-center">
                 <div className="w-16 h-16 rounded-lg mx-auto mb-4 flex items-center justify-center" style={{ background: 'var(--orange)' }}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
@@ -174,26 +174,26 @@ export default function FaleConosco() {
                     <polyline points="12,6 12,12 16,14"/>
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--foreground)' }}>
+                <h3 className="text-lg font-bold mb-3" style={{ color: 'var(--foreground)' }}>
                   Segunda a Sexta-feira
                 </h3>
-                <div className="text-3xl font-bold mb-4" style={{ color: 'var(--orange)' }}>
+                <div className="text-2xl font-bold mb-3" style={{ color: 'var(--orange)' }}>
                   8h às 17h
                 </div>
                 <div className="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
                   <div className="bg-white rounded-lg p-4">
-                    <h4 className="font-semibold mb-2" style={{ color: 'var(--foreground)' }}>
+                    <h4 className="font-semibold text-sm mb-2" style={{ color: 'var(--foreground)' }}>
                       🏪 Loja Física
                     </h4>
-                    <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                    <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                       Atendimento presencial e retirada de produtos
                     </p>
                   </div>
                   <div className="bg-white rounded-lg p-4">
-                    <h4 className="font-semibold mb-2" style={{ color: 'var(--foreground)' }}>
+                    <h4 className="font-semibold text-sm mb-2" style={{ color: 'var(--foreground)' }}>
                       💬 WhatsApp
                     </h4>
-                    <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                    <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                       Atendimento online e pedidos
                     </p>
                   </div>
@@ -208,8 +208,8 @@ export default function FaleConosco() {
           </section>
 
           {/* Como nos Encontrar */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-6 text-center" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4 text-center" style={{ color: 'var(--foreground)' }}>
               📍 Como nos Encontrar
             </h2>
             

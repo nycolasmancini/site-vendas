@@ -9,13 +9,13 @@ export default function PoliticaTrocas() {
       <Header showSearchBar={false} />
       
       <div className="max-w-4xl mx-auto px-6 py-12">
-        <div className="card p-8 animate-slide-up">
+        <div className="card p-6 animate-slide-up">
           {/* Header da Página */}
           <div className="text-center mb-12">
-            <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--foreground)' }}>
+            <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--foreground)' }}>
               Política de Trocas e Devoluções
             </h1>
-            <p className="text-lg" style={{ color: 'var(--muted-foreground)' }}>
+            <p className="text-base" style={{ color: 'var(--muted-foreground)' }}>
               Condições para trocas, devoluções e garantia dos produtos
             </p>
             <p className="text-sm mt-2" style={{ color: 'var(--muted-foreground)' }}>
@@ -24,7 +24,7 @@ export default function PoliticaTrocas() {
           </div>
 
           {/* Garantia - Destaque */}
-          <section className="mb-8">
+          <section className="mb-6">
             <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-6 border-2 border-green-200">
               <div>
                 <div>
@@ -41,8 +41,8 @@ export default function PoliticaTrocas() {
           </section>
 
           {/* Seção 1 - Condições para Troca */}
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-6">
+            <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
               1. Quando Aceitamos Trocas
             </h2>
             
@@ -98,8 +98,8 @@ export default function PoliticaTrocas() {
           </section>
 
           {/* Seção 2 - Prazos */}
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-6">
+            <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
               2. Prazos e Flexibilidade
             </h2>
             
@@ -149,8 +149,8 @@ export default function PoliticaTrocas() {
           </section>
 
           {/* Seção 3 - Processo de Troca */}
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-6">
+            <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
               3. Como Funciona o Processo
             </h2>
             
@@ -224,8 +224,8 @@ export default function PoliticaTrocas() {
           </section>
 
           {/* Seção 4 - Custos de Frete */}
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-6">
+            <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
               4. Custos de Frete
             </h2>
             
@@ -251,8 +251,8 @@ export default function PoliticaTrocas() {
           </section>
 
           {/* Seção 5 - Sistema de Crédito */}
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-6">
+            <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
               5. Sistema de Crédito
             </h2>
             
@@ -302,8 +302,8 @@ export default function PoliticaTrocas() {
           </section>
 
           {/* Seção 6 - Contato para Trocas */}
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-6">
+            <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
               6. Como Solicitar Troca
             </h2>
             
@@ -345,7 +345,7 @@ export default function PoliticaTrocas() {
           {/* Informações Importantes */}
           <section className="text-center">
             <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg p-6 border-2 border-orange-200">
-              <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
+              <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
                 📋 Informações Importantes
               </h2>
               <div className="max-w-3xl mx-auto space-y-3 text-base" style={{ color: 'var(--muted-foreground)' }}>

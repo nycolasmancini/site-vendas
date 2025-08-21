@@ -27,29 +27,29 @@ export default function SobreNos() {
       <Header showSearchBar={false} />
       
       <div className="max-w-4xl mx-auto px-6 py-12">
-        <div className="card p-8 animate-slide-up">
+        <div className="card p-6 animate-slide-up">
           {/* Header da Página */}
           <div className="text-center mb-12">
-            <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--foreground)' }}>
+            <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--foreground)' }}>
               Sobre a PMCELL São Paulo
             </h1>
-            <p className="text-lg" style={{ color: 'var(--muted-foreground)' }}>
+            <p className="text-base" style={{ color: 'var(--muted-foreground)' }}>
               Sua parceira de confiança no atacado de acessórios para celular
             </p>
           </div>
 
           {/* Nossa História */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-6" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
               Nossa História
             </h2>
             <div className="prose max-w-none">
-              <p className="text-base leading-relaxed mb-4" style={{ color: 'var(--muted-foreground)' }}>
+              <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--muted-foreground)' }}>
                 Há 5 anos atuando no coração comercial de São Paulo, na tradicional região da 25 de Março, 
                 a PMCELL São Paulo se consolidou como distribuidora oficial da importadora PMCELL, oferecendo 
                 soluções completas no atacado de acessórios para dispositivos móveis.
               </p>
-              <p className="text-base leading-relaxed mb-4" style={{ color: 'var(--muted-foreground)' }}>
+              <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--muted-foreground)' }}>
                 Nossa trajetória começou com o compromisso de fornecer produtos de qualidade com total 
                 transparência e confiabilidade. Hoje, atendemos mais de {clientCount.toLocaleString()} clientes em todo o Brasil, 
                 combinando a tradição do atendimento presencial com a praticidade das vendas online.
@@ -58,15 +58,15 @@ export default function SobreNos() {
           </section>
 
           {/* Localização */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-6" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
               Nossa Localização
             </h2>
             <a 
               href="https://share.google/9z8CDEFDLaa4vOXs3" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="block bg-gray-50 rounded-lg p-6 mb-6 hover:bg-gray-100 transition-colors cursor-pointer"
+              className="block bg-gray-50 rounded-lg p-4 mb-4 hover:bg-gray-100 transition-colors cursor-pointer"
             >
               <div className="flex items-start gap-6">
                 <div className="w-24 h-20 rounded-lg overflow-hidden flex-shrink-0">
@@ -82,14 +82,14 @@ export default function SobreNos() {
                   />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
+                  <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
                     Loja Física - 25 de Março
                   </h3>
-                  <p className="text-base" style={{ color: 'var(--muted-foreground)' }}>
+                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                     <strong>Rua Comendador Abdo Schahin, 62 - Loja 4</strong><br />
                     25 de Março, São Paulo - SP
                   </p>
-                  <p className="text-sm mt-2" style={{ color: 'var(--muted-foreground)' }}>
+                  <p className="text-xs mt-2" style={{ color: 'var(--muted-foreground)' }}>
                     Clique para ver no Google Maps • Atendimento presencial
                   </p>
                 </div>
@@ -103,8 +103,8 @@ export default function SobreNos() {
           </section>
 
           {/* Nossos Diferenciais */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-6" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
               Por Que Escolher a PMCELL?
             </h2>
             <div className="grid md:grid-cols-2 gap-6">
@@ -116,10 +116,10 @@ export default function SobreNos() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
+                  <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
                     Produtos Originais
                   </h3>
-                  <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                     Todos os produtos são originais com código de barras e certificações necessárias
                   </p>
                 </div>
@@ -137,10 +137,10 @@ export default function SobreNos() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
+                  <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
                     Nota Fiscal Garantida
                   </h3>
-                  <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                     Todas as vendas acompanham nota fiscal para total segurança do seu negócio
                   </p>
                 </div>
@@ -154,10 +154,10 @@ export default function SobreNos() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
+                  <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
                     Garantia de 90 Dias
                   </h3>
-                  <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                     Produtos com garantia estendida para sua total tranquilidade
                   </p>
                 </div>
@@ -176,10 +176,10 @@ export default function SobreNos() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
+                  <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
                     Envios Nacional
                   </h3>
-                  <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                     Atendemos todo o Brasil com logística eficiente e segura
                   </p>
                 </div>
@@ -193,10 +193,10 @@ export default function SobreNos() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
+                  <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
                     Certificação ANATEL
                   </h3>
-                  <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                     Produtos eletrônicos certificados conforme normas brasileiras
                   </p>
                 </div>
@@ -212,10 +212,10 @@ export default function SobreNos() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
+                  <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
                     +{clientCount.toLocaleString()} Clientes
                   </h3>
-                  <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                     Mais de {clientCount.toLocaleString()} clientes confiam na nossa qualidade e atendimento
                   </p>
                 </div>
@@ -225,11 +225,11 @@ export default function SobreNos() {
 
           {/* Compromisso */}
           <section className="text-center">
-            <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-8">
-              <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
+            <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-6">
+              <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
                 Nosso Compromisso
               </h2>
-              <p className="text-lg leading-relaxed max-w-3xl mx-auto" style={{ color: 'var(--muted-foreground)' }}>
+              <p className="text-base leading-relaxed max-w-3xl mx-auto" style={{ color: 'var(--muted-foreground)' }}>
                 Como distribuidora oficial da importadora PMCELL, nosso compromisso é oferecer 
                 produtos de qualidade superior, atendimento personalizado e condições comerciais 
                 que impulsionem o crescimento do seu negócio. Cada cliente é único, e tratamos 

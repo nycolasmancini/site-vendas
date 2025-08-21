@@ -39,13 +39,13 @@ export default function PoliticaFrete() {
       <Header showSearchBar={false} />
       
       <div className="max-w-4xl mx-auto px-6 py-12">
-        <div className="card p-8 animate-slide-up">
+        <div className="card p-6 animate-slide-up">
           {/* Header da Página */}
           <div className="text-center mb-12">
-            <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--foreground)' }}>
+            <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--foreground)' }}>
               Política de Frete e Entrega
             </h1>
-            <p className="text-lg" style={{ color: 'var(--muted-foreground)' }}>
+            <p className="text-base" style={{ color: 'var(--muted-foreground)' }}>
               Informações completas sobre envio, prazos e entrega dos produtos
             </p>
             <p className="text-sm mt-2" style={{ color: 'var(--muted-foreground)' }}>
@@ -54,13 +54,13 @@ export default function PoliticaFrete() {
           </div>
 
           {/* Transportadoras */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-6" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
               Transportadoras Parceiras
             </h2>
             
-            <div className="bg-blue-50 rounded-lg p-6 mb-6">
-              <h3 className="font-semibold text-lg mb-4" style={{ color: 'var(--foreground)' }}>
+            <div className="bg-blue-50 rounded-lg p-4 mb-4">
+              <h3 className="font-semibold text-base mb-3" style={{ color: 'var(--foreground)' }}>
                 🚚 Principais Transportadoras Utilizadas
               </h3>
               
@@ -75,7 +75,7 @@ export default function PoliticaFrete() {
                   {shippingCompanies.length > 0 ? (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                       {shippingCompanies.map((company) => (
-                        <div key={company.id} className="bg-white rounded-lg p-4 text-center shadow-sm">
+                        <div key={company.id} className="bg-white rounded-lg p-3 text-center shadow-sm">
                           <div className="h-10 mb-2 flex items-center justify-center">
                             {company.logo ? (
                               <img 
@@ -105,10 +105,10 @@ export default function PoliticaFrete() {
               )}
 
               <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4">
-                <h4 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
+                <h4 className="font-semibold text-sm mb-2" style={{ color: 'var(--foreground)' }}>
                   💡 Flexibilidade Total
                 </h4>
-                <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                   <strong>Você escolhe!</strong> Além das transportadoras parceiras, também coletamos 
                   e enviamos via qualquer transportadora de sua preferência. Basta informar!
                 </p>
@@ -117,18 +117,18 @@ export default function PoliticaFrete() {
           </section>
 
           {/* Cálculo de Frete */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-6" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
               Como é Calculado o Frete
             </h2>
             
             <div className="grid md:grid-cols-3 gap-6">
-              <div className="bg-orange-50 rounded-lg p-6">
+              <div className="bg-orange-50 rounded-lg p-4">
                 <div className="text-center">
-                  <h3 className="font-semibold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
+                  <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
                     ⚖️ Peso dos Produtos
                   </h3>
-                  <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                     Calculamos com base no peso total dos itens do seu pedido
                   </p>
                 </div>
@@ -136,10 +136,10 @@ export default function PoliticaFrete() {
 
               <div className="bg-blue-50 rounded-lg p-6">
                 <div className="text-center">
-                  <h3 className="font-semibold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
+                  <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
                     📦 Volume da Embalagem
                   </h3>
-                  <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                     Consideramos o volume necessário para embalar com segurança
                   </p>
                 </div>
@@ -147,10 +147,10 @@ export default function PoliticaFrete() {
 
               <div className="bg-green-50 rounded-lg p-6">
                 <div className="text-center">
-                  <h3 className="font-semibold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
+                  <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
                     📍 CEP de Destino
                   </h3>
-                  <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                     A distância até seu endereço influencia no valor final
                   </p>
                 </div>
@@ -169,17 +169,17 @@ export default function PoliticaFrete() {
           </section>
 
           {/* Prazos de Entrega */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-6" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
               Prazos de Entrega
             </h2>
             
-            <div className="bg-purple-50 rounded-lg p-6">
+            <div className="bg-purple-50 rounded-lg p-4">
               <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold mb-2" style={{ color: 'var(--foreground)' }}>
+                <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--foreground)' }}>
                   🇧🇷 Todo o Brasil
                 </h3>
-                <p className="text-lg" style={{ color: 'var(--muted-foreground)' }}>
+                <p className="text-base" style={{ color: 'var(--muted-foreground)' }}>
                   Prazo de <strong>1 a 9 dias úteis</strong> dependendo do seu CEP
                 </p>
               </div>
@@ -232,8 +232,8 @@ export default function PoliticaFrete() {
           </section>
 
           {/* Seguro Incluso */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-6" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
               Seguro Incluído
             </h2>
             
@@ -249,7 +249,7 @@ export default function PoliticaFrete() {
                   </p>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="bg-white rounded-lg p-4">
-                      <h4 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
+                      <h4 className="font-semibold text-sm mb-2" style={{ color: 'var(--foreground)' }}>
                         ✅ O que está coberto:
                       </h4>
                       <ul className="space-y-1 text-sm" style={{ color: 'var(--muted-foreground)' }}>
@@ -260,7 +260,7 @@ export default function PoliticaFrete() {
                       </ul>
                     </div>
                     <div className="bg-green-100 rounded-lg p-4">
-                      <h4 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
+                      <h4 className="font-semibold text-sm mb-2" style={{ color: 'var(--foreground)' }}>
                         💰 Sem custos extras:
                       </h4>
                       <ul className="space-y-1 text-sm" style={{ color: 'var(--muted-foreground)' }}>
@@ -277,14 +277,14 @@ export default function PoliticaFrete() {
           </section>
 
           {/* Como Funciona a Entrega */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-6" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
               Como Funciona a Entrega
             </h2>
             
             <div className="space-y-6">
               <div className="bg-red-50 rounded-lg p-6">
-                <h3 className="font-semibold text-lg mb-4" style={{ color: 'var(--foreground)' }}>
+                <h3 className="font-semibold text-base mb-3" style={{ color: 'var(--foreground)' }}>
                   📋 Políticas das Transportadoras
                 </h3>
                 <p className="text-base leading-relaxed mb-4" style={{ color: 'var(--muted-foreground)' }}>
@@ -336,13 +336,13 @@ export default function PoliticaFrete() {
           </section>
 
           {/* Grandes Volumes */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-6" style={{ color: 'var(--foreground)' }}>
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
               Pedidos de Grande Volume
             </h2>
             
-            <div className="bg-purple-50 rounded-lg p-6">
-              <h3 className="font-semibold text-lg mb-4" style={{ color: 'var(--foreground)' }}>
+            <div className="bg-purple-50 rounded-lg p-4">
+              <h3 className="font-semibold text-base mb-3" style={{ color: 'var(--foreground)' }}>
                 📦 Transportadoras Especializadas
               </h3>
               <p className="text-base leading-relaxed mb-4" style={{ color: 'var(--muted-foreground)' }}>
@@ -396,7 +396,7 @@ export default function PoliticaFrete() {
           </section>
 
           {/* Resumo da Política */}
-          <section className="mb-12">
+          <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-6 text-center" style={{ color: 'var(--foreground)' }}>
               📋 Resumo da Política
             </h2>
@@ -404,7 +404,7 @@ export default function PoliticaFrete() {
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div className="bg-green-50 rounded-lg p-4">
-                  <h4 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
+                  <h4 className="font-semibold text-sm mb-2" style={{ color: 'var(--foreground)' }}>
                     ✅ Garantimos
                   </h4>
                   <ul className="space-y-1 text-sm" style={{ color: 'var(--muted-foreground)' }}>
@@ -417,7 +417,7 @@ export default function PoliticaFrete() {
                 </div>
                 
                 <div className="bg-blue-50 rounded-lg p-4">
-                  <h4 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
+                  <h4 className="font-semibold text-sm mb-2" style={{ color: 'var(--foreground)' }}>
                     ⏰ Prazos
                   </h4>
                   <ul className="space-y-1 text-sm" style={{ color: 'var(--muted-foreground)' }}>
@@ -431,7 +431,7 @@ export default function PoliticaFrete() {
               
               <div className="space-y-4">
                 <div className="bg-orange-50 rounded-lg p-4">
-                  <h4 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
+                  <h4 className="font-semibold text-sm mb-2" style={{ color: 'var(--foreground)' }}>
                     💰 Cálculo
                   </h4>
                   <ul className="space-y-1 text-sm" style={{ color: 'var(--muted-foreground)' }}>
@@ -443,7 +443,7 @@ export default function PoliticaFrete() {
                 </div>
                 
                 <div className="bg-purple-50 rounded-lg p-4">
-                  <h4 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
+                  <h4 className="font-semibold text-sm mb-2" style={{ color: 'var(--foreground)' }}>
                     🚀 Flexibilidade
                   </h4>
                   <ul className="space-y-1 text-sm" style={{ color: 'var(--muted-foreground)' }}>

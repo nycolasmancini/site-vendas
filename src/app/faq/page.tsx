@@ -125,13 +125,13 @@ export default function FAQ() {
       <Header showSearchBar={false} />
       
       <div className="max-w-4xl mx-auto px-6 py-12">
-        <div className="card p-8 animate-slide-up">
+        <div className="card p-6 animate-slide-up">
           {/* Header da Página */}
           <div className="text-center mb-12">
-            <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--foreground)' }}>
+            <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--foreground)' }}>
               Perguntas Frequentes
             </h1>
-            <p className="text-lg" style={{ color: 'var(--muted-foreground)' }}>
+            <p className="text-base" style={{ color: 'var(--muted-foreground)' }}>
               Encontre respostas para as dúvidas mais comuns sobre nossos produtos e serviços
             </p>
             <p className="text-sm mt-2" style={{ color: 'var(--muted-foreground)' }}>
@@ -141,7 +141,7 @@ export default function FAQ() {
 
           {/* Filtros por Categoria */}
           <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4 text-center" style={{ color: 'var(--foreground)' }}>
+            <h2 className="text-lg font-semibold mb-3 text-center" style={{ color: 'var(--foreground)' }}>
               📂 Categorias
             </h2>
             <div className="flex flex-wrap gap-3 justify-center">
@@ -186,7 +186,7 @@ export default function FAQ() {
                     className="w-full p-6 text-left flex items-start justify-between hover:bg-gray-50 rounded-lg transition-colors"
                   >
                     <div className="flex-1 pr-4">
-                      <h3 className="font-semibold text-lg mb-1" style={{ color: 'var(--foreground)' }}>
+                      <h3 className="font-semibold text-base mb-1" style={{ color: 'var(--foreground)' }}>
                         {faq.question}
                       </h3>
                       <div className="flex items-center gap-2">
@@ -226,7 +226,7 @@ export default function FAQ() {
                         className="border-t pt-4 animate-slide-down"
                         style={{ borderColor: 'var(--border)' }}
                       >
-                        <p className="text-base leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
+                        <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
                           {faq.answer}
                         </p>
                       </div>
@@ -244,10 +244,10 @@ export default function FAQ() {
                     <path d="m21 21-4.35-4.35"/>
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--foreground)' }}>
+                <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--foreground)' }}>
                   Nenhuma pergunta encontrada
                 </h3>
-                <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                   Tente selecionar uma categoria diferente
                 </p>
               </div>
@@ -255,17 +255,17 @@ export default function FAQ() {
           </section>
 
           {/* Seção de Contato */}
-          <section className="mt-12">
-            <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-6 text-center">
+          <section className="mt-8">
+            <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-4 text-center">
               <div className="w-16 h-16 rounded-lg mx-auto mb-4 flex items-center justify-center" style={{ background: 'var(--blue)' }}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                 </svg>
               </div>
-              <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
+              <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
                 Ainda tem dúvidas?
               </h2>
-              <p className="text-base mb-6 max-w-2xl mx-auto" style={{ color: 'var(--muted-foreground)' }}>
+              <p className="text-sm mb-4 max-w-2xl mx-auto" style={{ color: 'var(--muted-foreground)' }}>
                 Nossa equipe está pronta para ajudar! Entre em contato via WhatsApp ou visite 
                 nossa loja física na 25 de Março. Atendimento de segunda a sexta, das 8h às 17h.
               </p>
