@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   experimental: {
     forceSwcTransforms: false,
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
   },
   images: {
     formats: ['image/avif', 'image/webp'],
@@ -13,40 +14,93 @@ const nextConfig: NextConfig = {
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
-  webpack: (config: any) => {
+  // Configurações de produção para Performance
+  output: 'standalone',
+  generateEtags: true,
+  compress: true,
+  poweredByHeader: false,
+  
+  // Headers de performance
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=300, stale-while-revalidate=86400'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY'
+          }
+        ]
+      },
+      {
+        source: '/api/images/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=86400, immutable'
+          }
+        ]
+      }
+    ]
+  },
+  
+  webpack: (config: any, { dev }) => {
     config.resolve.fallback = { fs: false, path: false };
     
-    // Optimize bundle splitting
-    config.optimization = {
-      ...config.optimization,
-      splitChunks: {
-        chunks: 'all',
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            chunks: 'all',
-            priority: 10,
-          },
-          common: {
-            name: 'common',
-            minChunks: 2,
-            chunks: 'all',
-            priority: 5,
-            reuseExistingChunk: true,
+    // Otimizações mais agressivas para produção
+    if (!dev) {
+      // Minimize payload
+      config.optimization = {
+        ...config.optimization,
+        minimize: true,
+        splitChunks: {
+          chunks: 'all',
+          minSize: 20000,
+          maxSize: 244000,
+          cacheGroups: {
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
+              priority: 10,
+              maxSize: 244000,
+            },
+            common: {
+              name: 'common',
+              minChunks: 2,
+              chunks: 'all',
+              priority: 5,
+              reuseExistingChunk: true,
+              maxSize: 244000,
+            },
+            // Chunk específico para componentes grandes
+            ui: {
+              test: /[\\/](components|lib)[\\/]/,
+              name: 'ui',
+              chunks: 'all',
+              priority: 7,
+              maxSize: 244000,
+            }
           },
         },
-      },
-    };
-    
-    // Tree shaking optimization
-    config.optimization.usedExports = true;
-    config.optimization.sideEffects = false;
+      };
+      
+      // Tree shaking mais agressivo
+      config.optimization.usedExports = true;
+      config.optimization.sideEffects = false;
+      config.optimization.providedExports = true;
+    }
     
     return config;
   },
-  compress: true,
-  poweredByHeader: false,
 }
 
 export default nextConfig;
