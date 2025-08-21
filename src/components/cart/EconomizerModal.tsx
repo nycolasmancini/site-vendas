@@ -18,6 +18,7 @@ export function EconomizerModal({ isOpen, onClose, eligibleItems }: EconomizerMo
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState(0)
   const [dragOffset, setDragOffset] = useState(0)
+  const [isProcessing, setIsProcessing] = useState<string | null>(null)
   const carouselRef = useRef<HTMLDivElement>(null)
   const updateQuantity = useCartStore((state) => state.updateQuantity)
 
@@ -38,6 +39,13 @@ export function EconomizerModal({ isOpen, onClose, eligibleItems }: EconomizerMo
       onClose()
     }
   }, [isOpen, eligibleItems.length, onClose])
+  
+  // Adjust currentIndex if it becomes invalid due to items being removed
+  useEffect(() => {
+    if (eligibleItems.length > 0 && currentIndex >= eligibleItems.length) {
+      setCurrentIndex(eligibleItems.length - 1)
+    }
+  }, [eligibleItems.length, currentIndex])
 
   // Navigation functions
   const goToNext = () => {
@@ -105,24 +113,19 @@ export function EconomizerModal({ isOpen, onClose, eligibleItems }: EconomizerMo
   const quickAddQuantity = (itemId: string, additionalQuantity: number) => {
     const item = eligibleItems.find(i => i.id === itemId)
     if (item) {
+      // Set processing state for visual feedback
+      setIsProcessing(itemId)
+      
       updateQuantity(itemId, item.quantity + additionalQuantity)
       
-      // Check if there are more items to navigate to
+      // Clear processing state after short delay
       setTimeout(() => {
-        const updatedEligibleItems = eligibleItems.filter(i => i.id !== itemId)
-        
-        if (updatedEligibleItems.length > 0) {
-          // Navigate to next item or back to first if at the end
-          if (currentIndex < eligibleItems.length - 1) {
-            setCurrentIndex(currentIndex + 1)
-          } else {
-            setCurrentIndex(0)
-          }
-        } else {
-          // Close modal if no more eligible items
-          onClose()
-        }
-      }, 500) // Small delay to let user see the action completed
+        setIsProcessing(null)
+      }, 1000)
+      
+      // No automatic navigation - let user control the flow
+      // The eligibleItems list will update automatically through the store,
+      // and useEffect will handle closing modal if no items remain
     }
   }
 
@@ -315,9 +318,21 @@ export function EconomizerModal({ isOpen, onClose, eligibleItems }: EconomizerMo
                       {/* Action Button */}
                       <button
                         onClick={() => quickAddQuantity(item.id, itemMissingQuantity)}
-                        className="w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold shadow-lg hover:from-orange-600 hover:to-orange-700 transition-all transform hover:scale-105"
+                        disabled={isProcessing === item.id}
+                        className={`w-full px-6 py-3 text-white rounded-lg font-semibold shadow-lg transition-all transform ${
+                          isProcessing === item.id
+                            ? 'bg-green-500 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 hover:scale-105'
+                        }`}
                       >
-                        Adicionar {itemMissingQuantity} para ganhar desconto
+                        {isProcessing === item.id ? (
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                            <span>✓ Adicionado!</span>
+                          </div>
+                        ) : (
+                          `Adicionar ${itemMissingQuantity} para ganhar desconto`
+                        )}
                       </button>
                     </div>
                   )
