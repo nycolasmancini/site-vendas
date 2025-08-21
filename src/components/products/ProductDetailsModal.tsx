@@ -33,7 +33,7 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
   const [imageLoaded, setImageLoaded] = useState(false)
   const [nextImagePreloaded, setNextImagePreloaded] = useState(false)
   const modalRef = useRef<HTMLDivElement>(null)
-  const preloadRef = useRef<HTMLImageElement>()
+  const preloadRef = useRef<HTMLImageElement | null>(null)
 
   // Preparar array de imagens
   const images = product.images?.length 
