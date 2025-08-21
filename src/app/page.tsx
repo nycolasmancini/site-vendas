@@ -368,30 +368,47 @@ export default function Home() {
 
           {/* Products Grid */}
           <main className="flex-1">
-            <div className="card mb-8 p-6 animate-slide-up">
-              <div className="flex flex-col">
-                <div className={`flex items-center gap-4 mb-4 ${selectedCategory ? 'justify-center' : ''}`}>
+            <div className="card mb-8 py-3 px-4 lg:py-4 lg:px-6 animate-slide-up">
+              {/* Mobile Layout */}
+              <div className="lg:hidden flex flex-col items-center">
+                <div className="mb-2" style={{ color: 'var(--orange)' }}>
                   {selectedCategory ? (
-                    <div style={{ color: 'var(--orange)' }}>
-                      {getCategoryIcon(categories.find(c => c.id === selectedCategory), 28)}
+                    getCategoryIcon(categories.find(c => c.id === selectedCategory), 24)
+                  ) : (
+                    <TodosProdutosIcon size={24} className="text-[#f97316]" />
+                  )}
+                </div>
+                <h1 className="text-xl font-bold text-center mb-2" style={{ color: 'var(--foreground)' }}>
+                  {selectedCategory
+                    ? categories.find(c => c.id === selectedCategory)?.name
+                    : 'Catálogo Completo'}
+                </h1>
+                {totalCartQuantity < 30 && (
+                  <div className="text-center">
+                    <div className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>
+                      Pedido mínimo: <span className="font-bold" style={{ color: 'var(--orange)' }}>30 peças</span>
                     </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Desktop Layout - Single Line */}
+              <div className="hidden lg:flex items-center justify-center gap-4">
+                <div style={{ color: 'var(--orange)' }}>
+                  {selectedCategory ? (
+                    getCategoryIcon(categories.find(c => c.id === selectedCategory), 28)
                   ) : (
                     <TodosProdutosIcon size={28} className="text-[#f97316]" />
                   )}
-                  <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
-                    {selectedCategory
-                      ? categories.find(c => c.id === selectedCategory)?.name
-                      : 'Catálogo Completo'}
-                  </h1>
                 </div>
+                <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
+                  {selectedCategory
+                    ? categories.find(c => c.id === selectedCategory)?.name
+                    : 'Catálogo Completo'}
+                </h1>
                 {totalCartQuantity < 30 && (
-                  <div className="text-center">
-                    <div className="text-xs font-medium mb-1" style={{ color: 'var(--muted-foreground)' }}>
-                      Pedido mínimo
-                    </div>
-                    <div className="text-xl font-bold" style={{ color: 'var(--orange)' }}>
-                      30 peças
-                    </div>
+                  <div className="text-sm font-medium ml-4" style={{ color: 'var(--muted-foreground)' }}>
+                    | Pedido mínimo: <span className="font-bold" style={{ color: 'var(--orange)' }}>30 peças</span>
                   </div>
                 )}
               </div>
