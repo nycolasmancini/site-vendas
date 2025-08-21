@@ -17,20 +17,45 @@ export default function AdminLogin() {
     setLoading(true)
 
     try {
+      console.log('Iniciando processo de login...')
       const result = await signIn('credentials', {
         email,
         password,
         redirect: false
       })
 
+      console.log('Resultado do signIn:', result)
+
       if (result?.error) {
+        console.error('Erro no login:', result.error)
         setError('Email ou senha inválidos')
+      } else if (result?.ok) {
+        console.log('Login bem-sucedido, verificando sessão...')
+        
+        // Aguardar um pouco para a sessão ser estabelecida
+        setTimeout(async () => {
+          // Verificar se a sessão foi criada corretamente
+          const response = await fetch('/api/auth/session')
+          const session = await response.json()
+          
+          console.log('Sessão após login:', session)
+          
+          if (session?.user) {
+            console.log('Sessão válida, redirecionando para dashboard...')
+            router.push('/admin/dashboard')
+          } else {
+            console.error('Sessão não foi criada corretamente')
+            setError('Erro ao estabelecer sessão. Tente novamente.')
+            setLoading(false)
+          }
+        }, 1000)
       } else {
-        router.push('/admin/dashboard')
+        console.error('Login falhou sem error específico:', result)
+        setError('Erro inesperado no login')
       }
     } catch (error) {
+      console.error('Erro no processo de login:', error)
       setError('Erro ao fazer login')
-    } finally {
       setLoading(false)
     }
   }

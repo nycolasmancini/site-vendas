@@ -62,7 +62,12 @@ export const authOptions: NextAuthOptions = {
                 return null
               }
 
-              console.log('✅ Autenticação bem-sucedida via conexão direta')
+              console.log('✅ Autenticação bem-sucedida via conexão direta:', {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role
+              })
               return {
                 id: user.id,
                 email: user.email,
@@ -117,6 +122,12 @@ export const authOptions: NextAuthOptions = {
               return null
             }
 
+            console.log('✅ Autenticação bem-sucedida via Prisma:', {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: user.role
+            })
             return {
               id: user.id,
               email: user.email,
@@ -145,6 +156,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id
         token.role = user.role
+        console.log('JWT callback - User autenticado:', { id: user.id, email: user.email, role: user.role })
       }
       return token
     },
@@ -152,8 +164,25 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string
         session.user.role = token.role as string
+        console.log('Session callback - Sessão criada:', { id: session.user.id, email: session.user.email, role: session.user.role })
       }
       return session
+    },
+    async redirect({ url, baseUrl }) {
+      console.log('Redirect callback - URL:', url, 'BaseURL:', baseUrl)
+      
+      // Se a URL é relativa, adicionar baseUrl
+      if (url.startsWith('/')) {
+        return `${baseUrl}${url}`
+      }
+      
+      // Se a URL é do mesmo domínio, permitir
+      if (new URL(url).origin === baseUrl) {
+        return url
+      }
+      
+      // Caso contrário, redirecionar para o dashboard
+      return `${baseUrl}/admin/dashboard`
     }
   }
 }
