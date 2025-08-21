@@ -35,11 +35,17 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
   const modalRef = useRef<HTMLDivElement>(null)
   const preloadRef = useRef<HTMLImageElement | null>(null)
 
-  // Preparar array de imagens - usar apenas product.images
+  // Preparar array de imagens - para produtos modais, usar apenas a imagem principal
   const images = product.images || []
+  
+  // Para produtos modais (capas, películas), mostrar apenas a imagem principal
+  // Os modelos são apenas variações do produto, não devem ter imagens separadas
+  const filteredImages = product.isModalProduct 
+    ? images.filter(img => img.isMain)  // Apenas imagem principal para produtos modais
+    : images  // Todas as imagens para produtos normais
 
   // Ordenar imagens com main primeiro
-  const sortedImages = images.sort((a, b) => (b.isMain ? 1 : 0) - (a.isMain ? 1 : 0))
+  const sortedImages = filteredImages.sort((a, b) => (b.isMain ? 1 : 0) - (a.isMain ? 1 : 0))
 
   // Pré-carregar próxima imagem
   const preloadNextImage = useCallback(() => {
@@ -343,8 +349,8 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
             </div>
 
             {/* Informações do Produto */}
-            <div className="flex-1 lg:w-1/3 p-4 lg:p-6 overflow-y-auto">
-              <div className="space-y-3">
+            <div className="flex-1 lg:w-1/3 p-4 lg:p-6 flex flex-col">
+              <div className="space-y-3 flex-shrink-0">
                 {/* Nome e Subnome na mesma linha */}
                 <div>
                   <h1 className="text-xl font-bold text-gray-900 leading-tight mb-2">
@@ -371,24 +377,16 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
 
                 {/* Descrição */}
                 {product.description && (
-                  <div className="max-h-48 overflow-y-auto">
+                  <div className="flex-1 min-h-0">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
                       Descrição
                     </h3>
-                    <div className="text-gray-700 leading-relaxed whitespace-pre-wrap text-sm">
+                    <div className="text-gray-700 leading-relaxed whitespace-pre-wrap text-sm overflow-y-auto">
                       {product.description}
                     </div>
                   </div>
                 )}
 
-                {/* Contador de imagens */}
-                {sortedImages.length > 1 && (
-                  <div className="mt-6 pt-4 border-t border-gray-200">
-                    <p className="text-sm text-gray-500 text-center">
-                      {currentImageIndex + 1} de {sortedImages.length}
-                    </p>
-                  </div>
-                )}
               </div>
             </div>
           </div>
