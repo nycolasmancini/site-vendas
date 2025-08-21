@@ -66,37 +66,39 @@ export default function SobreNos() {
               href="https://share.google/9z8CDEFDLaa4vOXs3" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="block bg-gray-50 rounded-lg p-4 mb-4 hover:bg-gray-100 transition-colors cursor-pointer"
+              className="block bg-gray-50 rounded-lg overflow-hidden mb-4 hover:bg-gray-100 transition-colors cursor-pointer"
             >
-              <div className="flex items-start gap-6">
-                <div className="w-24 h-20 rounded-lg overflow-hidden flex-shrink-0">
-                  <OptimizedImage
-                    src="/optimized/pmcell-loja-800.webp"
-                    alt="Loja PMCELL na 25 de Março"
-                    width={96}
-                    height={80}
-                    className="w-full h-full object-cover"
-                    priority={true}
-                    quality={90}
-                    sizes="96px"
-                  />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
-                    Loja Física - 25 de Março
-                  </h3>
-                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                    <strong>Rua Comendador Abdo Schahin, 62 - Loja 4</strong><br />
-                    25 de Março, São Paulo - SP
-                  </p>
-                  <p className="text-xs mt-2" style={{ color: 'var(--muted-foreground)' }}>
-                    Clique para ver no Google Maps • Atendimento presencial
-                  </p>
-                </div>
-                <div className="flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
-                    <path d="M7 17l9.2-9.2M17 17V7H7"/>
-                  </svg>
+              <div className="w-full h-48 relative">
+                <OptimizedImage
+                  src="/optimized/pmcell-loja-800.webp"
+                  alt="Loja PMCELL na 25 de Março"
+                  width={400}
+                  height={192}
+                  className="w-full h-full object-cover"
+                  priority={true}
+                  quality={90}
+                  sizes="400px"
+                />
+              </div>
+              <div className="p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
+                      Loja Física - 25 de Março
+                    </h3>
+                    <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                      <strong>Rua Comendador Abdo Schahin, 62 - Loja 4</strong><br />
+                      25 de Março, São Paulo - SP
+                    </p>
+                    <p className="text-xs mt-2" style={{ color: 'var(--muted-foreground)' }}>
+                      Clique para ver no Google Maps • Atendimento presencial
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                      <path d="M7 17l9.2-9.2M17 17V7H7"/>
+                    </svg>
+                  </div>
                 </div>
               </div>
             </a>

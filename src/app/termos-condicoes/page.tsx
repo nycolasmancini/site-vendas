@@ -287,12 +287,12 @@ export default function TermosCondicoes() {
               
               <div className="space-y-4 mb-6">
                 <div className="flex items-center justify-center">
-                  <p className="font-medium text-lg" style={{ color: 'var(--foreground)' }}>
+                  <p className="font-medium text-sm" style={{ color: 'var(--foreground)' }}>
                     📱 WhatsApp: (11) 97459-4169
                   </p>
                 </div>
                 <div className="flex items-center justify-center">
-                  <p className="font-medium text-lg" style={{ color: 'var(--foreground)' }}>
+                  <p className="font-medium text-sm break-all" style={{ color: 'var(--foreground)' }}>
                     📧 E-mail: nycolas@pmcellsaopaulo.com.br
                   </p>
                 </div>

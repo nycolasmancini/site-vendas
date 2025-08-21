@@ -181,7 +181,7 @@ export default function FormasPagamento() {
                   </div>
                 </div>
 
-                <div className="bg-blue-50 rounded-lg p-6">
+                <div className="bg-blue-50 rounded-lg p-4">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold" style={{ background: '#3B82F6' }}>
                       2
@@ -197,7 +197,7 @@ export default function FormasPagamento() {
                   </div>
                 </div>
 
-                <div className="bg-green-50 rounded-lg p-6">
+                <div className="bg-green-50 rounded-lg p-4">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold" style={{ background: '#10B981' }}>
                       3
@@ -215,7 +215,7 @@ export default function FormasPagamento() {
               </div>
 
               <div className="space-y-4">
-                <div className="bg-orange-50 rounded-lg p-6">
+                <div className="bg-orange-50 rounded-lg p-4">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold" style={{ background: '#F97316' }}>
                       4
@@ -231,7 +231,7 @@ export default function FormasPagamento() {
                   </div>
                 </div>
 
-                <div className="bg-red-50 rounded-lg p-6">
+                <div className="bg-red-50 rounded-lg p-4">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold" style={{ background: '#C2410C' }}>
                       5
@@ -247,7 +247,7 @@ export default function FormasPagamento() {
                   </div>
                 </div>
 
-                <div className="bg-gray-100 rounded-lg p-6">
+                <div className="bg-gray-100 rounded-lg p-4">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold" style={{ background: '#374151' }}>
                       6
