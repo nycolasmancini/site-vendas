@@ -35,12 +35,8 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
   const modalRef = useRef<HTMLDivElement>(null)
   const preloadRef = useRef<HTMLImageElement | null>(null)
 
-  // Preparar array de imagens
-  const images = product.images?.length 
-    ? product.images
-    : product.image 
-    ? [{ id: '1', url: product.image, isMain: true }]
-    : []
+  // Preparar array de imagens - usar apenas product.images
+  const images = product.images || []
 
   // Ordenar imagens com main primeiro
   const sortedImages = images.sort((a, b) => (b.isMain ? 1 : 0) - (a.isMain ? 1 : 0))
@@ -256,16 +252,33 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
                   onTouchEnd={handleTouchEnd}
                 >
                   <div className="relative max-w-full max-h-full aspect-square">
-                    <Image
-                      src={currentImage.url}
-                      alt={product.name}
-                      fill
-                      className="object-contain"
-                      sizes="(max-width: 1024px) 100vw, 60vw"
-                      priority={currentImageIndex === 0}
-                      onLoad={() => setImageLoaded(true)}
-                      quality={85}
-                    />
+                    {currentImage.url.startsWith('data:') ? (
+                      // Para data URLs, usar img nativa
+                      <img
+                        src={currentImage.url}
+                        alt={product.name}
+                        className="w-full h-full object-contain"
+                        onLoad={() => setImageLoaded(true)}
+                        onError={(e) => {
+                          console.error('Failed to load image (data URL):', e)
+                        }}
+                      />
+                    ) : (
+                      // Para URLs normais, usar Next.js Image
+                      <Image
+                        src={currentImage.url}
+                        alt={product.name}
+                        fill
+                        className="object-contain"
+                        sizes="(max-width: 1024px) 100vw, 60vw"
+                        priority={currentImageIndex === 0}
+                        onLoad={() => setImageLoaded(true)}
+                        onError={(e) => {
+                          console.error('Failed to load image:', currentImage.url, e)
+                        }}
+                        quality={85}
+                      />
+                    )}
                   </div>
 
                   {/* Setas de navegação */}

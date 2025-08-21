@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // Permitir data URLs
+    loader: 'default',
+    domains: [],
+    unoptimized: false
   },
   // Configurações de produção para Performance
   output: 'standalone',
