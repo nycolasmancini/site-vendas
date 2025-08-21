@@ -30,15 +30,43 @@ export default function AdminLogin() {
         console.error('Erro no login:', result.error)
         setError('Email ou senha inválidos')
       } else if (result?.ok) {
-        console.log('Login bem-sucedido! Redirecionando imediatamente...')
+        console.log('Login bem-sucedido! Aguardando estabelecimento da sessão...')
         
-        // Teste: redirecionar diretamente sem verificar sessão
-        // Se a autenticação funcionou, vamos confiar no NextAuth
-        setTimeout(() => {
-          console.log('Executando redirecionamento...')
+        // Aguardar a sessão ser estabelecida antes de redirecionar
+        const waitForSession = async () => {
+          let attempts = 0
+          const maxAttempts = 10
+          
+          while (attempts < maxAttempts) {
+            attempts++
+            console.log(`Verificando sessão - Tentativa ${attempts}/${maxAttempts}`)
+            
+            try {
+              const session = await getSession()
+              console.log('Resultado getSession:', session)
+              
+              if (session?.user) {
+                console.log('✅ Sessão estabelecida! Redirecionando...')
+                setLoading(false)
+                router.replace('/admin/dashboard')
+                return
+              }
+            } catch (error) {
+              console.error('Erro ao verificar sessão:', error)
+            }
+            
+            // Aguardar antes da próxima tentativa
+            await new Promise(resolve => setTimeout(resolve, 500))
+          }
+          
+          // Se chegou aqui, não conseguiu estabelecer a sessão
+          console.error('❌ Não foi possível estabelecer a sessão')
+          setError('Sessão não foi estabelecida. Tente fazer login novamente.')
           setLoading(false)
-          window.location.href = '/admin/dashboard'
-        }, 500)
+        }
+        
+        // Aguardar um pouco antes de começar a verificar
+        setTimeout(waitForSession, 300)
       } else {
         console.error('Login falhou sem error específico:', result)
         setError('Erro inesperado no login')

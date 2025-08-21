@@ -108,17 +108,27 @@ export default function AdminDashboard() {
   useEffect(() => {
     console.log('Dashboard useEffect - Status:', status, 'Session:', session)
     
-    // TESTE: Remover verificação de sessão temporariamente para diagnosticar
-    // if (status === 'loading') {
-    //   console.log('Dashboard - Aguardando carregamento da sessão...')
-    //   return
-    // }
+    // Aguardar até o status sair de 'loading'
+    if (status === 'loading') {
+      console.log('Dashboard - Aguardando carregamento da sessão...')
+      return
+    }
     
-    // if (!session) {
-    //   console.log('Dashboard - Sessão não encontrada, redirecionando para login')
-    //   router.push('/admin/login')
-    //   return
-    // }
+    // Se status é 'unauthenticated', aguardar um pouco mais
+    // pois a sessão pode estar sendo estabelecida
+    if (status === 'unauthenticated') {
+      console.log('Dashboard - Status unauthenticated, aguardando sessão...')
+      
+      // Aguardar 2 segundos antes de redirecionar
+      const timeoutId = setTimeout(() => {
+        if (!session) {
+          console.log('Dashboard - Sessão não estabelecida após timeout, redirecionando para login')
+          router.replace('/admin/login')
+        }
+      }, 2000)
+      
+      return () => clearTimeout(timeoutId)
+    }
 
     if (session) {
       console.log('Dashboard - Sessão válida:', { id: session.user.id, email: session.user.email, role: session.user.role })
@@ -126,16 +136,16 @@ export default function AdminDashboard() {
       // Verificar se o usuário tem acesso (ADMIN ou EMPLOYEE)
       if (session.user.role !== 'ADMIN' && session.user.role !== 'EMPLOYEE') {
         console.log('Dashboard - Role inválido:', session.user.role)
-        router.push('/admin/login')
+        router.replace('/admin/login')
         return
       }
-    }
 
-    console.log('Dashboard - Iniciando carregamento dos dados...')
-    fetchProducts()
-    fetchCategories()
-    fetchSuppliers()
-    fetchCompanySettings()
+      console.log('Dashboard - Usuário autorizado, carregando dados...')
+      fetchProducts()
+      fetchCategories()
+      fetchSuppliers()
+      fetchCompanySettings()
+    }
   }, [session, status, router])
 
   const fetchProducts = async () => {
