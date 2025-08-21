@@ -14,10 +14,10 @@ const SIZES = {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string; size: string } }
+  { params }: { params: Promise<{ id: string; size: string }> }
 ) {
   try {
-    const { id, size } = params
+    const { id, size } = await params
     
     // Validar parâmetros
     if (!id || !size || !['thumbnail', 'medium', 'full'].includes(size)) {
