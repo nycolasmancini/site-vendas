@@ -23,6 +23,7 @@ interface ProductDetailsModalProps {
     category?: string
     image?: string
     images?: ProductImage[]
+    isModalProduct?: boolean
   }
 }
 
