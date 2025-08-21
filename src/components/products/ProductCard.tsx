@@ -1,10 +1,13 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import Image from 'next/image'
 import { useCartStore } from '@/stores/useCartStore'
 import { useSession } from '@/contexts/SessionContext'
 import { formatPrice } from '@/lib/utils'
+
+// Lazy load do modal para otimização
+const ProductDetailsModal = lazy(() => import('./ProductDetailsModal'))
 
 
 interface ProductCardProps {
@@ -13,6 +16,8 @@ interface ProductCardProps {
     name: string
     subname?: string
     description?: string
+    brand?: string
+    category?: string
     image?: string
     images?: Array<{ id: string; url: string; isMain: boolean }>
     price: number
@@ -41,6 +46,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
   const [quantity, setQuantity] = useState<number | string>(1)
   const [isAnimating, setIsAnimating] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   // Função para obter quantidade no carrinho para este produto
@@ -146,14 +152,38 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
 
   return (
     <div className="card hover:shadow-lg transition-all duration-300 overflow-hidden group animate-fade-in w-full flex flex-col h-full">
-      <div className="aspect-square relative" style={{ background: 'var(--muted)' }}>
+      <div 
+        className="aspect-square relative cursor-pointer group/image" 
+        style={{ background: 'var(--muted)' }}
+        onClick={() => setShowDetailsModal(true)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            setShowDetailsModal(true)
+          }
+        }}
+        aria-label="Ver detalhes do produto"
+      >
         {imageUrl ? (
-          <Image
-            src={imageUrl}
-            alt={product.name}
-            fill
-            className="object-cover"
-          />
+          <>
+            <Image
+              src={imageUrl}
+              alt={product.name}
+              fill
+              className="object-cover transition-transform duration-300 group-hover/image:scale-105"
+            />
+            {/* Overlay para indicar que é clicável */}
+            <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/10 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover/image:opacity-100">
+              <div className="bg-white/90 rounded-full p-2 backdrop-blur-sm">
+                <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </div>
+            </div>
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center" style={{ color: 'var(--muted-foreground)' }}>
             <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -196,7 +226,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
               {product.isModalProduct && product.priceRange ? (
                 <div>
                   {/* Range de preços atacado */}
-                  <div className="flex items-baseline gap-2 mb-2">
+                  <div className={`mb-2 ${product.priceRange.min !== product.priceRange.max ? 'flex justify-center' : 'flex items-baseline gap-2'}`}>
                     <span 
                       className={`font-bold ${product.priceRange.min !== product.priceRange.max ? 'product-card-price-range' : 'text-lg sm:text-xl'}`}
                       style={{ 
@@ -451,6 +481,17 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
           </div>
         )}
       </div>
+
+      {/* Modal de detalhes - renderizado condicionalmente */}
+      {showDetailsModal && (
+        <Suspense fallback={null}>
+          <ProductDetailsModal
+            isOpen={showDetailsModal}
+            onClose={() => setShowDetailsModal(false)}
+            product={product}
+          />
+        </Suspense>
+      )}
     </div>
   )
 }
