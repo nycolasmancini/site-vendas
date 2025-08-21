@@ -12,6 +12,7 @@ import { formatPrice } from '@/lib/utils'
 import { useAnalytics } from '@/lib/analytics'
 import { useCartSync } from '@/hooks/useCartSync'
 import { CartRecovery } from '@/components/cart/CartRecovery'
+import { EndOfCategoryCard } from '@/components/ui/EndOfCategoryCard'
 import { 
   PhoneIcon, 
   TodosProdutosIcon, 
@@ -142,7 +143,18 @@ export default function Home() {
       .then(res => res.json())
       .then(data => {
         // Ensure data is always an array
-        setCategories(Array.isArray(data) ? data : [])
+        const categoriesData = Array.isArray(data) ? data : []
+        setCategories(categoriesData)
+        
+        // Set initial category to "Fones" if not already selected
+        if (!selectedCategory && categoriesData.length > 0) {
+          const fonesCategory = categoriesData.find(cat => 
+            cat.name.toLowerCase().includes('fone')
+          )
+          if (fonesCategory) {
+            setSelectedCategory(fonesCategory.id)
+          }
+        }
       })
       .catch(error => {
         console.error('Error loading categories:', error)
@@ -238,23 +250,6 @@ export default function Home() {
                 </h2>
               </div>
               <nav className="space-y-1">
-                <button
-                  onClick={() => setSelectedCategory(null)}
-                  className={`interactive w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-3 ${
-                    !selectedCategory
-                      ? 'text-white'
-                      : 'hover:bg-gray-50'
-                  }`}
-                  style={!selectedCategory ? {
-                    background: 'var(--primary)',
-                    color: 'var(--primary-foreground)'
-                  } : {
-                    color: 'var(--muted-foreground)'
-                  }}
-                >
-                  <TodosProdutosIcon size={16} />
-                  <span>Todos os Produtos</span>
-                </button>
                 {categories.map((category) => (
                   <button
                     key={category.id}
@@ -331,19 +326,6 @@ export default function Home() {
                     </h2>
                   </div>
                   <nav className="mt-5 px-2 space-y-1">
-                    <button
-                      onClick={() => {
-                        setSelectedCategory(null)
-                        setMenuOpen(false)
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-md text-base font-medium ${
-                        !selectedCategory
-                          ? 'bg-orange-100 text-orange-600'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                      }`}
-                    >
-                      Todos os Produtos
-                    </button>
                     {categories.map((category) => (
                       <button
                         key={category.id}
@@ -381,7 +363,7 @@ export default function Home() {
                 <h1 className="text-xl font-bold text-center mb-2" style={{ color: 'var(--foreground)' }}>
                   {selectedCategory
                     ? categories.find(c => c.id === selectedCategory)?.name
-                    : 'Catálogo Completo'}
+                    : 'Produtos'}
                 </h1>
                 {totalCartQuantity < 30 && (
                   <div className="text-center">
@@ -404,7 +386,7 @@ export default function Home() {
                 <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
                   {selectedCategory
                     ? categories.find(c => c.id === selectedCategory)?.name
-                    : 'Catálogo Completo'}
+                    : 'Produtos'}
                 </h1>
                 {totalCartQuantity < 30 && (
                   <div className="text-sm font-medium ml-4" style={{ color: 'var(--muted-foreground)' }}>
@@ -428,19 +410,25 @@ export default function Home() {
                 ))}
               </div>
             ) : products.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                {products.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onSelectModels={() => {
-                      setSelectedProductForVariation(product)
-                      setShowVariationModal(true)
-                    }}
-                    onUnlockPrices={() => setShowUnlockModal(true)}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                  {products.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      onSelectModels={() => {
+                        setSelectedProductForVariation(product)
+                        setShowVariationModal(true)
+                      }}
+                      onUnlockPrices={() => setShowUnlockModal(true)}
+                    />
+                  ))}
+                </div>
+                {/* Show EndOfCategoryCard only when a category is selected */}
+                {selectedCategory && (
+                  <EndOfCategoryCard onOpenMenu={() => setMenuOpen(true)} />
+                )}
+              </>
             ) : (
               <div className="text-center py-16">
                 <div className="card p-8 max-w-md mx-auto">
@@ -463,7 +451,7 @@ export default function Home() {
                     style={{ background: 'var(--orange)', color: 'var(--surface)' }}
                   >
                     <TodosProdutosIcon size={16} />
-                    Ver Todos os Produtos
+                    Ver Produtos
                   </button>
                 </div>
               </div>

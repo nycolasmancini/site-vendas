@@ -83,15 +83,13 @@ export function Footer() {
 
         {/* Linha separadora */}
         <div className="border-t border-gray-700 mt-8 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0">
-              <p className="text-gray-400 text-sm">
-                © 2025 PMCELL São Paulo. Todos os direitos reservados.
-              </p>
-            </div>
-            <div className="text-gray-400 text-sm">
-              <p>Acessórios para celular no atacado</p>
-            </div>
+          <div className="flex flex-col items-center text-center space-y-2">
+            <p className="text-gray-400 text-sm">
+              © 2025 PMCELL São Paulo. Todos os direitos reservados.
+            </p>
+            <p className="text-gray-400 text-sm">
+              CNPJ: 29.734.462/0003-86
+            </p>
           </div>
         </div>
       </div>
