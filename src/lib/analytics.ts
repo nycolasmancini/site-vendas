@@ -389,6 +389,16 @@ class Analytics {
     this.markCartAsCompleted()
   }
 
+  // Função auxiliar para remover imagens dos itens do carrinho (para webhooks mais leves)
+  private removeImagesFromCartItems(cartItems: any[]): any[] {
+    if (!Array.isArray(cartItems)) return []
+    
+    return cartItems.map(item => {
+      const { image, ...itemWithoutImage } = item
+      return itemWithoutImage
+    })
+  }
+
   // Webhooks
   private async sendWebhook(eventType: string, data: any, maxRetries: number = 2): Promise<void> {
     let retryCount = 0
@@ -490,7 +500,13 @@ class Analytics {
   }
 
   private sendOrderCompletedWebhook(orderData: any): void {
-    this.sendWebhook('orderCompleted', orderData)
+    // Remover imagens dos itens se existirem
+    let filteredOrderData = { ...orderData }
+    if (filteredOrderData.items && Array.isArray(filteredOrderData.items)) {
+      filteredOrderData.items = this.removeImagesFromCartItems(filteredOrderData.items)
+    }
+    
+    this.sendWebhook('orderCompleted', filteredOrderData)
   }
 
   private sendCartAbandonedWebhook(): void {
@@ -511,7 +527,7 @@ class Analytics {
           
           if (cart.state?.items?.length > 0) {
             const webhookData = {
-              cartItems: cart.state.items,
+              cartItems: this.removeImagesFromCartItems(cart.state.items),
               abandonedAt: Date.now(),
               timeSinceLastActivity: this.analytics.lastCartActivity > 0 ? Date.now() - this.analytics.lastCartActivity : 0,
               sessionId: this.analytics.sessionId,
@@ -759,6 +775,15 @@ export const checkAbandonedCartGlobal = async (): Promise<boolean> => {
           return false
         }
 
+        // Função auxiliar para remover imagens dos itens (mesma lógica da classe)
+        const removeImagesFromItems = (items: any[]): any[] => {
+          if (!Array.isArray(items)) return []
+          return items.map(item => {
+            const { image, ...itemWithoutImage } = item
+            return itemWithoutImage
+          })
+        }
+
         // Preparar dados do webhook
         const webhookData = {
           event: 'cartAbandoned',
@@ -777,7 +802,7 @@ export const checkAbandonedCartGlobal = async (): Promise<boolean> => {
             lastCartActivity: analytics.lastCartActivity
           },
           data: {
-            cartItems: cart.state.items,
+            cartItems: removeImagesFromItems(cart.state.items),
             abandonedAt: Date.now(),
             timeSinceLastActivity: timeSinceLastCart,
             sessionId: analytics.sessionId,

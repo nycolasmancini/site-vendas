@@ -288,16 +288,15 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                   }}
                 >
                   <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
                     width="16" 
                     height="16" 
+                    strokeWidth="1.5" 
                     viewBox="0 0 24 24" 
                     fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="1.5"
+                    xmlns="http://www.w3.org/2000/svg"
                   >
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                    <path d="M9 9h6v6H9z"/>
+                    <path d="M8 21H20.4C20.7314 21 21 20.7314 21 20.4V3.6C21 3.26863 20.7314 3 20.4 3H3.6C3.26863 3 3 3.26863 3 3.6V16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M3.5 20.5L12 12M12 12V16M12 12H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                   <span className="font-medium">Escolher</span>
                 </button>
