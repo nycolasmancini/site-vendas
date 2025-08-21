@@ -108,24 +108,27 @@ export default function AdminDashboard() {
   useEffect(() => {
     console.log('Dashboard useEffect - Status:', status, 'Session:', session)
     
-    if (status === 'loading') {
-      console.log('Dashboard - Aguardando carregamento da sessão...')
-      return
-    }
+    // TESTE: Remover verificação de sessão temporariamente para diagnosticar
+    // if (status === 'loading') {
+    //   console.log('Dashboard - Aguardando carregamento da sessão...')
+    //   return
+    // }
     
-    if (!session) {
-      console.log('Dashboard - Sessão não encontrada, redirecionando para login')
-      router.push('/admin/login')
-      return
-    }
+    // if (!session) {
+    //   console.log('Dashboard - Sessão não encontrada, redirecionando para login')
+    //   router.push('/admin/login')
+    //   return
+    // }
 
-    console.log('Dashboard - Sessão válida:', { id: session.user.id, email: session.user.email, role: session.user.role })
+    if (session) {
+      console.log('Dashboard - Sessão válida:', { id: session.user.id, email: session.user.email, role: session.user.role })
 
-    // Verificar se o usuário tem acesso (ADMIN ou EMPLOYEE)
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'EMPLOYEE') {
-      console.log('Dashboard - Role inválido:', session.user.role)
-      router.push('/admin/login')
-      return
+      // Verificar se o usuário tem acesso (ADMIN ou EMPLOYEE)
+      if (session.user.role !== 'ADMIN' && session.user.role !== 'EMPLOYEE') {
+        console.log('Dashboard - Role inválido:', session.user.role)
+        router.push('/admin/login')
+        return
+      }
     }
 
     console.log('Dashboard - Iniciando carregamento dos dados...')

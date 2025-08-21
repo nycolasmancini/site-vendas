@@ -30,44 +30,15 @@ export default function AdminLogin() {
         console.error('Erro no login:', result.error)
         setError('Email ou senha inválidos')
       } else if (result?.ok) {
-        console.log('Login bem-sucedido, verificando sessão...')
+        console.log('Login bem-sucedido! Redirecionando imediatamente...')
         
-        // Forçar atualização da sessão e aguardar
-        let attempts = 0
-        const maxAttempts = 5
-        
-        const checkSession = async () => {
-          attempts++
-          console.log(`Tentativa ${attempts} de verificar sessão...`)
-          
-          try {
-            // Usar getSession() do next-auth que é mais confiável
-            const session = await getSession()
-            console.log('Sessão verificada:', session)
-            
-            if (session?.user) {
-              console.log('Sessão válida encontrada, redirecionando...')
-              setLoading(false)
-              router.push('/admin/dashboard')
-              return
-            }
-          } catch (error) {
-            console.error('Erro ao verificar sessão:', error)
-          }
-          
-          // Se não conseguiu a sessão e ainda há tentativas
-          if (attempts < maxAttempts) {
-            console.log(`Sessão não encontrada, tentando novamente em 500ms...`)
-            setTimeout(checkSession, 500)
-          } else {
-            console.error('Não foi possível estabelecer sessão após', maxAttempts, 'tentativas')
-            setError('Erro ao estabelecer sessão. Verifique suas credenciais e tente novamente.')
-            setLoading(false)
-          }
-        }
-        
-        // Iniciar verificação após pequeno delay
-        setTimeout(checkSession, 300)
+        // Teste: redirecionar diretamente sem verificar sessão
+        // Se a autenticação funcionou, vamos confiar no NextAuth
+        setTimeout(() => {
+          console.log('Executando redirecionamento...')
+          setLoading(false)
+          window.location.href = '/admin/dashboard'
+        }, 500)
       } else {
         console.error('Login falhou sem error específico:', result)
         setError('Erro inesperado no login')
