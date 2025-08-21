@@ -6,6 +6,11 @@ import sharp from 'sharp'
 
 type ImageSize = 'thumbnail' | 'medium' | 'full'
 
+interface CachedImage {
+  buffer: Buffer
+  contentType: string
+}
+
 const SIZES = {
   thumbnail: { width: 150, height: 150, quality: 70 },
   medium: { width: 400, height: 400, quality: 80 },
@@ -28,7 +33,7 @@ export async function GET(
     const cacheKey = getCacheKey('image', id, size)
     
     // Verificar cache primeiro
-    const cached = imageCache.get(cacheKey)
+    const cached = imageCache.get<CachedImage>(cacheKey)
     if (cached) {
       return new NextResponse(cached.buffer, {
         headers: {
@@ -85,7 +90,8 @@ export async function GET(
     const contentType = 'image/jpeg'
     
     // Cachear imagem processada por 1 hora
-    imageCache.set(cacheKey, { buffer: processedBuffer, contentType }, 1000 * 60 * 60)
+    const cachedImageData: CachedImage = { buffer: processedBuffer, contentType }
+    imageCache.set(cacheKey, cachedImageData, 1000 * 60 * 60)
 
     return new NextResponse(processedBuffer, {
       headers: {
