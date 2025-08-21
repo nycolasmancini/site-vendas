@@ -1285,6 +1285,28 @@ input[type="number"] {
 
 /* Model items have lower z-index than sticky headers */
 
+/* Modal price range dynamic font sizing */
+.modal-price-range {
+  font-size: clamp(0.875rem, 4vw, 1.125rem) !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  display: inline-block;
+}
+
+@media (min-width: 640px) {
+  .modal-price-range {
+    font-size: clamp(1rem, 3vw, 1.25rem) !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .modal-price-range {
+    font-size: clamp(1.125rem, 2.5vw, 1.25rem) !important;
+  }
+}
+
 /* Desabilitar zoom e seleção de texto */
 * {
   -webkit-user-select: none;

@@ -31,6 +31,13 @@ interface ProductVariationModalProps {
     image?: string
     images?: Array<{ id: string; url: string; isMain: boolean }>
     quickAddIncrement?: number
+    priceRange?: {
+      min: number
+      max: number
+      superWholesaleMin?: number
+      superWholesaleMax?: number
+    }
+    isModalProduct?: boolean
   }
   isOpen: boolean
   onClose: () => void
@@ -565,27 +572,80 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                                 </div>
                                 <div className="flex flex-col items-start gap-1">
                                   {(() => {
+                                    // Se o produto tem priceRange, usar a lógica de range
+                                    if (product.isModalProduct && product.priceRange) {
+                                      const isRange = product.priceRange.min !== product.priceRange.max
+                                      const priceText = isRange 
+                                        ? `${formatPrice(product.priceRange.min)} - ${formatPrice(product.priceRange.max)}`
+                                        : formatPrice(product.priceRange.min)
+                                      
+                                      return (
+                                        <div className={`${isRange ? 'flex justify-center w-full' : 'flex items-baseline gap-2'}`}>
+                                          <span 
+                                            className={`text-lg font-bold text-gray-900 transition-all duration-500 ease-in-out ${isRange ? 'text-center modal-price-range' : ''}`}
+                                            style={{
+                                              animation: 'fadeInPrice 0.5s ease-in-out',
+                                              fontSize: isRange ? 'clamp(0.875rem, 4vw, 1.125rem)' : undefined,
+                                              whiteSpace: isRange ? 'nowrap' : undefined
+                                            }}
+                                          >
+                                            {priceText}
+                                          </span>
+                                          {!isRange && (
+                                            <span className="text-xs text-gray-500">
+                                              unidade
+                                            </span>
+                                          )}
+                                        </div>
+                                      )
+                                    }
+                                    
+                                    // Lógica original para produtos com modelos individuais
                                     const cartQuantity = getCartQuantityByModel(model.id)
                                     const increment = product.quickAddIncrement || 1
                                     const hasReachedSuperWholesale = model.superWholesalePrice && cartQuantity >= increment
                                     const currentPrice = hasReachedSuperWholesale ? (model.superWholesalePrice || 0) : (model.price || 0)
                                     
                                     return (
-                                      <span 
-                                        key={`${model.id}-${hasReachedSuperWholesale}`}
-                                        className="text-lg font-bold text-gray-900 transition-all duration-500 ease-in-out animate-price-change"
-                                        style={{
-                                          animation: 'fadeInPrice 0.5s ease-in-out'
-                                        }}
-                                      >
-                                        {formatPrice(currentPrice)}
-                                      </span>
+                                      <div className="flex items-baseline gap-2">
+                                        <span 
+                                          key={`${model.id}-${hasReachedSuperWholesale}`}
+                                          className="text-lg font-bold text-gray-900 transition-all duration-500 ease-in-out animate-price-change"
+                                          style={{
+                                            animation: 'fadeInPrice 0.5s ease-in-out'
+                                          }}
+                                        >
+                                          {formatPrice(currentPrice)}
+                                        </span>
+                                        <span className="text-xs text-gray-500">
+                                          unidade
+                                        </span>
+                                      </div>
                                     )
                                   })()}
-                                  {model.superWholesalePrice && (
+                                  {/* Super wholesale info apenas para produtos com modelos individuais */}
+                                  {!product.isModalProduct && model.superWholesalePrice && (
                                     <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded whitespace-nowrap flex items-center justify-center" style={{minHeight: '18px', lineHeight: '1', textAlign: 'center'}}>
                                       +{product.quickAddIncrement || 1} un.: {formatPrice(model.superWholesalePrice || 0)}
                                     </span>
+                                  )}
+                                  {/* Super wholesale range para produtos modais */}
+                                  {product.isModalProduct && product.priceRange?.superWholesaleMin && product.priceRange?.superWholesaleMax && (
+                                    <div className="w-full">
+                                      <div className="p-2 rounded-lg bg-green-50 border border-green-200">
+                                        <div className="flex flex-col">
+                                          <p className="text-xs font-medium text-green-600">
+                                            Caixa fechada
+                                          </p>
+                                          <p className="text-xs text-gray-600">
+                                            {product.priceRange.superWholesaleMin === product.priceRange.superWholesaleMax
+                                              ? formatPrice(product.priceRange.superWholesaleMin)
+                                              : `${formatPrice(product.priceRange.superWholesaleMin)} - ${formatPrice(product.priceRange.superWholesaleMax)}`
+                                            } / un
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
                                   )}
                                 </div>
                               </div>
