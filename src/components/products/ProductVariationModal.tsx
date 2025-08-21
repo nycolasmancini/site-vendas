@@ -458,7 +458,7 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                         return (
                           <>
                             {totalQuantity > 0 && (
-                              <div className="hidden sm:flex mr-3 px-3 py-1 bg-blue-500 text-white rounded-full font-medium text-sm items-center justify-center shadow-sm">
+                              <div className="hidden sm:flex mr-3 px-3 py-0.5 bg-blue-500 text-white rounded-full font-medium text-sm items-center justify-center shadow-sm" style={{minHeight: '24px', lineHeight: '1', textAlign: 'center'}}>
                                 {totalQuantity} un.
                               </div>
                             )}
@@ -509,7 +509,7 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                               if (cartQuantity > 0) {
                                 return (
                                   <div 
-                                    className="sm:hidden absolute top-2 right-2 z-20 px-2 py-1 bg-green-500 text-white rounded-full font-medium text-xs flex items-center justify-center shadow-sm"
+                                    className="sm:hidden absolute top-2 right-2 z-20 px-2 py-0.5 bg-green-500 text-white rounded-full font-medium text-xs flex items-center justify-center shadow-sm"
                                     style={{
                                       minWidth: cartQuantity >= 100000 ? '4rem' : 
                                                cartQuantity >= 10000 ? '3.5rem' : 
@@ -517,7 +517,10 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                                                cartQuantity >= 100 ? '2.5rem' : 
                                                cartQuantity >= 10 ? '2rem' : '1.5rem',
                                       whiteSpace: 'nowrap',
-                                      transition: 'all 0.2s ease-in-out'
+                                      transition: 'all 0.2s ease-in-out',
+                                      minHeight: '20px',
+                                      lineHeight: '1',
+                                      textAlign: 'center'
                                     }}
                                     title={`${cartQuantity} unidades no carrinho`}
                                   >
@@ -538,7 +541,7 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                                     if (cartQuantity > 0) {
                                       return (
                                         <div 
-                                          className="hidden sm:flex px-2 py-1 bg-green-500 text-white rounded-full font-medium text-xs items-center justify-center shadow-sm"
+                                          className="hidden sm:flex px-2 py-0.5 bg-green-500 text-white rounded-full font-medium text-xs items-center justify-center shadow-sm"
                                           style={{
                                             minWidth: cartQuantity >= 100000 ? '4rem' : 
                                                      cartQuantity >= 10000 ? '3.5rem' : 
@@ -546,7 +549,10 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                                                      cartQuantity >= 100 ? '2.5rem' : 
                                                      cartQuantity >= 10 ? '2rem' : '1.5rem',
                                             whiteSpace: 'nowrap',
-                                            transition: 'all 0.2s ease-in-out'
+                                            transition: 'all 0.2s ease-in-out',
+                                            minHeight: '20px',
+                                            lineHeight: '1',
+                                            textAlign: 'center'
                                           }}
                                           title={`${cartQuantity} unidades no carrinho`}
                                         >
@@ -577,7 +583,7 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                                     )
                                   })()}
                                   {model.superWholesalePrice && (
-                                    <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded whitespace-nowrap">
+                                    <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded whitespace-nowrap flex items-center justify-center" style={{minHeight: '18px', lineHeight: '1', textAlign: 'center'}}>
                                       +{product.quickAddIncrement || 1} un.: {formatPrice(model.superWholesalePrice || 0)}
                                     </span>
                                   )}
