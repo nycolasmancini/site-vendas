@@ -88,7 +88,7 @@ async function loadCarts(): Promise<any[]> {
     cartsCache = JSON.parse(data)
     lastFileModTime = stats.mtime.getTime()
     
-    return cartsCache
+    return cartsCache || []
   } catch (error) {
     console.error('Erro ao carregar carrinhos:', error)
     cartsCache = []
