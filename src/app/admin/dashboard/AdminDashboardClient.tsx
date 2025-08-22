@@ -6,10 +6,33 @@ interface Product {
   id: string
   name: string
   subname?: string
-  categoryId: string
-  supplierId: string
+  description: string
+  brand?: string
   price: number
+  superWholesalePrice?: number
+  superWholesaleQuantity?: number
+  cost?: number
+  categoryId: string
   isActive: boolean
+  isModalProduct?: boolean
+  quickAddIncrement?: number
+  category: {
+    name: string
+  }
+  images: Array<{ id: string; url: string; isMain: boolean }>
+  suppliers: Array<{ id: string; supplier: { name: string; phone?: string } }>
+  models?: Array<{
+    id: string
+    price: number
+    superWholesalePrice?: number
+    model?: {
+      id: string
+      name: string
+      brand: { name: string }
+    }
+    brandName?: string
+    modelName?: string
+  }>
   createdAt: string
 }
 
@@ -23,7 +46,7 @@ interface Category {
 interface Supplier {
   id: string
   name: string
-  contact?: string
+  phone?: string
 }
 
 interface CompanySettings {
@@ -57,6 +80,26 @@ export default function AdminDashboardClient({ user }: Props) {
     order: ''
   })
   const [svgFile, setSvgFile] = useState<File | null>(null)
+  
+  // Estados para produtos
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [showEditForm, setShowEditForm] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [selectedImages, setSelectedImages] = useState<File[]>([])
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    subname: '',
+    description: '',
+    brand: '',
+    price: '',
+    superWholesalePrice: '',
+    superWholesaleQuantity: '',
+    cost: '',
+    categoryId: '',
+    supplierId: '',
+    supplierName: '',
+    supplierPhone: ''
+  })
 
   useEffect(() => {
     console.log('AdminDashboardClient - Usuário autenticado:', user)
@@ -183,6 +226,203 @@ export default function AdminDashboardClient({ user }: Props) {
   const handleSvgTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setSvgFile(null)
     setNewCategory(prev => ({ ...prev, icon: e.target.value }))
+  }
+
+  // Handlers para produtos
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    setSelectedImages(prev => [...prev, ...files])
+  }
+
+  const removeImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const handleAddProduct = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (selectedImages.length === 0) {
+      alert('Por favor, selecione pelo menos uma imagem')
+      return
+    }
+    
+    try {
+      const formData = new FormData()
+      
+      // Adicionar dados do produto
+      formData.append('name', newProduct.name)
+      formData.append('subname', newProduct.subname)
+      formData.append('description', newProduct.description)
+      formData.append('brand', newProduct.brand)
+      formData.append('price', newProduct.price)
+      formData.append('superWholesalePrice', newProduct.superWholesalePrice)
+      formData.append('superWholesaleQuantity', newProduct.superWholesaleQuantity)
+      formData.append('cost', newProduct.cost)
+      formData.append('categoryId', newProduct.categoryId)
+      formData.append('supplierName', newProduct.supplierName)
+      formData.append('supplierPhone', newProduct.supplierPhone)
+      
+      // Adicionar imagens
+      selectedImages.forEach((file, index) => {
+        formData.append('images', file)
+        if (index === 0) formData.append('mainImageIndex', '0')
+      })
+
+      const response = await fetch('/api/products', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (response.ok) {
+        alert('Produto adicionado com sucesso!')
+        await fetchProducts()
+        setShowAddForm(false)
+        setSelectedImages([])
+        setNewProduct({
+          name: '',
+          subname: '',
+          description: '',
+          brand: '',
+          price: '',
+          superWholesalePrice: '',
+          superWholesaleQuantity: '',
+          cost: '',
+          categoryId: '',
+          supplierId: '',
+          supplierName: '',
+          supplierPhone: ''
+        })
+      } else {
+        const errorData = await response.json()
+        alert(`Erro ao adicionar produto: ${errorData.error || 'Erro desconhecido'}`)
+      }
+    } catch (error) {
+      console.error('Erro ao adicionar produto:', error)
+      alert('Erro ao adicionar produto')
+    }
+  }
+
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product)
+    setNewProduct({
+      name: product.name,
+      subname: product.subname || '',
+      description: product.description || '',
+      brand: product.brand || '',
+      price: product.price.toString(),
+      superWholesalePrice: product.superWholesalePrice?.toString() || '',
+      superWholesaleQuantity: product.superWholesaleQuantity?.toString() || '',
+      cost: product.cost?.toString() || '',
+      categoryId: product.categoryId,
+      supplierId: '',
+      supplierName: product.suppliers[0]?.supplier.name || '',
+      supplierPhone: product.suppliers[0]?.supplier.phone || ''
+    })
+    setSelectedImages([])
+    setShowEditForm(true)
+  }
+
+  const handleUpdateProduct = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!editingProduct) return
+    
+    try {
+      const formData = new FormData()
+      
+      // Adicionar dados do produto
+      formData.append('name', newProduct.name)
+      formData.append('subname', newProduct.subname)
+      formData.append('description', newProduct.description)
+      formData.append('brand', newProduct.brand)
+      formData.append('price', newProduct.price)
+      formData.append('superWholesalePrice', newProduct.superWholesalePrice)
+      formData.append('superWholesaleQuantity', newProduct.superWholesaleQuantity)
+      formData.append('cost', newProduct.cost)
+      formData.append('categoryId', newProduct.categoryId)
+      formData.append('supplierName', newProduct.supplierName)
+      formData.append('supplierPhone', newProduct.supplierPhone)
+      
+      // Adicionar novas imagens se houver
+      selectedImages.forEach((file, index) => {
+        formData.append('images', file)
+        if (index === 0) formData.append('mainImageIndex', '0')
+      })
+
+      const response = await fetch(`/api/products/${editingProduct.id}`, {
+        method: 'PUT',
+        body: formData,
+      })
+
+      if (response.ok) {
+        alert('Produto atualizado com sucesso!')
+        await fetchProducts()
+        setShowEditForm(false)
+        setEditingProduct(null)
+        setSelectedImages([])
+        setNewProduct({
+          name: '',
+          subname: '',
+          description: '',
+          brand: '',
+          price: '',
+          superWholesalePrice: '',
+          superWholesaleQuantity: '',
+          cost: '',
+          categoryId: '',
+          supplierId: '',
+          supplierName: '',
+          supplierPhone: ''
+        })
+      } else {
+        const errorData = await response.json()
+        alert(`Erro ao atualizar produto: ${errorData.error || 'Erro desconhecido'}`)
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar produto:', error)
+      alert('Erro ao atualizar produto')
+    }
+  }
+
+  const handleDeleteProduct = async (id: string) => {
+    if (confirm('Tem certeza que deseja excluir este produto?')) {
+      try {
+        const response = await fetch(`/api/products/${id}`, {
+          method: 'DELETE',
+        })
+
+        if (response.ok) {
+          alert('Produto excluído com sucesso!')
+          await fetchProducts()
+        } else {
+          alert('Erro ao excluir produto')
+        }
+      } catch (error) {
+        console.error('Erro ao excluir produto:', error)
+        alert('Erro ao excluir produto')
+      }
+    }
+  }
+
+  const handleToggleAvailability = async (id: string, currentStatus: boolean) => {
+    try {
+      const response = await fetch(`/api/products/${id}/toggle`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isActive: !currentStatus }),
+      })
+
+      if (response.ok) {
+        await fetchProducts()
+      } else {
+        alert('Erro ao alterar status do produto')
+      }
+    } catch (error) {
+      console.error('Erro ao alterar status do produto:', error)
+      alert('Erro ao alterar status do produto')
+    }
   }
 
   const handleAddCategory = async (e: React.FormEvent) => {
@@ -501,6 +741,272 @@ export default function AdminDashboardClient({ user }: Props) {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Products Section */}
+          <div className="bg-white shadow rounded-lg mt-8">
+            <div className="px-4 py-5 sm:p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  Produtos ({products.length})
+                </h3>
+                <button
+                  onClick={() => setShowAddForm(!showAddForm)}
+                  className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
+                >
+                  {showAddForm ? 'Cancelar' : 'Adicionar Produto'}
+                </button>
+              </div>
+
+              {/* Add Product Form */}
+              {showAddForm && (
+                <form onSubmit={handleAddProduct} className="mb-6 p-4 bg-gray-50 rounded-lg">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Nome</label>
+                      <input
+                        type="text"
+                        value={newProduct.name}
+                        onChange={(e) => setNewProduct(prev => ({ ...prev, name: e.target.value }))}
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Subnome</label>
+                      <input
+                        type="text"
+                        value={newProduct.subname}
+                        onChange={(e) => setNewProduct(prev => ({ ...prev, subname: e.target.value }))}
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Marca</label>
+                      <input
+                        type="text"
+                        value={newProduct.brand}
+                        onChange={(e) => setNewProduct(prev => ({ ...prev, brand: e.target.value }))}
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Preço</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={newProduct.price}
+                        onChange={(e) => setNewProduct(prev => ({ ...prev, price: e.target.value }))}
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Preço Super Atacado</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={newProduct.superWholesalePrice}
+                        onChange={(e) => setNewProduct(prev => ({ ...prev, superWholesalePrice: e.target.value }))}
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Quantidade Super Atacado</label>
+                      <input
+                        type="number"
+                        value={newProduct.superWholesaleQuantity}
+                        onChange={(e) => setNewProduct(prev => ({ ...prev, superWholesaleQuantity: e.target.value }))}
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Custo</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={newProduct.cost}
+                        onChange={(e) => setNewProduct(prev => ({ ...prev, cost: e.target.value }))}
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Categoria</label>
+                      <select
+                        value={newProduct.categoryId}
+                        onChange={(e) => setNewProduct(prev => ({ ...prev, categoryId: e.target.value }))}
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      >
+                        <option value="">Selecione uma categoria</option>
+                        {categories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Nome do Fornecedor</label>
+                      <input
+                        type="text"
+                        value={newProduct.supplierName}
+                        onChange={(e) => setNewProduct(prev => ({ ...prev, supplierName: e.target.value }))}
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700">Descrição</label>
+                    <textarea
+                      value={newProduct.description}
+                      onChange={(e) => setNewProduct(prev => ({ ...prev, description: e.target.value }))}
+                      rows={3}
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700">Imagens</label>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleImageSelect}
+                      className="mt-1 block w-full text-sm text-gray-500"
+                    />
+                    {selectedImages.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-600">{selectedImages.length} imagem(ns) selecionada(s)</p>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {selectedImages.map((file, index) => (
+                            <div key={index} className="relative">
+                              <span className="text-xs bg-gray-200 px-2 py-1 rounded">{file.name}</span>
+                              <button
+                                type="button"
+                                onClick={() => removeImage(index)}
+                                className="ml-2 text-red-500 hover:text-red-700"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700"
+                    >
+                      Salvar Produto
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Products List */}
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Produto
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Categoria
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Preço
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Ações
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {products.map((product) => (
+                      <tr key={product.id}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            {product.images[0] && (
+                              <img
+                                src={product.images[0].url}
+                                alt={product.name}
+                                className="h-10 w-10 rounded-lg object-cover mr-3"
+                              />
+                            )}
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {product.name}
+                              </div>
+                              {product.subname && (
+                                <div className="text-sm text-gray-500">
+                                  {product.subname}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {product.category.name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          R$ {product.price.toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            product.isActive 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {product.isActive ? 'Ativo' : 'Inativo'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                          <button
+                            onClick={() => handleEditProduct(product)}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleToggleAvailability(product.id, product.isActive)}
+                            className={`${
+                              product.isActive 
+                                ? 'text-red-600 hover:text-red-900' 
+                                : 'text-green-600 hover:text-green-900'
+                            }`}
+                          >
+                            {product.isActive ? 'Desativar' : 'Ativar'}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProduct(product.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Excluir
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
