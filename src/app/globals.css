@@ -1165,17 +1165,29 @@ input[type="number"] {
 
 .model-item {
   position: relative;
-  margin-left: 24px;
-  margin-right: 12px;
-  margin-top: 8px;
-  margin-bottom: 8px;
-  padding: 16px;
+  margin-left: 8px;
+  margin-right: 4px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  padding: 8px;
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(229, 231, 235, 0.8);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 5; /* Lower than sticky headers (z-index: 30) */
+}
+
+@media (min-width: 640px) {
+  .model-item {
+    margin-left: 24px;
+    margin-right: 12px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
 }
 
 .model-item::before {
@@ -1328,7 +1340,7 @@ input[type="number"] {
 
 /* Modal price range dynamic font sizing */
 .modal-price-range {
-  font-size: clamp(0.875rem, 4vw, 1.125rem) !important;
+  font-size: clamp(0.75rem, 3.5vw, 1rem) !important;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

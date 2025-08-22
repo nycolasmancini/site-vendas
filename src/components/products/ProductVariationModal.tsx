@@ -371,7 +371,7 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
     >
       <div 
         ref={modalRef}
-        className={`bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden transform transition-all duration-300 ease-out ${
+        className={`bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[85vh] sm:max-h-[90vh] overflow-hidden transform transition-all duration-300 ease-out ${
           isAnimating 
             ? 'scale-95 opacity-0 translate-y-4' 
             : 'scale-100 opacity-100 translate-y-0 animate-scale-in'
@@ -382,11 +382,11 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
         }}
       >
         {/* Header */}
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white">
+        <div className="p-3 sm:p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white">
           <div className="flex-1">
-            <h2 id="modal-title" className="text-2xl font-bold text-gray-900 mb-1">{product.name}</h2>
+            <h2 id="modal-title" className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{product.name}</h2>
             {product.description && (
-              <p className="text-sm text-gray-600 opacity-80">{product.description}</p>
+              <p className="text-xs sm:text-sm text-gray-600 opacity-80">{product.description}</p>
             )}
           </div>
           
@@ -394,10 +394,10 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
           <div className="flex items-center gap-6">
             {models.length > 0 && (
               <div className="text-right transform transition-all duration-300 ease-out animate-slide-up">
-                <p className="text-sm text-gray-600 font-medium">
+                <p className="text-xs sm:text-sm text-gray-600 font-medium">
                   Total: {getTotalItems()} item{getTotalItems() !== 1 ? 's' : ''}
                 </p>
-                <p className="text-xl font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">
+                <p className="text-lg sm:text-xl font-bold text-blue-600 bg-blue-50 px-2 sm:px-3 py-1 rounded-lg">
                   {formatPrice(getTotalValue())}
                 </p>
               </div>
@@ -417,7 +417,7 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
 
         
         {/* Scrollable Content with Sticky Headers */}
-        <div className="overflow-y-auto max-h-[calc(90vh-200px)] custom-scrollbar modal-content-scroll relative">
+        <div className="overflow-y-auto max-h-[calc(85vh-150px)] sm:max-h-[calc(90vh-200px)] custom-scrollbar modal-content-scroll relative">
             
           {loading ? (
             <div className="text-center py-12 animate-fade-in">
@@ -433,19 +433,19 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
               </div>
             </div>
           ) : (
-            <div className="p-6 pt-2 space-y-6 animate-slide-up">
+            <div className="p-3 sm:p-6 pt-2 space-y-3 sm:space-y-6 animate-slide-up">
               {Object.entries(groupedModels)
                 .sort(([a], [b]) => a.localeCompare(b))
                 .map(([brandName, brandModels], index) => (
                 <div 
                   key={brandName} 
-                  className="border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 ease-out transform hover:-translate-y-1"
+                  className="border-b border-gray-200 last:border-b-0 sm:border sm:rounded-xl sm:shadow-sm sm:hover:shadow-md transition-all duration-300 ease-out sm:transform sm:hover:-translate-y-1"
                   style={{animationDelay: `${index * 100}ms`}}
                 >
                   {/* Brand Header - Sticky */}
                   <button
                     onClick={() => toggleBrandExpansion(brandName)}
-                    className={`brand-header w-full px-6 py-5 transition-all duration-300 ease-out flex items-center justify-between text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset sticky top-0 z-30 ${
+                    className={`brand-header w-full px-3 sm:px-6 py-3 sm:py-5 transition-all duration-300 ease-out flex items-center justify-between text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset sticky top-0 z-30 ${
                       expandedBrands[brandName] ? 'expanded' : 'collapsed'
                     }`}
                     style={{
@@ -469,8 +469,8 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                                 {totalQuantity} un.
                               </div>
                             )}
-                            <span className="text-lg font-semibold text-gray-900">{brandName}</span>
-                            <span className="ml-3 text-sm text-gray-500">
+                            <span className="text-base sm:text-lg font-semibold text-gray-900">{brandName}</span>
+                            <span className="ml-2 sm:ml-3 text-xs sm:text-sm text-gray-500">
                               ({brandModels.length} modelo{brandModels.length !== 1 ? 's' : ''})
                             </span>
                           </>
@@ -516,22 +516,22 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                               if (cartQuantity > 0) {
                                 return (
                                   <div 
-                                    className="sm:hidden absolute top-2 right-2 z-20 px-2 py-0.5 bg-green-500 text-white rounded-full font-medium text-xs flex items-center justify-center shadow-sm"
+                                    className="sm:hidden absolute top-1 right-1 z-20 px-1.5 py-0.5 bg-green-500 text-white rounded-full font-medium text-[10px] flex items-center justify-center shadow-sm"
                                     style={{
-                                      minWidth: cartQuantity >= 100000 ? '4rem' : 
-                                               cartQuantity >= 10000 ? '3.5rem' : 
-                                               cartQuantity >= 1000 ? '3rem' : 
-                                               cartQuantity >= 100 ? '2.5rem' : 
-                                               cartQuantity >= 10 ? '2rem' : '1.5rem',
+                                      minWidth: cartQuantity >= 100000 ? '3.5rem' : 
+                                               cartQuantity >= 10000 ? '3rem' : 
+                                               cartQuantity >= 1000 ? '2.5rem' : 
+                                               cartQuantity >= 100 ? '2rem' : 
+                                               cartQuantity >= 10 ? '1.75rem' : '1.25rem',
                                       whiteSpace: 'nowrap',
                                       transition: 'all 0.2s ease-in-out',
-                                      minHeight: '20px',
+                                      minHeight: '18px',
                                       lineHeight: '1',
                                       textAlign: 'center'
                                     }}
                                     title={`${cartQuantity} unidades no carrinho`}
                                   >
-                                    {cartQuantity.toLocaleString()} un.
+                                    {cartQuantity.toLocaleString()}
                                   </div>
                                 )
                               }
@@ -540,8 +540,8 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                             
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <h4 className="text-base font-medium text-gray-900">{model.modelName}</h4>
+                                <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+                                  <h4 className="text-sm sm:text-base font-medium text-gray-900">{model.modelName}</h4>
                                   {/* Badge verde desktop - ao lado do nome */}
                                   {(() => {
                                     const cartQuantity = getCartQuantityByModel(model.id)
@@ -570,7 +570,7 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                                     return null
                                   })()}
                                 </div>
-                                <div className="flex flex-col items-start gap-1">
+                                <div className="flex flex-col items-start gap-0.5 sm:gap-1">
                                   {(() => {
                                     // Se o produto tem priceRange, usar a lógica de range
                                     if (product.isModalProduct && product.priceRange) {
@@ -580,19 +580,19 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                                         : formatPrice(product.priceRange.min)
                                       
                                       return (
-                                        <div className={`${isRange ? 'flex justify-center w-full' : 'flex items-baseline gap-2'}`}>
+                                        <div className={`${isRange ? 'flex justify-start w-full' : 'flex items-baseline gap-1 sm:gap-2'}`}>
                                           <span 
-                                            className={`text-lg font-bold text-gray-900 transition-all duration-500 ease-in-out ${isRange ? 'text-center modal-price-range' : ''}`}
+                                            className={`text-sm sm:text-lg font-bold text-gray-900 transition-all duration-500 ease-in-out ${isRange ? 'modal-price-range' : ''}`}
                                             style={{
                                               animation: 'fadeInPrice 0.5s ease-in-out',
-                                              fontSize: isRange ? 'clamp(0.875rem, 4vw, 1.125rem)' : undefined,
+                                              fontSize: isRange ? 'clamp(0.75rem, 3.5vw, 1rem)' : undefined,
                                               whiteSpace: isRange ? 'nowrap' : undefined
                                             }}
                                           >
                                             {priceText}
                                           </span>
                                           {!isRange && (
-                                            <span className="text-xs text-gray-500">
+                                            <span className="text-[10px] sm:text-xs text-gray-500">
                                               unidade
                                             </span>
                                           )}
@@ -607,17 +607,17 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                                     const currentPrice = hasReachedSuperWholesale ? (model.superWholesalePrice || 0) : (model.price || 0)
                                     
                                     return (
-                                      <div className="flex items-baseline gap-2">
+                                      <div className="flex items-baseline gap-1 sm:gap-2">
                                         <span 
                                           key={`${model.id}-${hasReachedSuperWholesale}`}
-                                          className="text-lg font-bold text-gray-900 transition-all duration-500 ease-in-out animate-price-change"
+                                          className="text-sm sm:text-lg font-bold text-gray-900 transition-all duration-500 ease-in-out animate-price-change"
                                           style={{
                                             animation: 'fadeInPrice 0.5s ease-in-out'
                                           }}
                                         >
                                           {formatPrice(currentPrice)}
                                         </span>
-                                        <span className="text-xs text-gray-500">
+                                        <span className="text-[10px] sm:text-xs text-gray-500">
                                           unidade
                                         </span>
                                       </div>
@@ -625,37 +625,33 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                                   })()}
                                   {/* Super wholesale info apenas para produtos com modelos individuais */}
                                   {!product.isModalProduct && model.superWholesalePrice && (
-                                    <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded whitespace-nowrap flex items-center justify-center" style={{minHeight: '18px', lineHeight: '1', textAlign: 'center'}}>
+                                    <div className="text-[10px] sm:text-xs text-green-600 font-medium bg-green-50 px-1.5 sm:px-2 py-0.5 rounded whitespace-nowrap inline-flex items-center" style={{minHeight: '16px', lineHeight: '1'}}>
                                       +{product.quickAddIncrement || 1} un.: {formatPrice(model.superWholesalePrice || 0)}
-                                    </span>
+                                    </div>
                                   )}
                                   {/* Super wholesale range para produtos modais */}
                                   {product.isModalProduct && product.priceRange?.superWholesaleMin && product.priceRange?.superWholesaleMax && (
-                                    <div className="w-full">
-                                      <div className="py-1 px-2 rounded-lg bg-green-50 border border-green-200">
-                                        <div className="flex flex-col items-center">
-                                          <p className="text-xs font-medium text-green-600 text-center">
-                                            Pacote ({product.quickAddIncrement || 25} un.)
-                                          </p>
-                                          <p className="text-xs text-gray-600 text-center">
-                                            {product.priceRange.superWholesaleMin === product.priceRange.superWholesaleMax
-                                              ? formatPrice(product.priceRange.superWholesaleMin)
-                                              : `${formatPrice(product.priceRange.superWholesaleMin)} - ${formatPrice(product.priceRange.superWholesaleMax)}`
-                                            } / un
-                                          </p>
-                                        </div>
-                                      </div>
+                                    <div className="inline-flex items-center gap-1 py-0.5 px-1.5 sm:px-2 rounded bg-green-50 border border-green-200">
+                                      <span className="text-[10px] sm:text-xs font-medium text-green-600">
+                                        Pacote ({product.quickAddIncrement || 25} un.):
+                                      </span>
+                                      <span className="text-[10px] sm:text-xs text-gray-600">
+                                        {product.priceRange.superWholesaleMin === product.priceRange.superWholesaleMax
+                                          ? formatPrice(product.priceRange.superWholesaleMin)
+                                          : `${formatPrice(product.priceRange.superWholesaleMin)} - ${formatPrice(product.priceRange.superWholesaleMax)}`
+                                        } / un
+                                      </span>
                                     </div>
                                   )}
                                 </div>
                               </div>
                               
                               {/* Quantity Controls alinhados à direita */}
-                              <div className="flex items-center rounded-xl overflow-hidden ml-2 sm:ml-4 shadow-sm border border-gray-200 bg-white">
+                              <div className="flex items-center rounded-lg overflow-hidden ml-1 sm:ml-4 shadow-sm border border-gray-200 bg-white">
                                 <button
                                   onClick={() => decrementQuantity(model.id, 1)}
                                   disabled={currentQuantity === 0}
-                                  className="px-2 sm:px-3 py-1.5 sm:py-2 hover:bg-red-50 hover:text-red-600 text-gray-500 font-bold transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-300 active:scale-95"
+                                  className="px-1.5 sm:px-3 py-1 sm:py-2 hover:bg-red-50 hover:text-red-600 text-gray-500 font-bold transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-300 active:scale-95 text-sm sm:text-base"
                                 >
                                   −
                                 </button>
@@ -664,13 +660,13 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                                   value={getDisplayValue(model.id)}
                                   onChange={(e) => handleInputChange(model.id, e.target.value)}
                                   onBlur={() => handleInputBlur(model.id)}
-                                  className="w-12 sm:w-16 text-center py-1.5 sm:py-2 text-sm font-semibold border-x border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-200"
+                                  className="w-10 sm:w-16 text-center py-1 sm:py-2 text-xs sm:text-sm font-semibold border-x border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-200"
                                   min="0"
                                   aria-label={`Quantidade para ${model.modelName}`}
                                 />
                                 <button
                                   onClick={() => incrementQuantity(model.id, 1)}
-                                  className="px-2 sm:px-3 py-1.5 sm:py-2 hover:bg-green-50 hover:text-green-600 text-gray-500 font-bold transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-green-300 active:scale-95"
+                                  className="px-1.5 sm:px-3 py-1 sm:py-2 hover:bg-green-50 hover:text-green-600 text-gray-500 font-bold transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-green-300 active:scale-95 text-sm sm:text-base"
                                 >
                                   +
                                 </button>
