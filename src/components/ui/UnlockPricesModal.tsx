@@ -87,15 +87,22 @@ export default function UnlockPricesModal({ isOpen, onClose }: UnlockPricesModal
 
   return (
     <div 
-      className="fixed inset-0 flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 flex items-center justify-center p-4 z-50 animate-fade-in"
       style={{ 
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
         backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)'
+        WebkitBackdropFilter: 'blur(8px)',
+        animation: 'fadeIn 0.3s ease-out'
       }}
       onClick={onClose}
     >
-      <div className="bg-white rounded-lg max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+      <div 
+        className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl transform transition-all duration-300" 
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          animation: 'modalSlideIn 0.3s ease-out'
+        }}
+      >
         <div className="text-center mb-6">
           <div className="mx-auto w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
             <svg className="w-8 h-8 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -103,10 +110,10 @@ export default function UnlockPricesModal({ isOpen, onClose }: UnlockPricesModal
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Veja os Melhores Preços!
+            🤝 Vamos fazer negócio juntos?
           </h2>
           <p className="text-gray-600">
-            Informe seu WhatsApp (com ou sem o 9) para liberar os preços exclusivos de atacado
+            Deixe seu WhatsApp para ver preços personalizados e ter um atendimento direto quando precisar. Somos parceiros do seu sucesso!
           </p>
         </div>
 
@@ -129,14 +136,24 @@ export default function UnlockPricesModal({ isOpen, onClose }: UnlockPricesModal
             )}
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2 px-4 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ backgroundColor: '#FC6D36' }}
-          >
-            {loading ? 'Liberando...' : 'Liberar Preços'}
-          </button>
+          <div className="space-y-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-2 px-4 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: '#FC6D36' }}
+            >
+              {loading ? 'Liberando...' : 'Ver Preços Especiais'}
+            </button>
+            
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full py-2 px-4 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition-colors text-sm"
+            >
+              Agora não, obrigado
+            </button>
+          </div>
         </form>
 
         <div className="mt-6 pt-6 border-t border-gray-200">

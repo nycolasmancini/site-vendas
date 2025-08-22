@@ -192,7 +192,7 @@ export default function Home() {
       })
   }, [selectedCategory, searchTerm, categories, analytics])
 
-  // Iniciar timer de 30 segundos quando o usuário navegar sem ter preços liberados
+  // Iniciar timer de 1 minuto quando o usuário navegar sem ter preços liberados
   useEffect(() => {
     if (!unlocked && products.length > 0 && mounted) {
       // Limpar timer anterior se existir
@@ -200,10 +200,10 @@ export default function Home() {
         clearTimeout(navigationTimer)
       }
       
-      // Criar novo timer de 30 segundos
+      // Criar novo timer de 1 minuto
       const timer = setTimeout(() => {
         setShowUnlockModal(true)
-      }, 30000) // 30 segundos
+      }, 60000) // 1 minuto
       
       setNavigationTimer(timer)
     }

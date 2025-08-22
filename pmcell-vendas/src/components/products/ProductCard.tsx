@@ -260,19 +260,15 @@ export default function ProductCard({ product, onSelectModels }: ProductCardProp
           </div>
         ) : (
           <div className="mt-3">
-            <div className="text-center p-4" style={{ background: 'var(--muted)', borderRadius: '8px' }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto mb-3" style={{ color: 'var(--muted-foreground)' }}>
-                <rect x="3" y="11" width="18" height="10" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-              <p className="text-sm mb-3" style={{ color: 'var(--muted-foreground)' }}>
-                Preços exclusivos para lojistas
+            <div className="text-center p-3" style={{ background: 'var(--muted)', borderRadius: '8px' }}>
+              <p className="text-sm mb-2" style={{ color: 'var(--muted-foreground)' }}>
+                Preços para lojistas
               </p>
               <button
                 className="btn-primary w-full interactive"
                 style={{ background: 'var(--orange)', color: 'var(--surface)' }}
               >
-                Liberar Preços
+                Visualizar
               </button>
             </div>
           </div>

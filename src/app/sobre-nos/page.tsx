@@ -80,7 +80,7 @@ export default function SobreNos() {
                   sizes="400px"
                 />
               </div>
-              <div className="p-4">
+              <div className="p-4 pt-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--foreground)' }}>
