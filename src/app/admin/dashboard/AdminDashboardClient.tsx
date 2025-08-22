@@ -130,6 +130,18 @@ export default function AdminDashboardClient({ user }: Props) {
   const [selectedBrand, setSelectedBrand] = useState<any>(null)
   const [brandModels, setBrandModels] = useState<any[]>([])
 
+  // Estados para fornecedores
+  const [showAddSupplierForm, setShowAddSupplierForm] = useState(false)
+  const [showEditSupplierForm, setShowEditSupplierForm] = useState(false)
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null)
+  const [newSupplier, setNewSupplier] = useState({
+    name: '',
+    phone: '',
+    address: '',
+    email: '',
+    notes: ''
+  })
+
   useEffect(() => {
     console.log('AdminDashboardClient - Usuário autenticado:', user)
     
@@ -481,7 +493,7 @@ export default function AdminDashboardClient({ user }: Props) {
       superWholesaleQuantity: product.superWholesaleQuantity?.toString() || '',
       cost: product.cost?.toString() || '',
       categoryId: product.categoryId,
-      supplierId: '',
+      supplierId: product.suppliers?.[0]?.supplier?.id || '',
       supplierName: product.suppliers?.[0]?.supplier?.name || '',
       supplierPhone: product.suppliers?.[0]?.supplier?.phone || ''
     })
@@ -625,6 +637,136 @@ export default function AdminDashboardClient({ user }: Props) {
     } catch (error) {
       console.error('Erro ao adicionar categoria:', error)
       alert('Erro ao adicionar categoria')
+    }
+  }
+
+  // Funções para fornecedores
+  const handleAddSupplier = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!newSupplier.name) {
+      alert('Por favor, digite o nome do fornecedor')
+      return
+    }
+    
+    try {
+      const response = await fetch('/api/suppliers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newSupplier),
+      })
+
+      if (response.ok) {
+        alert('Fornecedor adicionado com sucesso!')
+        setNewSupplier({
+          name: '',
+          phone: '',
+          address: '',
+          email: '',
+          notes: ''
+        })
+        setShowAddSupplierForm(false)
+        await fetchSuppliers()
+      } else {
+        const errorData = await response.json()
+        console.error('Erro ao adicionar fornecedor:', errorData)
+        alert('Erro ao adicionar fornecedor')
+      }
+    } catch (error) {
+      console.error('Erro ao adicionar fornecedor:', error)
+      alert('Erro ao adicionar fornecedor')
+    }
+  }
+
+  const handleEditSupplier = (supplier: Supplier) => {
+    setEditingSupplier(supplier)
+    setNewSupplier({
+      name: supplier.name,
+      phone: supplier.phone || '',
+      address: supplier.address || '',
+      email: supplier.email || '',
+      notes: supplier.notes || ''
+    })
+    setShowEditSupplierForm(true)
+  }
+
+  const handleUpdateSupplier = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!editingSupplier) return
+    
+    try {
+      const response = await fetch(`/api/suppliers/${editingSupplier.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newSupplier),
+      })
+
+      if (response.ok) {
+        alert('Fornecedor atualizado com sucesso!')
+        setNewSupplier({
+          name: '',
+          phone: '',
+          address: '',
+          email: '',
+          notes: ''
+        })
+        setShowEditSupplierForm(false)
+        setEditingSupplier(null)
+        await fetchSuppliers()
+      } else {
+        const errorData = await response.json()
+        alert(`Erro ao atualizar fornecedor: ${errorData.error}`)
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar fornecedor:', error)
+      alert('Erro ao atualizar fornecedor')
+    }
+  }
+
+  const handleDeleteSupplier = async (id: string) => {
+    if (confirm('Tem certeza que deseja excluir este fornecedor?')) {
+      try {
+        const response = await fetch(`/api/suppliers/${id}`, {
+          method: 'DELETE',
+        })
+
+        if (response.ok) {
+          alert('Fornecedor excluído com sucesso!')
+          await fetchSuppliers()
+        } else {
+          const errorData = await response.json()
+          alert(`Erro ao excluir fornecedor: ${errorData.error}`)
+        }
+      } catch (error) {
+        console.error('Erro ao excluir fornecedor:', error)
+        alert('Erro ao excluir fornecedor')
+      }
+    }
+  }
+
+  const handleToggleSupplierStatus = async (id: string, currentStatus: boolean) => {
+    try {
+      const response = await fetch(`/api/suppliers/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isActive: !currentStatus }),
+      })
+
+      if (response.ok) {
+        await fetchSuppliers()
+      } else {
+        alert('Erro ao alterar status do fornecedor')
+      }
+    } catch (error) {
+      console.error('Erro ao alterar status do fornecedor:', error)
+      alert('Erro ao alterar status do fornecedor')
     }
   }
 
@@ -960,6 +1102,187 @@ export default function AdminDashboardClient({ user }: Props) {
             </div>
           </div>
 
+          {/* Suppliers Section */}
+          <div className="bg-white shadow rounded-lg mt-8">
+            <div className="px-4 py-5 sm:p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  Fornecedores ({suppliers.length})
+                </h3>
+                <button
+                  onClick={() => setShowAddSupplierForm(!showAddSupplierForm)}
+                  className="px-4 py-2 bg-orange-600 text-white text-sm rounded-md hover:bg-orange-700"
+                >
+                  {showAddSupplierForm ? 'Cancelar' : 'Adicionar Fornecedor'}
+                </button>
+              </div>
+
+              {/* Add Supplier Form */}
+              {showAddSupplierForm && (
+                <form onSubmit={handleAddSupplier} className="mb-6 p-4 bg-orange-50 rounded-lg">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Nome *</label>
+                      <input
+                        type="text"
+                        value={newSupplier.name}
+                        onChange={(e) => setNewSupplier(prev => ({ ...prev, name: e.target.value }))}
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                        required
+                        placeholder="Nome do fornecedor"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Telefone</label>
+                      <input
+                        type="text"
+                        value={newSupplier.phone}
+                        onChange={(e) => setNewSupplier(prev => ({ ...prev, phone: e.target.value }))}
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                        placeholder="(XX) XXXXX-XXXX"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Email</label>
+                      <input
+                        type="email"
+                        value={newSupplier.email}
+                        onChange={(e) => setNewSupplier(prev => ({ ...prev, email: e.target.value }))}
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                        placeholder="email@fornecedor.com"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Endereço</label>
+                      <input
+                        type="text"
+                        value={newSupplier.address}
+                        onChange={(e) => setNewSupplier(prev => ({ ...prev, address: e.target.value }))}
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                        placeholder="Endereço completo"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700">Observações</label>
+                    <textarea
+                      value={newSupplier.notes}
+                      onChange={(e) => setNewSupplier(prev => ({ ...prev, notes: e.target.value }))}
+                      rows={3}
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                      placeholder="Observações internas sobre o fornecedor..."
+                    />
+                  </div>
+
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-orange-600 text-white text-sm rounded-md hover:bg-orange-700"
+                    >
+                      Salvar Fornecedor
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Suppliers List */}
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Fornecedor
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Contato
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Ações
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {suppliers.map((supplier) => (
+                      <tr key={supplier.id}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {supplier.name}
+                            </div>
+                            {supplier.address && (
+                              <div className="text-sm text-gray-500">
+                                {supplier.address}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {supplier.phone && (
+                              <div>📞 {supplier.phone}</div>
+                            )}
+                            {supplier.email && (
+                              <div>✉️ {supplier.email}</div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            supplier.isActive 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {supplier.isActive ? 'Ativo' : 'Inativo'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleEditSupplier(supplier)}
+                              className="text-blue-600 hover:text-blue-900"
+                            >
+                              Editar
+                            </button>
+                            <button
+                              onClick={() => handleToggleSupplierStatus(supplier.id, supplier.isActive)}
+                              className={`${
+                                supplier.isActive 
+                                  ? 'text-red-600 hover:text-red-900' 
+                                  : 'text-green-600 hover:text-green-900'
+                              }`}
+                            >
+                              {supplier.isActive ? 'Desativar' : 'Ativar'}
+                            </button>
+                            <button
+                              onClick={() => handleDeleteSupplier(supplier.id)}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              Excluir
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {suppliers.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
+                          Nenhum fornecedor cadastrado
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
           {/* Products Section */}
           <div className="bg-white shadow rounded-lg mt-8">
             <div className="px-4 py-5 sm:p-6">
@@ -1086,14 +1409,60 @@ export default function AdminDashboardClient({ user }: Props) {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Nome do Fornecedor</label>
-                      <input
-                        type="text"
-                        value={newProduct.supplierName}
-                        onChange={(e) => setNewProduct(prev => ({ ...prev, supplierName: e.target.value }))}
+                      <label className="block text-sm font-medium text-gray-700">Fornecedor</label>
+                      <select
+                        value={newProduct.supplierId}
+                        onChange={(e) => {
+                          const selectedSupplierId = e.target.value
+                          const selectedSupplier = suppliers.find(s => s.id === selectedSupplierId)
+                          setNewProduct(prev => ({ 
+                            ...prev, 
+                            supplierId: selectedSupplierId,
+                            supplierName: selectedSupplier?.name || '',
+                            supplierPhone: selectedSupplier?.phone || ''
+                          }))
+                        }}
                         className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                      />
+                      >
+                        <option value="">Selecione um fornecedor</option>
+                        {suppliers.filter(s => s.isActive).map((supplier) => (
+                          <option key={supplier.id} value={supplier.id}>
+                            {supplier.name} {supplier.phone ? `(${supplier.phone})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                      {newProduct.supplierId === '' && (
+                        <p className="mt-1 text-xs text-gray-500">
+                          Ou adicione um fornecedor personalizado nos campos abaixo
+                        </p>
+                      )}
                     </div>
+
+                    {newProduct.supplierId === '' && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Nome do Fornecedor (Personalizado)</label>
+                          <input
+                            type="text"
+                            value={newProduct.supplierName}
+                            onChange={(e) => setNewProduct(prev => ({ ...prev, supplierName: e.target.value }))}
+                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Nome do fornecedor"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Telefone do Fornecedor (Personalizado)</label>
+                          <input
+                            type="text"
+                            value={newProduct.supplierPhone}
+                            onChange={(e) => setNewProduct(prev => ({ ...prev, supplierPhone: e.target.value }))}
+                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="(XX) XXXXX-XXXX"
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   <div className="mt-4">
@@ -1578,6 +1947,123 @@ export default function AdminDashboardClient({ user }: Props) {
                 e use a função "Gerenciar Modelos".
               </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Edição de Fornecedor */}
+      {showEditSupplierForm && editingSupplier && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-gray-900">
+                Editar Fornecedor - {editingSupplier.name}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowEditSupplierForm(false)
+                  setEditingSupplier(null)
+                  setNewSupplier({
+                    name: '',
+                    phone: '',
+                    address: '',
+                    email: '',
+                    notes: ''
+                  })
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateSupplier} className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Nome *</label>
+                  <input
+                    type="text"
+                    value={newSupplier.name}
+                    onChange={(e) => setNewSupplier(prev => ({ ...prev, name: e.target.value }))}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                    required
+                    placeholder="Nome do fornecedor"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Telefone</label>
+                  <input
+                    type="text"
+                    value={newSupplier.phone}
+                    onChange={(e) => setNewSupplier(prev => ({ ...prev, phone: e.target.value }))}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                    placeholder="(XX) XXXXX-XXXX"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <input
+                    type="email"
+                    value={newSupplier.email}
+                    onChange={(e) => setNewSupplier(prev => ({ ...prev, email: e.target.value }))}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                    placeholder="email@fornecedor.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Endereço</label>
+                  <input
+                    type="text"
+                    value={newSupplier.address}
+                    onChange={(e) => setNewSupplier(prev => ({ ...prev, address: e.target.value }))}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                    placeholder="Endereço completo"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Observações</label>
+                <textarea
+                  value={newSupplier.notes}
+                  onChange={(e) => setNewSupplier(prev => ({ ...prev, notes: e.target.value }))}
+                  rows={3}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                  placeholder="Observações internas sobre o fornecedor..."
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditSupplierForm(false)
+                    setEditingSupplier(null)
+                    setNewSupplier({
+                      name: '',
+                      phone: '',
+                      address: '',
+                      email: '',
+                      notes: ''
+                    })
+                  }}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-400"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-orange-600 text-white text-sm rounded-md hover:bg-orange-700"
+                >
+                  Atualizar Fornecedor
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
