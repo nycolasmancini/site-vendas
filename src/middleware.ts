@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { withAuth } from 'next-auth/middleware'
+import { getToken } from 'next-auth/jwt'
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const response = NextResponse.next()
   const pathname = request.nextUrl.pathname
 
@@ -13,35 +13,29 @@ export function middleware(request: NextRequest) {
       return response
     }
     
-    // Para outras rotas admin, verificar autenticação via NextAuth middleware
-    return withAuth(
-      function middleware(req) {
-        return NextResponse.next()
-      },
-      {
-        callbacks: {
-          authorized: ({ token, req }) => {
-            // Verificar se tem token válido e role apropriado
-            if (!token) {
-              console.log('Middleware: Token não encontrado')
-              return false
-            }
-            
-            const role = token.role as string
-            if (role !== 'ADMIN' && role !== 'EMPLOYEE') {
-              console.log('Middleware: Role inválido:', role)
-              return false
-            }
-            
-            console.log('Middleware: Acesso autorizado para:', token.email)
-            return true
-          },
-        },
-        pages: {
-          signIn: '/admin/login',
-        },
+    // Verificar token de autenticação para outras rotas admin
+    try {
+      const token = await getToken({ 
+        req: request, 
+        secret: process.env.NEXTAUTH_SECRET 
+      })
+      
+      if (!token) {
+        console.log('Middleware: Token não encontrado, redirecionando para login')
+        return NextResponse.redirect(new URL('/admin/login', request.url))
       }
-    )(request)
+      
+      const role = token.role as string
+      if (role !== 'ADMIN' && role !== 'EMPLOYEE') {
+        console.log('Middleware: Role inválido:', role)
+        return NextResponse.redirect(new URL('/admin/login', request.url))
+      }
+      
+      console.log('Middleware: Acesso autorizado para:', token.email)
+    } catch (error) {
+      console.error('Middleware: Erro ao verificar token:', error)
+      return NextResponse.redirect(new URL('/admin/login', request.url))
+    }
   }
 
   // Headers de compressão para todas as requisições
