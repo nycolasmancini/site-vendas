@@ -246,7 +246,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                     <div className="py-1 px-2 rounded-lg mb-2" style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
                       <div className="flex flex-col items-center">
                         <p className="text-xs font-medium text-center" style={{ color: 'var(--green)' }}>
-                          Pacote fechado
+                          Pacote ({product.superWholesaleQuantity || 25} un.)
                         </p>
                         <p className="text-xs text-center" style={{ color: 'var(--muted-foreground)' }}>
                           {product.priceRange.superWholesaleMin === product.priceRange.superWholesaleMax

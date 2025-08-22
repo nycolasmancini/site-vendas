@@ -578,7 +578,7 @@ export function CartSidebar() {
                         {/* Variações em azul */}
                         <div className="mt-2 space-y-1">
                           {group.items.map((item) => (
-                            <div key={item.id} className="flex items-center gap-2">
+                            <div key={item.id} className="flex items-start gap-2">
                               <p className="text-xs text-blue-600 font-medium">
                                 {item.modelName} ({item.quantity} un.)
                               </p>

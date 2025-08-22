@@ -635,7 +635,7 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                                       <div className="py-1 px-2 rounded-lg bg-green-50 border border-green-200">
                                         <div className="flex flex-col items-center">
                                           <p className="text-xs font-medium text-green-600 text-center">
-                                            Pacote fechado
+                                            Pacote ({product.quickAddIncrement || 25} un.)
                                           </p>
                                           <p className="text-xs text-gray-600 text-center">
                                             {product.priceRange.superWholesaleMin === product.priceRange.superWholesaleMax
