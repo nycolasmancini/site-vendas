@@ -354,7 +354,9 @@ export default function Home() {
               className="card mb-8 py-2 px-4 lg:py-4 lg:px-6 animate-slide-up cursor-pointer hover:shadow-lg transition-shadow"
               onClick={(event) => {
                 const heroCard = event.currentTarget
-                const scrollTarget = heroCard.offsetTop + heroCard.offsetHeight + 20
+                const header = document.querySelector('header')
+                const headerHeight = header ? header.offsetHeight : 64
+                const scrollTarget = heroCard.offsetTop + heroCard.offsetHeight - headerHeight
                 window.scrollTo({
                   top: scrollTarget,
                   behavior: 'smooth'
@@ -363,19 +365,12 @@ export default function Home() {
             >
               {/* Mobile Layout */}
               <div className="lg:hidden">
-                <div className="flex items-baseline justify-center gap-2 mb-1">
-                  <h1 className="text-xl font-bold text-center self-center" style={{ color: 'var(--foreground)' }}>
+                <div className="flex justify-center mb-1">
+                  <h1 className="text-xl font-bold text-center" style={{ color: 'var(--foreground)' }}>
                     {selectedCategory
                       ? categories.find(c => c.id === selectedCategory)?.name
                       : 'Produtos'}
                   </h1>
-                  <div className="self-center" style={{ color: 'var(--orange)' }}>
-                    {selectedCategory ? (
-                      getCategoryIcon(categories.find(c => c.id === selectedCategory), 24)
-                    ) : (
-                      <TodosProdutosIcon size={24} className="text-[#f97316]" />
-                    )}
-                  </div>
                 </div>
                 {totalCartQuantity < 30 && (
                   <div className="text-center">
