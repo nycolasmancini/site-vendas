@@ -146,6 +146,16 @@ export default function AdminDashboardClient({ user }: Props) {
     notes: ''
   })
 
+  // Estados para edição de categorias
+  const [showEditCategoryForm, setShowEditCategoryForm] = useState(false)
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+  const [editCategory, setEditCategory] = useState({
+    name: '',
+    icon: '',
+    order: ''
+  })
+  const [editSvgFile, setEditSvgFile] = useState<File | null>(null)
+
   useEffect(() => {
     console.log('AdminDashboardClient - Usuário autenticado:', user)
     
@@ -644,6 +654,178 @@ export default function AdminDashboardClient({ user }: Props) {
     }
   }
 
+  const handleEditCategory = (category: Category) => {
+    setEditingCategory(category)
+    setEditCategory({
+      name: category.name,
+      icon: category.icon || '',
+      order: category.order?.toString() || '0'
+    })
+    setEditSvgFile(null)
+    setShowEditCategoryForm(true)
+  }
+
+  const handleEditSvgSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.type !== 'image/svg+xml' && !file.name.endsWith('.svg')) {
+        alert('Por favor, selecione apenas arquivos SVG (.svg)')
+        return
+      }
+      
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const svgContent = e.target?.result as string
+        setEditCategory(prev => ({ ...prev, icon: svgContent }))
+      }
+      reader.readAsText(file)
+      setEditSvgFile(file)
+    }
+  }
+
+  const handleEditSvgTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setEditSvgFile(null)
+    setEditCategory(prev => ({ ...prev, icon: e.target.value }))
+  }
+
+  const handleUpdateCategory = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!editingCategory || !editCategory.name) {
+      alert('Por favor, digite o nome da categoria')
+      return
+    }
+    
+    try {
+      const formData = new FormData()
+      formData.append('name', editCategory.name)
+      formData.append('icon', editCategory.icon)
+      formData.append('order', editCategory.order || '0')
+
+      const response = await fetch(`/api/categories/${editingCategory.id}`, {
+        method: 'PUT',
+        body: formData,
+      })
+
+      if (response.ok) {
+        alert('Categoria atualizada com sucesso!')
+        setEditCategory({ name: '', icon: '', order: '' })
+        setEditSvgFile(null)
+        setShowEditCategoryForm(false)
+        setEditingCategory(null)
+        await fetchCategories()
+      } else {
+        const errorData = await response.text()
+        console.error('Erro ao atualizar categoria:', errorData)
+        alert('Erro ao atualizar categoria')
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar categoria:', error)
+      alert('Erro ao atualizar categoria')
+    }
+  }
+
+  const handleDeleteCategory = async (id: string, name: string) => {
+    if (confirm(`Tem certeza que deseja excluir a categoria "${name}"?`)) {
+      try {
+        const response = await fetch(`/api/categories?id=${id}`, {
+          method: 'DELETE',
+        })
+
+        if (response.ok) {
+          alert('Categoria excluída com sucesso!')
+          await fetchCategories()
+        } else {
+          const errorData = await response.json()
+          alert(`Erro ao excluir categoria: ${errorData.error}`)
+        }
+      } catch (error) {
+        console.error('Erro ao excluir categoria:', error)
+        alert('Erro ao excluir categoria')
+      }
+    }
+  }
+
+  const handleMoveCategoryUp = async (categoryId: string, currentOrder: number) => {
+    const categoryIndex = categories.findIndex(c => c.id === categoryId)
+    if (categoryIndex <= 0) return // Já está no topo
+    
+    const newCategories = [...categories]
+    const categoryToMove = newCategories[categoryIndex]
+    const categoryAbove = newCategories[categoryIndex - 1]
+    
+    // Swap orders
+    const tempOrder = categoryToMove.order || 0
+    categoryToMove.order = categoryAbove.order || 0
+    categoryAbove.order = tempOrder
+    
+    // Swap positions in array
+    newCategories[categoryIndex] = categoryAbove
+    newCategories[categoryIndex - 1] = categoryToMove
+    
+    // Update local state immediately
+    setCategories(newCategories)
+    
+    // Send to server
+    try {
+      const categoryOrders = newCategories.map((cat, index) => ({
+        id: cat.id,
+        order: index
+      }))
+      
+      await fetch('/api/categories/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categoryOrders })
+      })
+    } catch (error) {
+      console.error('Erro ao reordenar categoria:', error)
+      // Revert local state on error
+      await fetchCategories()
+      alert('Erro ao reordenar categoria')
+    }
+  }
+
+  const handleMoveCategoryDown = async (categoryId: string, currentOrder: number) => {
+    const categoryIndex = categories.findIndex(c => c.id === categoryId)
+    if (categoryIndex >= categories.length - 1) return // Já está no final
+    
+    const newCategories = [...categories]
+    const categoryToMove = newCategories[categoryIndex]
+    const categoryBelow = newCategories[categoryIndex + 1]
+    
+    // Swap orders
+    const tempOrder = categoryToMove.order || 0
+    categoryToMove.order = categoryBelow.order || 0
+    categoryBelow.order = tempOrder
+    
+    // Swap positions in array
+    newCategories[categoryIndex] = categoryBelow
+    newCategories[categoryIndex + 1] = categoryToMove
+    
+    // Update local state immediately
+    setCategories(newCategories)
+    
+    // Send to server
+    try {
+      const categoryOrders = newCategories.map((cat, index) => ({
+        id: cat.id,
+        order: index
+      }))
+      
+      await fetch('/api/categories/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categoryOrders })
+      })
+    } catch (error) {
+      console.error('Erro ao reordenar categoria:', error)
+      // Revert local state on error
+      await fetchCategories()
+      alert('Erro ao reordenar categoria')
+    }
+  }
+
   // Funções para fornecedores
   const handleAddSupplier = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -1022,6 +1204,19 @@ export default function AdminDashboardClient({ user }: Props) {
                     />
                   </div>
 
+                  {/* Preview do ícone */}
+                  {newCategory.icon && (
+                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Preview do ícone:
+                      </label>
+                      <div 
+                        className="w-8 h-8 inline-block"
+                        dangerouslySetInnerHTML={{ __html: newCategory.icon }}
+                      />
+                    </div>
+                  )}
+
                   <div className="mt-4 flex justify-end">
                     <button
                       type="submit"
@@ -1034,26 +1229,95 @@ export default function AdminDashboardClient({ user }: Props) {
               )}
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {categories.map((category) => (
+                {categories.map((category, index) => (
                   <div key={category.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center space-x-3">
-                      {category.icon && (
-                        <div 
-                          className="w-8 h-8 flex-shrink-0"
-                          dangerouslySetInnerHTML={{ __html: category.icon }}
-                        />
-                      )}
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-900">
-                          {category.name}
-                        </h4>
-                        <p className="text-xs text-gray-500">
-                          Ordem: {category.order || 0}
-                        </p>
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center space-x-3 flex-1">
+                        {category.icon && (
+                          <div 
+                            className="w-8 h-8 flex-shrink-0"
+                            dangerouslySetInnerHTML={{ __html: category.icon }}
+                          />
+                        )}
+                        <div className="flex-1">
+                          <h4 className="text-sm font-medium text-gray-900">
+                            {category.name}
+                          </h4>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <p className="text-xs text-gray-500">
+                              Ordem: {category.order || 0}
+                            </p>
+                            <span className="text-xs text-gray-400">•</span>
+                            <p className={`text-xs ${
+                              products.filter(p => p.categoryId === category.id).length > 0 
+                                ? 'text-green-600' 
+                                : 'text-gray-400'
+                            }`}>
+                              {products.filter(p => p.categoryId === category.id).length} produto{products.filter(p => p.categoryId === category.id).length !== 1 ? 's' : ''}
+                            </p>
+                          </div>
+                        </div>
                       </div>
+                      
+                      {/* Controles de reordenação */}
+                      <div className="flex flex-col ml-2">
+                        <button
+                          onClick={() => handleMoveCategoryUp(category.id, category.order || 0)}
+                          disabled={index === 0}
+                          className={`p-1 text-xs rounded ${
+                            index === 0 
+                              ? 'text-gray-300 cursor-not-allowed' 
+                              : 'text-blue-600 hover:text-blue-900 hover:bg-blue-50'
+                          }`}
+                          title="Mover para cima"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          onClick={() => handleMoveCategoryDown(category.id, category.order || 0)}
+                          disabled={index === categories.length - 1}
+                          className={`p-1 text-xs rounded ${
+                            index === categories.length - 1
+                              ? 'text-gray-300 cursor-not-allowed' 
+                              : 'text-blue-600 hover:text-blue-900 hover:bg-blue-50'
+                          }`}
+                          title="Mover para baixo"
+                        >
+                          ▼
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Botões de ação */}
+                    <div className="mt-3 flex justify-end space-x-2">
+                      <button
+                        onClick={() => handleEditCategory(category)}
+                        className="text-blue-600 hover:text-blue-900 text-xs"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCategory(category.id, category.name)}
+                        className="text-red-600 hover:text-red-900 text-xs"
+                      >
+                        Excluir
+                      </button>
                     </div>
                   </div>
                 ))}
+                {categories.length === 0 && (
+                  <div className="col-span-full text-center py-8">
+                    <div className="text-gray-400 mb-2">
+                      <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-500 font-medium">Nenhuma categoria cadastrada</p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Clique no botão "Adicionar Categoria" para começar
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -2065,6 +2329,135 @@ export default function AdminDashboardClient({ user }: Props) {
                   className="px-4 py-2 bg-orange-600 text-white text-sm rounded-md hover:bg-orange-700"
                 >
                   Atualizar Fornecedor
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Edição de Categoria */}
+      {showEditCategoryForm && editingCategory && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-gray-900">
+                Editar Categoria - {editingCategory.name}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowEditCategoryForm(false)
+                  setEditingCategory(null)
+                  setEditCategory({
+                    name: '',
+                    icon: '',
+                    order: ''
+                  })
+                  setEditSvgFile(null)
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateCategory} className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Nome da Categoria
+                  </label>
+                  <input
+                    type="text"
+                    value={editCategory.name}
+                    onChange={(e) => setEditCategory(prev => ({ ...prev, name: e.target.value }))}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Ex: Smartphones"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Ordem (opcional)
+                  </label>
+                  <input
+                    type="number"
+                    value={editCategory.order}
+                    onChange={(e) => setEditCategory(prev => ({ ...prev, order: e.target.value }))}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="0"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Upload SVG
+                  </label>
+                  <input
+                    type="file"
+                    accept=".svg,image/svg+xml"
+                    onChange={handleEditSvgSelect}
+                    className="mt-1 block w-full text-sm text-gray-500"
+                  />
+                  {editSvgFile && (
+                    <p className="mt-1 text-xs text-green-600">
+                      Arquivo selecionado: {editSvgFile.name}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Ou cole o código SVG:
+                </label>
+                <textarea
+                  value={editCategory.icon}
+                  onChange={handleEditSvgTextChange}
+                  rows={3}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="<svg>...</svg>"
+                />
+              </div>
+
+              {/* Preview do ícone */}
+              {editCategory.icon && (
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Preview do ícone:
+                  </label>
+                  <div 
+                    className="w-8 h-8 inline-block"
+                    dangerouslySetInnerHTML={{ __html: editCategory.icon }}
+                  />
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditCategoryForm(false)
+                    setEditingCategory(null)
+                    setEditCategory({
+                      name: '',
+                      icon: '',
+                      order: ''
+                    })
+                    setEditSvgFile(null)
+                  }}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-400"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
+                >
+                  Atualizar Categoria
                 </button>
               </div>
             </form>
