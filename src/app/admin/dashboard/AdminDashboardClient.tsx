@@ -20,7 +20,7 @@ interface Product {
     name: string
   }
   images: Array<{ id: string; url: string; isMain: boolean }>
-  suppliers: Array<{ id: string; supplier: { name: string; phone?: string } }>
+  suppliers: Array<{ id: string; supplier: { id: string; name: string; phone?: string } }>
   models?: Array<{
     id: string
     price: number
@@ -47,6 +47,10 @@ interface Supplier {
   id: string
   name: string
   phone?: string
+  address?: string
+  email?: string
+  notes?: string
+  isActive: boolean
 }
 
 interface CompanySettings {
