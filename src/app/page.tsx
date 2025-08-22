@@ -352,27 +352,24 @@ export default function Home() {
           <main className="flex-1">
             <div 
               className="card mb-8 py-2 px-4 lg:py-4 lg:px-6 animate-slide-up cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => {
-                const productsGrid = document.querySelector('.grid.grid-cols-2')
-                if (productsGrid) {
-                  const headerHeight = 80 // Approximate header height
-                  const offsetTop = productsGrid.getBoundingClientRect().top + window.pageYOffset - headerHeight
-                  window.scrollTo({
-                    top: offsetTop,
-                    behavior: 'smooth'
-                  })
-                }
+              onClick={(event) => {
+                const heroCard = event.currentTarget
+                const scrollTarget = heroCard.offsetTop + heroCard.offsetHeight + 20
+                window.scrollTo({
+                  top: scrollTarget,
+                  behavior: 'smooth'
+                })
               }}
             >
               {/* Mobile Layout */}
               <div className="lg:hidden">
                 <div className="flex items-center justify-center gap-2 mb-1">
-                  <h1 className="text-xl font-bold text-center" style={{ color: 'var(--foreground)' }}>
+                  <h1 className="text-xl font-bold text-center leading-none" style={{ color: 'var(--foreground)' }}>
                     {selectedCategory
                       ? categories.find(c => c.id === selectedCategory)?.name
                       : 'Produtos'}
                   </h1>
-                  <div style={{ color: 'var(--orange)' }}>
+                  <div className="flex items-center justify-center" style={{ color: 'var(--orange)', lineHeight: 0 }}>
                     {selectedCategory ? (
                       getCategoryIcon(categories.find(c => c.id === selectedCategory), 24)
                     ) : (

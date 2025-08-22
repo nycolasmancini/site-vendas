@@ -170,13 +170,15 @@ export function Header({
         
         {/* Mobile Search */}
         {showSearchBar && (
-          <div
-            className={cn(
-              "md:hidden overflow-hidden transition-all duration-300",
-              showSearch ? "max-h-16 pb-3" : "max-h-0"
-            )}
-          >
-            <div className="relative w-full">
+          <div className="md:hidden h-16 flex items-center">
+            <div
+              className={cn(
+                "relative w-full transition-all duration-300 ease-in-out",
+                showSearch 
+                  ? "opacity-100 transform translate-y-0" 
+                  : "opacity-0 transform -translate-y-4 pointer-events-none"
+              )}
+            >
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
                 type="search"
