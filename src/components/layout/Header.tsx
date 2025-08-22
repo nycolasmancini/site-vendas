@@ -84,7 +84,7 @@ export function Header({
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 w-full bg-white transition-all duration-300",
+        "sticky top-0 z-50 w-full bg-white transition-all duration-300 border-t-0",
         isScrolled && "shadow-md"
       )}
     >
@@ -170,23 +170,23 @@ export function Header({
         
         {/* Mobile Search */}
         {showSearchBar && (
-          <div className="md:hidden h-16 flex items-center">
-            <div
-              className={cn(
-                "relative w-full transition-all duration-300 ease-in-out",
-                showSearch 
-                  ? "opacity-100 transform translate-y-0" 
-                  : "opacity-0 transform -translate-y-4 pointer-events-none"
-              )}
-            >
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
-                type="search"
-                placeholder="Buscar produtos..."
-                value={searchTerm}
-                onChange={(e) => onSearchChange?.(e.target.value)}
-                className="w-full rounded-lg border border-gray-200 bg-gray-50 pl-10 pr-4 py-2 text-sm focus:border-[#FC6D36] focus:bg-white focus:outline-none"
-              />
+          <div className={cn(
+            "md:hidden grid transition-[grid-template-rows] duration-300 ease-in-out",
+            showSearch ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+          )}>
+            <div className="overflow-hidden">
+              <div className="pb-3">
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="search"
+                    placeholder="Buscar produtos..."
+                    value={searchTerm}
+                    onChange={(e) => onSearchChange?.(e.target.value)}
+                    className="w-full rounded-lg border border-gray-200 bg-gray-50 pl-10 pr-4 py-2 text-sm focus:border-[#FC6D36] focus:bg-white focus:outline-none"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         )}

@@ -363,13 +363,13 @@ export default function Home() {
             >
               {/* Mobile Layout */}
               <div className="lg:hidden">
-                <div className="flex items-center justify-center gap-2 mb-1">
-                  <h1 className="text-xl font-bold text-center leading-none" style={{ color: 'var(--foreground)' }}>
+                <div className="flex items-baseline justify-center gap-2 mb-1">
+                  <h1 className="text-xl font-bold text-center self-center" style={{ color: 'var(--foreground)' }}>
                     {selectedCategory
                       ? categories.find(c => c.id === selectedCategory)?.name
                       : 'Produtos'}
                   </h1>
-                  <div className="flex items-center justify-center" style={{ color: 'var(--orange)', lineHeight: 0 }}>
+                  <div className="self-center" style={{ color: 'var(--orange)' }}>
                     {selectedCategory ? (
                       getCategoryIcon(categories.find(c => c.id === selectedCategory), 24)
                     ) : (
