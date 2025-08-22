@@ -233,6 +233,7 @@ export default function Home() {
         onSearchChange={setSearchTerm}
         onMenuToggle={() => setMenuOpen(!menuOpen)}
         showMenuButton={true}
+        isMenuOpen={menuOpen}
         onLogoClick={() => {
           setSelectedCategory(null)
           setSearchTerm('')

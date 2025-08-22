@@ -13,6 +13,7 @@ interface HeaderProps {
   showMenuButton?: boolean
   onLogoClick?: () => void
   showSearchBar?: boolean
+  isMenuOpen?: boolean
 }
 
 export function Header({ 
@@ -21,9 +22,9 @@ export function Header({
   onMenuToggle, 
   showMenuButton = false,
   onLogoClick,
-  showSearchBar = true
+  showSearchBar = true,
+  isMenuOpen = false
 }: HeaderProps = {}) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [lastScrollY, setLastScrollY] = useState(0)
   const [showSearch, setShowSearch] = useState(true)
@@ -94,10 +95,7 @@ export function Header({
           <div className="flex items-center space-x-3">
             {showMenuButton && (
               <button
-                onClick={() => {
-                  setIsMenuOpen(!isMenuOpen)
-                  onMenuToggle?.()
-                }}
+                onClick={onMenuToggle}
                 className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 {isMenuOpen ? (
