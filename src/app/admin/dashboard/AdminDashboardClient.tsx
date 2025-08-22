@@ -315,8 +315,8 @@ export default function AdminDashboardClient({ user }: Props) {
       cost: product.cost?.toString() || '',
       categoryId: product.categoryId,
       supplierId: '',
-      supplierName: product.suppliers[0]?.supplier.name || '',
-      supplierPhone: product.suppliers[0]?.supplier.phone || ''
+      supplierName: product.suppliers?.[0]?.supplier?.name || '',
+      supplierPhone: product.suppliers?.[0]?.supplier?.phone || ''
     })
     setSelectedImages([])
     setShowEditForm(true)
@@ -945,7 +945,7 @@ export default function AdminDashboardClient({ user }: Props) {
                       <tr key={product.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            {product.images[0] && (
+                            {product.images?.[0] && (
                               <img
                                 src={product.images[0].url}
                                 alt={product.name}
@@ -965,7 +965,7 @@ export default function AdminDashboardClient({ user }: Props) {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {product.category.name}
+                          {product.category?.name || 'Sem categoria'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           R$ {product.price.toFixed(2)}

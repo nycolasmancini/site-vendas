@@ -597,8 +597,9 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                                   })()}
                                   {/* Super wholesale info para todos os modelos que tenham essa informação */}
                                   {model.superWholesalePrice && (
-                                    <div className="text-[10px] sm:text-xs text-green-600 font-medium bg-green-50 px-1.5 sm:px-2 py-0.5 rounded whitespace-nowrap inline-flex items-center" style={{minHeight: '16px', lineHeight: '1'}}>
-                                      +{product.quickAddIncrement || 1} un.: {formatPrice(model.superWholesalePrice || 0)}
+                                    <div className="text-xs sm:text-sm text-green-600 bg-green-50 px-1.5 sm:px-2 py-0.5 rounded whitespace-nowrap inline-flex items-center gap-1" style={{minHeight: '18px', lineHeight: '1'}}>
+                                      <span className="font-bold">+{product.quickAddIncrement || 1} un.:</span>
+                                      <span className="font-normal">{formatPrice(model.superWholesalePrice || 0)}</span>
                                     </div>
                                   )}
                                 </div>
