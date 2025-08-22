@@ -350,21 +350,36 @@ export default function Home() {
 
           {/* Products Grid */}
           <main className="flex-1">
-            <div className="card mb-8 py-3 px-4 lg:py-4 lg:px-6 animate-slide-up">
+            <div 
+              className="card mb-8 py-2 px-4 lg:py-4 lg:px-6 animate-slide-up cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => {
+                const productsGrid = document.querySelector('.grid.grid-cols-2')
+                if (productsGrid) {
+                  const headerHeight = 80 // Approximate header height
+                  const offsetTop = productsGrid.getBoundingClientRect().top + window.pageYOffset - headerHeight
+                  window.scrollTo({
+                    top: offsetTop,
+                    behavior: 'smooth'
+                  })
+                }
+              }}
+            >
               {/* Mobile Layout */}
-              <div className="lg:hidden flex flex-col items-center">
-                <div className="mb-2" style={{ color: 'var(--orange)' }}>
-                  {selectedCategory ? (
-                    getCategoryIcon(categories.find(c => c.id === selectedCategory), 24)
-                  ) : (
-                    <TodosProdutosIcon size={24} className="text-[#f97316]" />
-                  )}
+              <div className="lg:hidden">
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <h1 className="text-xl font-bold text-center" style={{ color: 'var(--foreground)' }}>
+                    {selectedCategory
+                      ? categories.find(c => c.id === selectedCategory)?.name
+                      : 'Produtos'}
+                  </h1>
+                  <div style={{ color: 'var(--orange)' }}>
+                    {selectedCategory ? (
+                      getCategoryIcon(categories.find(c => c.id === selectedCategory), 24)
+                    ) : (
+                      <TodosProdutosIcon size={24} className="text-[#f97316]" />
+                    )}
+                  </div>
                 </div>
-                <h1 className="text-xl font-bold text-center mb-2" style={{ color: 'var(--foreground)' }}>
-                  {selectedCategory
-                    ? categories.find(c => c.id === selectedCategory)?.name
-                    : 'Produtos'}
-                </h1>
                 {totalCartQuantity < 30 && (
                   <div className="text-center">
                     <div className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>
