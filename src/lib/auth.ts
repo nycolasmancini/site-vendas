@@ -6,7 +6,6 @@ import bcrypt from 'bcryptjs'
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   // Configuração específica para produção no Vercel
-  trustHost: true,
   useSecureCookies: process.env.NODE_ENV === 'production',
   cookies: {
     sessionToken: {
