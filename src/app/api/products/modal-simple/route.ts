@@ -33,8 +33,7 @@ export async function POST(request: NextRequest) {
         categoryId,
         isModalProduct: true,
         quickAddIncrement: quickAddIncrement ? parseInt(quickAddIncrement) : null,
-        price: 0, // Produto modal não tem preço próprio
-        isActive: true
+        price: 0 // Produto modal não tem preço próprio
       })
       
     } else {
@@ -49,8 +48,7 @@ export async function POST(request: NextRequest) {
           categoryId,
           isModalProduct: true,
           quickAddIncrement: quickAddIncrement ? parseInt(quickAddIncrement) : null,
-          price: 0, // Produto modal não tem preço próprio
-          isActive: true
+          price: 0 // Produto modal não tem preço próprio
         }
       })
     }
