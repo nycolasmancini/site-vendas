@@ -451,7 +451,7 @@ export default function Home() {
                   <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--foreground)' }}>
                     Nenhum produto encontrado
                   </h3>
-                  <p className="text-sm mb-6" style={{ color: 'var(--muted-foreground)' }}>
+                  <p className="text-sm text-center mb-6" style={{ color: 'var(--muted-foreground)' }}>
                     Tente ajustar os filtros ou buscar por outro termo
                   </p>
                   <button
