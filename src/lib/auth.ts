@@ -5,22 +5,8 @@ import bcrypt from 'bcryptjs'
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
-  // Configuração específica para produção no Vercel
+  // Usar configuração padrão de cookies do NextAuth (mais confiável)
   useSecureCookies: process.env.NODE_ENV === 'production',
-  cookies: {
-    sessionToken: {
-      name: process.env.NODE_ENV === 'production' 
-        ? '__Secure-next-auth.session-token'
-        : 'next-auth.session-token',
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        domain: process.env.NODE_ENV === 'production' ? '.vercel.app' : undefined
-      }
-    }
-  },
   providers: [
     CredentialsProvider({
       name: 'credentials',
@@ -177,23 +163,24 @@ export const authOptions: NextAuthOptions = {
       return token
     },
     async session({ session, token }) {
-      console.log('Session callback iniciado - Token:', { id: token.id, role: token.role })
-      console.log('Session callback iniciado - Session inicial:', session)
+      console.log('Session callback - Token recebido:', { 
+        id: token.id, 
+        role: token.role, 
+        email: token.email 
+      })
       
-      if (session.user && token.id && token.role) {
+      // Garantir que dados do token sejam copiados para a sessão
+      if (session.user) {
         session.user.id = token.id as string
         session.user.role = token.role as string
-        console.log('Session callback - Sessão processada:', { 
+        
+        console.log('Session callback - Sessão final:', { 
           id: session.user.id, 
           email: session.user.email, 
           role: session.user.role 
         })
       } else {
-        console.error('Session callback - Dados incompletos:', {
-          hasSessionUser: !!session.user,
-          hasTokenId: !!token.id,
-          hasTokenRole: !!token.role
-        })
+        console.error('Session callback - session.user não existe')
       }
       
       return session

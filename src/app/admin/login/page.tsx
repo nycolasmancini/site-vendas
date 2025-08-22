@@ -36,40 +36,50 @@ export default function AdminLogin() {
       } else if (result?.ok) {
         console.log('Login bem-sucedido! Redirecionando...')
         
-        // Verificar sessão via API antes de redirecionar
+        // Verificar sessão e redirecionar com refresh completo
         setTimeout(async () => {
           try {
             console.log('Verificando sessão via API...')
-            const checkResponse = await fetch('/api/auth/check-session')
+            const checkResponse = await fetch('/api/auth/check-session', {
+              credentials: 'include',
+              cache: 'no-cache'
+            })
             const checkData = await checkResponse.json()
             
             console.log('Resposta da verificação:', checkData)
             
             if (checkData.authenticated && checkData.user) {
-              console.log('✅ Sessão confirmada via API! Redirecionando...')
-              router.push('/admin/dashboard')
-            } else {
-              console.log('⚠️ Sessão não confirmada, tentando getSession...')
-              const session = await getSession()
-              console.log('Resultado getSession:', session)
-              
-              if (session?.user) {
-                console.log('✅ Sessão encontrada via getSession!')
-                router.push('/admin/dashboard')
-              } else {
-                console.log('Aguardando mais tempo para sessão...')
-                setTimeout(() => {
-                  router.push('/admin/dashboard')
-                }, 2000)
-              }
-            }
+              console.log('✅ Sessão confirmada via API! Redirecionando com refresh...')
+              // Usar window.location.replace para forçar refresh completo
+              window.location.replace('/admin/dashboard')
+              return
+            } 
+            
+            console.log('⚠️ Sessão não confirmada, tentando getSession...')
+            const session = await getSession()
+            console.log('Resultado getSession:', session)
+            
+            if (session?.user) {
+              console.log('✅ Sessão encontrada via getSession!')
+              window.location.replace('/admin/dashboard')
+              return
+            } 
+            
+            console.log('Forçando redirecionamento para dashboard...')
+            // Como último recurso, redirecionar mesmo assim
+            setTimeout(() => {
+              window.location.replace('/admin/dashboard')
+            }, 1000)
+            
           } catch (error) {
             console.error('Erro ao verificar sessão:', error)
             // Tentar redirecionamento direto como fallback
-            router.push('/admin/dashboard')
+            setTimeout(() => {
+              window.location.replace('/admin/dashboard')
+            }, 1000)
           }
           setLoading(false)
-        }, 2000)
+        }, 1500)
       } else {
         console.error('Login falhou sem error específico:', result)
         setError('Erro inesperado no login')
