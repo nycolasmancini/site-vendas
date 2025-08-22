@@ -5,8 +5,21 @@ import bcrypt from 'bcryptjs'
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
-  // Usar configuração padrão de cookies do NextAuth (mais confiável)
+  // Configuração explícita de cookies para garantir funcionamento correto
   useSecureCookies: process.env.NODE_ENV === 'production',
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === 'production' 
+        ? '__Secure-next-auth.session-token' 
+        : 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production'
+      }
+    }
+  },
   providers: [
     CredentialsProvider({
       name: 'credentials',

@@ -15,10 +15,16 @@ export async function middleware(request: NextRequest) {
     
     // Verificar token de autenticação para outras rotas admin
     try {
+      console.log('Middleware: Tentando obter token para:', pathname)
+      console.log('Middleware: NEXTAUTH_SECRET definido:', !!process.env.NEXTAUTH_SECRET)
+      console.log('Middleware: Cookies disponíveis:', request.cookies.getAll().map(c => c.name))
+      
       const token = await getToken({ 
         req: request, 
         secret: process.env.NEXTAUTH_SECRET 
       })
+      
+      console.log('Middleware: Token resultado:', token ? 'encontrado' : 'não encontrado')
       
       if (!token) {
         console.log('Middleware: Token não encontrado para:', pathname)
