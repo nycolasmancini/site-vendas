@@ -83,6 +83,7 @@ export default function AdminDashboardClient({ user }: Props) {
   
   // Estados para produtos
   const [showAddForm, setShowAddForm] = useState(false)
+  const [showModalProductForm, setShowModalProductForm] = useState(false)
   const [showEditForm, setShowEditForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [selectedImages, setSelectedImages] = useState<File[]>([])
@@ -101,6 +102,34 @@ export default function AdminDashboardClient({ user }: Props) {
     supplierPhone: ''
   })
 
+  // Estados para produto modal
+  const [newModalProduct, setNewModalProduct] = useState({
+    name: '',
+    description: '',
+    brand: '',
+    categoryId: '',
+    quickAddIncrement: '',
+    isModalProduct: true
+  })
+
+  // Estados para gerenciamento de modelos
+  const [showModelsManager, setShowModelsManager] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [productModels, setProductModels] = useState<any[]>([])
+  const [brands, setBrands] = useState<any[]>([])
+  const [showAddModelForm, setShowAddModelForm] = useState(false)
+  const [newModel, setNewModel] = useState({
+    brandName: '',
+    modelName: '',
+    price: '',
+    superWholesalePrice: ''
+  })
+
+  // Estados para visualização global de marcas/modelos
+  const [showBrandModels, setShowBrandModels] = useState(false)
+  const [selectedBrand, setSelectedBrand] = useState<any>(null)
+  const [brandModels, setBrandModels] = useState<any[]>([])
+
   useEffect(() => {
     console.log('AdminDashboardClient - Usuário autenticado:', user)
     
@@ -109,6 +138,7 @@ export default function AdminDashboardClient({ user }: Props) {
     fetchCategories()
     fetchSuppliers()
     fetchCompanySettings()
+    fetchBrands()
   }, [])
 
   const fetchProducts = async () => {
@@ -299,6 +329,143 @@ export default function AdminDashboardClient({ user }: Props) {
     } catch (error) {
       console.error('Erro ao adicionar produto:', error)
       alert('Erro ao adicionar produto')
+    }
+  }
+
+  const handleAddModalProduct = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    try {
+      const productData = {
+        name: newModalProduct.name,
+        description: newModalProduct.description,
+        brand: newModalProduct.brand,
+        categoryId: newModalProduct.categoryId,
+        quickAddIncrement: newModalProduct.quickAddIncrement
+      }
+
+      const response = await fetch('/api/products/modal-simple', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(productData),
+      })
+
+      if (response.ok) {
+        alert('Produto modal criado com sucesso! Agora você pode adicionar modelos específicos.')
+        await fetchProducts()
+        setShowModalProductForm(false)
+        setNewModalProduct({
+          name: '',
+          description: '',
+          brand: '',
+          categoryId: '',
+          quickAddIncrement: '',
+          isModalProduct: true
+        })
+      } else {
+        const errorData = await response.json()
+        alert(`Erro ao criar produto modal: ${errorData.error || 'Erro desconhecido'}`)
+      }
+    } catch (error) {
+      console.error('Erro ao criar produto modal:', error)
+      alert('Erro ao criar produto modal')
+    }
+  }
+
+  const handleManageModels = async (product: Product) => {
+    setSelectedProduct(product)
+    setShowModelsManager(true)
+    await fetchProductModels(product.id)
+    await fetchBrands()
+  }
+
+  const fetchProductModels = async (productId: string) => {
+    try {
+      const response = await fetch(`/api/products/${productId}/models`)
+      if (response.ok) {
+        const models = await response.json()
+        setProductModels(models)
+      } else {
+        console.error('Erro ao buscar modelos do produto')
+        setProductModels([])
+      }
+    } catch (error) {
+      console.error('Erro ao buscar modelos:', error)
+      setProductModels([])
+    }
+  }
+
+  const fetchBrands = async () => {
+    try {
+      const response = await fetch('/api/admin/brands')
+      if (response.ok) {
+        const brandsData = await response.json()
+        setBrands(brandsData)
+      } else {
+        console.error('Erro ao buscar marcas')
+        setBrands([])
+      }
+    } catch (error) {
+      console.error('Erro ao buscar marcas:', error)
+      setBrands([])
+    }
+  }
+
+  const handleAddModel = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!selectedProduct) return
+    
+    try {
+      const response = await fetch(`/api/products/${selectedProduct.id}/models`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newModel),
+      })
+
+      if (response.ok) {
+        alert('Modelo adicionado com sucesso!')
+        await fetchProductModels(selectedProduct.id)
+        setShowAddModelForm(false)
+        setNewModel({
+          brandName: '',
+          modelName: '',
+          price: '',
+          superWholesalePrice: ''
+        })
+      } else {
+        const errorData = await response.json()
+        alert(`Erro ao adicionar modelo: ${errorData.error || 'Erro desconhecido'}`)
+      }
+    } catch (error) {
+      console.error('Erro ao adicionar modelo:', error)
+      alert('Erro ao adicionar modelo')
+    }
+  }
+
+  const handleViewBrandModels = async (brand: any) => {
+    setSelectedBrand(brand)
+    setShowBrandModels(true)
+    await fetchBrandModels(brand.id)
+  }
+
+  const fetchBrandModels = async (brandId: string) => {
+    try {
+      const response = await fetch(`/api/admin/brands/${brandId}/models`)
+      if (response.ok) {
+        const models = await response.json()
+        setBrandModels(models)
+      } else {
+        console.error('Erro ao buscar modelos da marca')
+        setBrandModels([])
+      }
+    } catch (error) {
+      console.error('Erro ao buscar modelos da marca:', error)
+      setBrandModels([])
     }
   }
 
@@ -745,6 +912,54 @@ export default function AdminDashboardClient({ user }: Props) {
             </div>
           </div>
 
+          {/* Brands and Models Section */}
+          <div className="bg-white shadow rounded-lg mt-8">
+            <div className="px-4 py-5 sm:p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  Marcas e Modelos ({brands.length} marcas)
+                </h3>
+                <button
+                  onClick={() => fetchBrands()}
+                  className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700"
+                >
+                  Atualizar Lista
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {brands.map((brand) => (
+                  <div key={brand.id} className="border border-gray-200 rounded-lg p-4 hover:border-indigo-300 transition-colors">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h4 className="text-md font-medium text-gray-900">{brand.name}</h4>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {brand._count?.models || 0} modelo{(brand._count?.models || 0) !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleViewBrandModels(brand)}
+                          className="text-indigo-600 hover:text-indigo-900 text-sm"
+                        >
+                          Ver Modelos
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {brands.length === 0 && (
+                  <div className="col-span-full text-center py-8">
+                    <p className="text-gray-500">Nenhuma marca cadastrada ainda.</p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Marcas são criadas automaticamente ao adicionar modelos aos produtos modais.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Products Section */}
           <div className="bg-white shadow rounded-lg mt-8">
             <div className="px-4 py-5 sm:p-6">
@@ -752,12 +967,26 @@ export default function AdminDashboardClient({ user }: Props) {
                 <h3 className="text-lg leading-6 font-medium text-gray-900">
                   Produtos ({products.length})
                 </h3>
-                <button
-                  onClick={() => setShowAddForm(!showAddForm)}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
-                >
-                  {showAddForm ? 'Cancelar' : 'Adicionar Produto'}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setShowAddForm(!showAddForm)
+                      setShowModalProductForm(false)
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
+                  >
+                    {showAddForm ? 'Cancelar' : 'Adicionar Produto'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowModalProductForm(!showModalProductForm)
+                      setShowAddForm(false)
+                    }}
+                    className="px-4 py-2 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700"
+                  >
+                    {showModalProductForm ? 'Cancelar' : 'Produto Modal'}
+                  </button>
+                </div>
               </div>
 
               {/* Add Product Form */}
@@ -918,6 +1147,89 @@ export default function AdminDashboardClient({ user }: Props) {
                 </form>
               )}
 
+              {/* Add Modal Product Form */}
+              {showModalProductForm && (
+                <form onSubmit={handleAddModalProduct} className="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                  <h4 className="text-lg font-medium text-purple-900 mb-4">Adicionar Produto Modal (Capas/Películas)</h4>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Nome do Produto *</label>
+                      <input
+                        type="text"
+                        value={newModalProduct.name}
+                        onChange={(e) => setNewModalProduct({ ...newModalProduct, name: e.target.value })}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                        required
+                        placeholder="ex: Capa de Silicone"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Categoria *</label>
+                      <select
+                        value={newModalProduct.categoryId}
+                        onChange={(e) => setNewModalProduct({ ...newModalProduct, categoryId: e.target.value })}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                        required
+                      >
+                        <option value="">Selecione uma categoria</option>
+                        {categories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Marca (opcional)</label>
+                      <input
+                        type="text"
+                        value={newModalProduct.brand}
+                        onChange={(e) => setNewModalProduct({ ...newModalProduct, brand: e.target.value })}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                        placeholder="ex: Genérica"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Incremento para Super Atacado</label>
+                      <select
+                        value={newModalProduct.quickAddIncrement}
+                        onChange={(e) => setNewModalProduct({ ...newModalProduct, quickAddIncrement: e.target.value })}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                      >
+                        <option value="">Selecione o incremento</option>
+                        <option value="25">25 unidades</option>
+                        <option value="50">50 unidades</option>
+                        <option value="100">100 unidades</option>
+                        <option value="200">200 unidades</option>
+                      </select>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700">Descrição</label>
+                      <textarea
+                        value={newModalProduct.description}
+                        onChange={(e) => setNewModalProduct({ ...newModalProduct, description: e.target.value })}
+                        rows={3}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                        placeholder="Descrição do produto..."
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4 p-3 bg-purple-100 rounded-lg">
+                    <p className="text-sm text-purple-800">
+                      <strong>Produto Modal:</strong> Após criar este produto, você poderá adicionar modelos específicos (ex: iPhone 12, Samsung S21) com preços individuais para cada modelo.
+                    </p>
+                  </div>
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700"
+                    >
+                      Criar Produto Modal
+                    </button>
+                  </div>
+                </form>
+              )}
+
               {/* Products List */}
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
@@ -953,12 +1265,24 @@ export default function AdminDashboardClient({ user }: Props) {
                               />
                             )}
                             <div>
-                              <div className="text-sm font-medium text-gray-900">
-                                {product.name}
+                              <div className="flex items-center gap-2">
+                                <div className="text-sm font-medium text-gray-900">
+                                  {product.name}
+                                </div>
+                                {product.isModalProduct && (
+                                  <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                                    Modal
+                                  </span>
+                                )}
                               </div>
                               {product.subname && (
                                 <div className="text-sm text-gray-500">
                                   {product.subname}
+                                </div>
+                              )}
+                              {product.isModalProduct && product.models && product.models.length > 0 && (
+                                <div className="text-xs text-purple-600">
+                                  {product.models.length} modelo{product.models.length !== 1 ? 's' : ''} cadastrado{product.models.length !== 1 ? 's' : ''}
                                 </div>
                               )}
                             </div>
@@ -979,23 +1303,35 @@ export default function AdminDashboardClient({ user }: Props) {
                             {product.isActive ? 'Ativo' : 'Inativo'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                          <button
-                            onClick={() => handleEditProduct(product)}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            Editar
-                          </button>
-                          <button
-                            onClick={() => handleToggleAvailability(product.id, product.isActive)}
-                            className={`${
-                              product.isActive 
-                                ? 'text-red-600 hover:text-red-900' 
-                                : 'text-green-600 hover:text-green-900'
-                            }`}
-                          >
-                            {product.isActive ? 'Desativar' : 'Ativar'}
-                          </button>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex flex-col space-y-1">
+                            <div className="space-x-2">
+                              <button
+                                onClick={() => handleEditProduct(product)}
+                                className="text-blue-600 hover:text-blue-900"
+                              >
+                                Editar
+                              </button>
+                              <button
+                                onClick={() => handleToggleAvailability(product.id, product.isActive)}
+                                className={`${
+                                  product.isActive 
+                                    ? 'text-red-600 hover:text-red-900' 
+                                    : 'text-green-600 hover:text-green-900'
+                                }`}
+                              >
+                                {product.isActive ? 'Desativar' : 'Ativar'}
+                              </button>
+                            </div>
+                            {product.isModalProduct && (
+                              <button
+                                onClick={() => handleManageModels(product)}
+                                className="text-purple-600 hover:text-purple-900 text-xs"
+                              >
+                                Gerenciar Modelos
+                              </button>
+                            )}
+                          </div>
                           <button
                             onClick={() => handleDeleteProduct(product.id)}
                             className="text-red-600 hover:text-red-900"
@@ -1013,6 +1349,238 @@ export default function AdminDashboardClient({ user }: Props) {
 
         </div>
       </div>
+
+      {/* Modal de Gestão de Modelos */}
+      {showModelsManager && selectedProduct && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-gray-900">
+                Gerenciar Modelos - {selectedProduct.name}
+              </h3>
+              <button
+                onClick={() => setShowModelsManager(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <button
+                onClick={() => setShowAddModelForm(!showAddModelForm)}
+                className="px-4 py-2 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700"
+              >
+                {showAddModelForm ? 'Cancelar' : 'Adicionar Modelo'}
+              </button>
+            </div>
+
+            {/* Formulário de Adicionar Modelo */}
+            {showAddModelForm && (
+              <form onSubmit={handleAddModel} className="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                <h4 className="text-md font-medium text-purple-900 mb-4">Novo Modelo</h4>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Marca *</label>
+                    <input
+                      type="text"
+                      value={newModel.brandName}
+                      onChange={(e) => setNewModel({ ...newModel, brandName: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                      required
+                      placeholder="ex: Apple, Samsung"
+                      list="brands-list"
+                    />
+                    <datalist id="brands-list">
+                      {brands.map((brand) => (
+                        <option key={brand.id} value={brand.name} />
+                      ))}
+                    </datalist>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Modelo *</label>
+                    <input
+                      type="text"
+                      value={newModel.modelName}
+                      onChange={(e) => setNewModel({ ...newModel, modelName: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                      required
+                      placeholder="ex: iPhone 13, Galaxy S21"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Preço Atacado *</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={newModel.price}
+                      onChange={(e) => setNewModel({ ...newModel, price: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                      required
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Preço Super Atacado</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={newModel.superWholesalePrice}
+                      onChange={(e) => setNewModel({ ...newModel, superWholesalePrice: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+                {selectedProduct.quickAddIncrement && (
+                  <div className="mt-3 p-2 bg-purple-100 rounded-lg">
+                    <p className="text-sm text-purple-800">
+                      <strong>Super Atacado:</strong> Ativado a partir de {selectedProduct.quickAddIncrement} unidades
+                    </p>
+                  </div>
+                )}
+                <div className="mt-4 flex justify-end">
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700"
+                  >
+                    Adicionar Modelo
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Lista de Modelos */}
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Marca / Modelo
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Preço Atacado
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Super Atacado
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Ações
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {productModels.map((model) => (
+                    <tr key={model.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {model.brandName}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {model.modelName}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        R$ {model.price.toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {model.superWholesalePrice ? `R$ ${model.superWholesalePrice.toFixed(2)}` : '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button className="text-blue-600 hover:text-blue-900 mr-2">
+                          Editar
+                        </button>
+                        <button className="text-red-600 hover:text-red-900">
+                          Excluir
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {productModels.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
+                        Nenhum modelo cadastrado
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Visualização de Modelos por Marca */}
+      {showBrandModels && selectedBrand && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-gray-900">
+                Modelos da Marca: {selectedBrand.name}
+              </h3>
+              <button
+                onClick={() => setShowBrandModels(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Modelo
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Data de Criação
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Produtos Relacionados
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {brandModels.map((model) => (
+                    <tr key={model.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {model.name}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(model.createdAt).toLocaleDateString('pt-BR')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {model._count?.productModels || 0} produto{(model._count?.productModels || 0) !== 1 ? 's' : ''}
+                      </td>
+                    </tr>
+                  ))}
+                  {brandModels.length === 0 && (
+                    <tr>
+                      <td colSpan={3} className="px-6 py-4 text-center text-gray-500">
+                        Nenhum modelo encontrado para esta marca
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>Dica:</strong> Para adicionar novos modelos a esta marca, vá até um produto modal 
+                e use a função "Gerenciar Modelos".
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
