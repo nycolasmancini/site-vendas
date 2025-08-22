@@ -632,12 +632,12 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                                   {/* Super wholesale range para produtos modais */}
                                   {product.isModalProduct && product.priceRange?.superWholesaleMin && product.priceRange?.superWholesaleMax && (
                                     <div className="w-full">
-                                      <div className="p-2 rounded-lg bg-green-50 border border-green-200">
-                                        <div className="flex flex-col">
-                                          <p className="text-xs font-medium text-green-600">
-                                            Caixa fechada
+                                      <div className="py-1 px-2 rounded-lg bg-green-50 border border-green-200">
+                                        <div className="flex items-center justify-center gap-1">
+                                          <p className="text-xs font-medium text-green-600 text-center">
+                                            Pacote fechado
                                           </p>
-                                          <p className="text-xs text-gray-600">
+                                          <p className="text-xs text-gray-600 text-center">
                                             {product.priceRange.superWholesaleMin === product.priceRange.superWholesaleMax
                                               ? formatPrice(product.priceRange.superWholesaleMin)
                                               : `${formatPrice(product.priceRange.superWholesaleMin)} - ${formatPrice(product.priceRange.superWholesaleMax)}`

@@ -578,13 +578,13 @@ export function CartSidebar() {
                         {/* Variações em azul */}
                         <div className="mt-2 space-y-1">
                           {group.items.map((item) => (
-                            <div key={item.id} className="flex items-center justify-between">
+                            <div key={item.id} className="flex items-center gap-2">
                               <p className="text-xs text-blue-600 font-medium">
                                 {item.modelName} ({item.quantity} un.)
                               </p>
                               <button
                                 onClick={() => handleRemoveItem(item.id)}
-                                className="p-1 rounded transition-all duration-200 text-red-500 hover:bg-red-50 hover:scale-110 active:scale-95 opacity-70 hover:opacity-100"
+                                className="p-0.5 rounded transition-all duration-200 text-red-500 hover:bg-red-50 hover:scale-110 active:scale-95 opacity-70 hover:opacity-100"
                               >
                                 <Trash2 className="w-3 h-3" />
                               </button>
