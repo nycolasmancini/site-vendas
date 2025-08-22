@@ -114,24 +114,28 @@ export default function AdminDashboard() {
       return
     }
     
-    // Se status é 'unauthenticated', aguardar um pouco mais
-    // pois a sessão pode estar sendo estabelecida
+    // Se status é 'unauthenticated', verificar se realmente não há sessão
     if (status === 'unauthenticated') {
-      console.log('Dashboard - Status unauthenticated, aguardando sessão...')
+      console.log('Dashboard - Status unauthenticated, verificando sessão...')
       
-      // Aguardar 2 segundos antes de redirecionar
+      // Dar mais tempo para a sessão ser estabelecida após login
       const timeoutId = setTimeout(() => {
-        if (!session) {
-          console.log('Dashboard - Sessão não estabelecida após timeout, redirecionando para login')
+        if (!session && status === 'unauthenticated') {
+          console.log('Dashboard - Sessão não estabelecida, redirecionando para login')
           router.replace('/admin/login')
         }
-      }, 2000)
+      }, 3000) // Aumentado para 3 segundos
       
       return () => clearTimeout(timeoutId)
     }
 
-    if (session) {
-      console.log('Dashboard - Sessão válida:', { id: session.user.id, email: session.user.email, role: session.user.role })
+    // Se temos sessão, verificar se é válida
+    if (session?.user) {
+      console.log('Dashboard - Sessão válida:', { 
+        id: session.user.id, 
+        email: session.user.email, 
+        role: session.user.role 
+      })
 
       // Verificar se o usuário tem acesso (ADMIN ou EMPLOYEE)
       if (session.user.role !== 'ADMIN' && session.user.role !== 'EMPLOYEE') {
@@ -145,6 +149,10 @@ export default function AdminDashboard() {
       fetchCategories()
       fetchSuppliers()
       fetchCompanySettings()
+    } else if (status === 'authenticated' && !session?.user) {
+      // Status diz que está autenticado mas não há dados do usuário
+      console.error('Dashboard - Status authenticated mas sem dados do usuário')
+      router.replace('/admin/login')
     }
   }, [session, status, router])
 

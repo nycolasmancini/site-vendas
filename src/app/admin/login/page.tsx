@@ -18,9 +18,12 @@ export default function AdminLogin() {
 
     try {
       console.log('Iniciando processo de login...')
+      
+      // Primeiro tentar o método padrão do NextAuth com redirecionamento automático
       const result = await signIn('credentials', {
         email,
         password,
+        callbackUrl: '/admin/dashboard',
         redirect: false
       })
 
@@ -29,47 +32,33 @@ export default function AdminLogin() {
       if (result?.error) {
         console.error('Erro no login:', result.error)
         setError('Email ou senha inválidos')
+        setLoading(false)
       } else if (result?.ok) {
-        console.log('Login bem-sucedido! Aguardando estabelecimento da sessão...')
+        console.log('Login bem-sucedido! Redirecionando...')
         
-        // Aguardar a sessão ser estabelecida antes de redirecionar
-        const waitForSession = async () => {
-          let attempts = 0
-          const maxAttempts = 10
-          
-          while (attempts < maxAttempts) {
-            attempts++
-            console.log(`Verificando sessão - Tentativa ${attempts}/${maxAttempts}`)
+        // Aguardar um momento para a sessão ser estabelecida
+        setTimeout(async () => {
+          try {
+            const session = await getSession()
+            console.log('Sessão após login:', session)
             
-            try {
-              const session = await getSession()
-              console.log('Resultado getSession:', session)
-              
-              if (session?.user) {
-                console.log('✅ Sessão estabelecida! Redirecionando...')
-                setLoading(false)
-                router.replace('/admin/dashboard')
-                return
-              }
-            } catch (error) {
-              console.error('Erro ao verificar sessão:', error)
+            if (session?.user) {
+              console.log('✅ Sessão confirmada! Redirecionando para dashboard...')
+              window.location.href = '/admin/dashboard'
+            } else {
+              console.log('⚠️ Sessão não encontrada, tentando redirecionamento direto...')
+              window.location.href = '/admin/dashboard'
             }
-            
-            // Aguardar antes da próxima tentativa
-            await new Promise(resolve => setTimeout(resolve, 500))
+          } catch (error) {
+            console.error('Erro ao verificar sessão:', error)
+            // Mesmo com erro, tentar redirecionar
+            window.location.href = '/admin/dashboard'
           }
-          
-          // Se chegou aqui, não conseguiu estabelecer a sessão
-          console.error('❌ Não foi possível estabelecer a sessão')
-          setError('Sessão não foi estabelecida. Tente fazer login novamente.')
-          setLoading(false)
-        }
-        
-        // Aguardar um pouco antes de começar a verificar
-        setTimeout(waitForSession, 300)
+        }, 1000)
       } else {
         console.error('Login falhou sem error específico:', result)
         setError('Erro inesperado no login')
+        setLoading(false)
       }
     } catch (error) {
       console.error('Erro no processo de login:', error)

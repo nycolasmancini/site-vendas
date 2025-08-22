@@ -216,18 +216,24 @@ export const authOptions: NextAuthOptions = {
     async redirect({ url, baseUrl }) {
       console.log('Redirect callback - URL:', url, 'BaseURL:', baseUrl)
       
+      // Para login do admin, sempre redirecionar para o dashboard
+      if (url.includes('/admin/dashboard') || url === '/admin/dashboard') {
+        console.log('Redirecionando para admin dashboard')
+        return `${baseUrl}/admin/dashboard`
+      }
+      
       // Se a URL é relativa, adicionar baseUrl
       if (url.startsWith('/')) {
         return `${baseUrl}${url}`
       }
       
       // Se a URL é do mesmo domínio, permitir
-      if (new URL(url).origin === baseUrl) {
+      if (url.startsWith(baseUrl)) {
         return url
       }
       
-      // Caso contrário, redirecionar para o dashboard
-      return `${baseUrl}/admin/dashboard`
+      // Caso contrário, redirecionar para a home
+      return baseUrl
     }
   }
 }
