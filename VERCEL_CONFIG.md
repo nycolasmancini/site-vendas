@@ -1,10 +1,13 @@
 # 🚀 Configurações Obrigatórias do Vercel
 
-## Variáveis de Ambiente Necessárias
+## ⚠️ AÇÃO OBRIGATÓRIA: REMOVER NEXTAUTH_URL
 
 ### 1. NextAuth Configuration
 ```
-NEXTAUTH_URL=https://pmcellvendas.vercel.app
+# ❌ NÃO DEFINIR - Vercel define automaticamente
+# NEXTAUTH_URL=https://pmcellvendas.vercel.app
+
+# ✅ MANTER APENAS ESTA
 NEXTAUTH_SECRET=<seu-secret-seguro-aqui>
 ```
 
@@ -24,13 +27,16 @@ NODE_ENV=production
 1. Acesse: https://vercel.com/dashboard
 2. Selecione seu projeto: `pmcellvendas`
 3. Vá em `Settings` > `Environment Variables`
-4. Adicione cada variável acima
+4. **REMOVER** `NEXTAUTH_URL` se existir (causa conflitos)
+5. **MANTER** apenas `NEXTAUTH_SECRET` e variáveis do banco
+6. Ativar "Automatically expose System Environment Variables"
 
-## ⚠️ IMPORTANTE
+## ⚠️ CRÍTICO - PASSOS OBRIGATÓRIOS
 
-- **NEXTAUTH_URL** deve ser exatamente: `https://pmcellvendas.vercel.app`
-- **NEXTAUTH_SECRET** deve ser uma string longa e segura (pode gerar em: `openssl rand -base64 32`)
-- Após adicionar as variáveis, faça um novo deploy
+1. **DELETAR** `NEXTAUTH_URL` das variáveis do Vercel
+2. **MANTER** apenas `NEXTAUTH_SECRET` (sem caractere `$`)
+3. Verificar que está marcado: ✅ "Automatically expose System Environment Variables"
+4. Fazer novo deploy após alterações
 
 ## 🔍 Como Verificar se Funcionou
 
