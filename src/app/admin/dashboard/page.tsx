@@ -20,8 +20,8 @@ export default async function AdminDashboard() {
   })
   
   // Se não há sessão, redirecionar para login
-  if (!session || !session.user) {
-    console.log('Dashboard Server Component - Sem sessão, redirecionando...')
+  if (!session || !session.user || !session.user.email) {
+    console.log('Dashboard Server Component - Sem sessão ou dados incompletos, redirecionando...')
     redirect('/admin/login')
   }
   
@@ -33,6 +33,14 @@ export default async function AdminDashboard() {
   
   console.log('Dashboard Server Component - Usuário autorizado, renderizando cliente...')
   
+  // Garantir que os dados estão no formato correto para o componente cliente
+  const userData = {
+    id: session.user.id,
+    email: session.user.email,
+    name: session.user.name || undefined,
+    role: session.user.role || 'USER'
+  }
+  
   // Renderizar componente cliente com dados da sessão
-  return <AdminDashboardClient user={session.user} />
+  return <AdminDashboardClient user={userData} />
 }
