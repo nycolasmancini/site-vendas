@@ -6,8 +6,8 @@ export async function middleware(request: NextRequest) {
   const response = NextResponse.next()
   const pathname = request.nextUrl.pathname
 
-  // Proteção de rotas admin
-  if (pathname.startsWith('/admin')) {
+  // Proteção de rotas admin (excluir APIs)
+  if (pathname.startsWith('/admin') && !pathname.startsWith('/api/')) {
     // Se está tentando acessar /admin/login, permitir
     if (pathname === '/admin/login') {
       return response
@@ -21,20 +21,23 @@ export async function middleware(request: NextRequest) {
       })
       
       if (!token) {
-        console.log('Middleware: Token não encontrado, redirecionando para login')
-        return NextResponse.redirect(new URL('/admin/login', request.url))
+        console.log('Middleware: Token não encontrado para:', pathname)
+        const loginUrl = new URL('/admin/login', request.url)
+        return NextResponse.redirect(loginUrl)
       }
       
       const role = token.role as string
       if (role !== 'ADMIN' && role !== 'EMPLOYEE') {
-        console.log('Middleware: Role inválido:', role)
-        return NextResponse.redirect(new URL('/admin/login', request.url))
+        console.log('Middleware: Role inválido:', role, 'para:', pathname)
+        const loginUrl = new URL('/admin/login', request.url)
+        return NextResponse.redirect(loginUrl)
       }
       
-      console.log('Middleware: Acesso autorizado para:', token.email)
+      console.log('Middleware: Acesso autorizado para:', token.email, 'na rota:', pathname)
     } catch (error) {
-      console.error('Middleware: Erro ao verificar token:', error)
-      return NextResponse.redirect(new URL('/admin/login', request.url))
+      console.error('Middleware: Erro ao verificar token para:', pathname, error)
+      const loginUrl = new URL('/admin/login', request.url)
+      return NextResponse.redirect(loginUrl)
     }
   }
 

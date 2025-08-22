@@ -137,26 +137,10 @@ export default function AdminDashboard() {
       return
     }
     
-    // Se status é 'unauthenticated', dar tempo para sessão ser estabelecida
+    // Se não há sessão, deixar o middleware gerenciar o redirecionamento
+    // Não fazer redirecionamento manual aqui para evitar loops
     if (status === 'unauthenticated') {
-      console.log('Dashboard - Status unauthenticated, verificando sessão...')
-      
-      // Dar mais tempo para a sessão ser estabelecida após login
-      const timeoutId = setTimeout(() => {
-        // Verificar novamente se a sessão foi estabelecida
-        if (status === 'unauthenticated' && !session) {
-          console.log('Dashboard - Sessão não estabelecida após timeout, redirecionando para login')
-          router.replace('/admin/login')
-        }
-      }, 5000) // Aumentado para 5 segundos
-      
-      return () => clearTimeout(timeoutId)
-    }
-
-    // Status authenticated mas sem dados do usuário
-    if (status === 'authenticated' && !session?.user) {
-      console.error('Dashboard - Status authenticated mas sem dados do usuário')
-      router.replace('/admin/login')
+      console.log('Dashboard - Status unauthenticated, middleware gerenciará redirecionamento')
     }
   }, [session, status, router])
 
