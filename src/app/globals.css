@@ -1152,23 +1152,10 @@ input[type="number"] {
   position: relative;
 }
 
-.models-container::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: linear-gradient(to bottom, #3b82f6, #1d4ed8);
-  border-radius: 2px;
-}
 
 .model-item {
   position: relative;
-  margin-left: 8px;
-  margin-right: 4px;
-  margin-top: 2px;
-  margin-bottom: 2px;
+  margin: 2px 8px;
   padding: 8px;
   background: white;
   border-radius: 8px;
@@ -1180,27 +1167,13 @@ input[type="number"] {
 
 @media (min-width: 640px) {
   .model-item {
-    margin-left: 24px;
-    margin-right: 12px;
-    margin-top: 8px;
-    margin-bottom: 8px;
+    margin: 8px 12px;
     padding: 16px;
     border-radius: 12px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   }
 }
 
-.model-item::before {
-  content: '';
-  position: absolute;
-  left: -18px;
-  top: 50%;
-  width: 12px;
-  height: 2px;
-  background: #cbd5e1;
-  transform: translateY(-50%);
-  border-radius: 1px;
-}
 
 .model-item:hover {
   background: #eff6ff;
@@ -1209,10 +1182,6 @@ input[type="number"] {
   transform: scale(1.01) translateY(-1px);
 }
 
-.model-item:hover::before {
-  background: #3b82f6;
-  width: 16px;
-}
 
 /* Brand header enhanced with sticky behavior */
 .brand-header {

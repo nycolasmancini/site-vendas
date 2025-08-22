@@ -572,35 +572,7 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                                 </div>
                                 <div className="flex flex-col items-start gap-0.5 sm:gap-1">
                                   {(() => {
-                                    // Se o produto tem priceRange, usar a lógica de range
-                                    if (product.isModalProduct && product.priceRange) {
-                                      const isRange = product.priceRange.min !== product.priceRange.max
-                                      const priceText = isRange 
-                                        ? `${formatPrice(product.priceRange.min)} - ${formatPrice(product.priceRange.max)}`
-                                        : formatPrice(product.priceRange.min)
-                                      
-                                      return (
-                                        <div className={`${isRange ? 'flex justify-start w-full' : 'flex items-baseline gap-1 sm:gap-2'}`}>
-                                          <span 
-                                            className={`text-sm sm:text-lg font-bold text-gray-900 transition-all duration-500 ease-in-out ${isRange ? 'modal-price-range' : ''}`}
-                                            style={{
-                                              animation: 'fadeInPrice 0.5s ease-in-out',
-                                              fontSize: isRange ? 'clamp(0.75rem, 3.5vw, 1rem)' : undefined,
-                                              whiteSpace: isRange ? 'nowrap' : undefined
-                                            }}
-                                          >
-                                            {priceText}
-                                          </span>
-                                          {!isRange && (
-                                            <span className="text-[10px] sm:text-xs text-gray-500">
-                                              unidade
-                                            </span>
-                                          )}
-                                        </div>
-                                      )
-                                    }
-                                    
-                                    // Lógica original para produtos com modelos individuais
+                                    // Sempre usar o preço individual do modelo, independente se é modalProduct
                                     const cartQuantity = getCartQuantityByModel(model.id)
                                     const increment = product.quickAddIncrement || 1
                                     const hasReachedSuperWholesale = model.superWholesalePrice && cartQuantity >= increment
@@ -623,24 +595,10 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                                       </div>
                                     )
                                   })()}
-                                  {/* Super wholesale info apenas para produtos com modelos individuais */}
-                                  {!product.isModalProduct && model.superWholesalePrice && (
+                                  {/* Super wholesale info para todos os modelos que tenham essa informação */}
+                                  {model.superWholesalePrice && (
                                     <div className="text-[10px] sm:text-xs text-green-600 font-medium bg-green-50 px-1.5 sm:px-2 py-0.5 rounded whitespace-nowrap inline-flex items-center" style={{minHeight: '16px', lineHeight: '1'}}>
                                       +{product.quickAddIncrement || 1} un.: {formatPrice(model.superWholesalePrice || 0)}
-                                    </div>
-                                  )}
-                                  {/* Super wholesale range para produtos modais */}
-                                  {product.isModalProduct && product.priceRange?.superWholesaleMin && product.priceRange?.superWholesaleMax && (
-                                    <div className="inline-flex items-center gap-1 py-0.5 px-1.5 sm:px-2 rounded bg-green-50 border border-green-200">
-                                      <span className="text-[10px] sm:text-xs font-medium text-green-600">
-                                        Pacote ({product.quickAddIncrement || 25} un.):
-                                      </span>
-                                      <span className="text-[10px] sm:text-xs text-gray-600">
-                                        {product.priceRange.superWholesaleMin === product.priceRange.superWholesaleMax
-                                          ? formatPrice(product.priceRange.superWholesaleMin)
-                                          : `${formatPrice(product.priceRange.superWholesaleMin)} - ${formatPrice(product.priceRange.superWholesaleMax)}`
-                                        } / un
-                                      </span>
                                     </div>
                                   )}
                                 </div>
