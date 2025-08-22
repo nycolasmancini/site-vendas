@@ -244,7 +244,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                   {/* Range de preços super atacado */}
                   {product.priceRange.superWholesaleMin && product.priceRange.superWholesaleMax && (
                     <div className="py-1 px-2 rounded-lg mb-2" style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
-                      <div className="flex items-center justify-center gap-1">
+                      <div className="flex flex-col items-center">
                         <p className="text-xs font-medium text-center" style={{ color: 'var(--green)' }}>
                           Pacote fechado
                         </p>
@@ -282,7 +282,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
                     <div>
                       {(
                         <div className="py-1 px-2 rounded-lg mb-2" style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
-                          <div className="flex items-center justify-center gap-1">
+                          <div className="flex flex-col items-center">
                             <p className="text-xs font-medium text-center" style={{ color: 'var(--green)' }}>
                               <span className="sm:hidden">+{product.superWholesaleQuantity} unidades</span>
                               <span className="hidden sm:inline">A partir de {product.superWholesaleQuantity} unidades</span>
