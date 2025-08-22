@@ -44,17 +44,22 @@ export default function AdminLogin() {
             
             if (session?.user) {
               console.log('✅ Sessão confirmada! Redirecionando para dashboard...')
-              window.location.href = '/admin/dashboard'
+              router.push('/admin/dashboard')
             } else {
-              console.log('⚠️ Sessão não encontrada, tentando redirecionamento direto...')
-              window.location.href = '/admin/dashboard'
+              console.log('⚠️ Sessão não encontrada, aguardando mais tempo...')
+              // Aguardar mais um pouco para sessão ser estabelecida
+              setTimeout(() => {
+                console.log('Redirecionando para dashboard após timeout...')
+                router.push('/admin/dashboard')
+              }, 2000)
             }
           } catch (error) {
             console.error('Erro ao verificar sessão:', error)
             // Mesmo com erro, tentar redirecionar
-            window.location.href = '/admin/dashboard'
+            router.push('/admin/dashboard')
           }
-        }, 1000)
+          setLoading(false)
+        }, 1500)
       } else {
         console.error('Login falhou sem error específico:', result)
         setError('Erro inesperado no login')

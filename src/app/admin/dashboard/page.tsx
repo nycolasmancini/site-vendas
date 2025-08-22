@@ -114,23 +114,8 @@ export default function AdminDashboard() {
       return
     }
     
-    // Se status é 'unauthenticated', verificar se realmente não há sessão
-    if (status === 'unauthenticated') {
-      console.log('Dashboard - Status unauthenticated, verificando sessão...')
-      
-      // Dar mais tempo para a sessão ser estabelecida após login
-      const timeoutId = setTimeout(() => {
-        if (!session && status === 'unauthenticated') {
-          console.log('Dashboard - Sessão não estabelecida, redirecionando para login')
-          router.replace('/admin/login')
-        }
-      }, 3000) // Aumentado para 3 segundos
-      
-      return () => clearTimeout(timeoutId)
-    }
-
-    // Se temos sessão, verificar se é válida
-    if (session?.user) {
+    // Se temos sessão válida, carregar dados
+    if (status === 'authenticated' && session?.user) {
       console.log('Dashboard - Sessão válida:', { 
         id: session.user.id, 
         email: session.user.email, 
@@ -149,8 +134,27 @@ export default function AdminDashboard() {
       fetchCategories()
       fetchSuppliers()
       fetchCompanySettings()
-    } else if (status === 'authenticated' && !session?.user) {
-      // Status diz que está autenticado mas não há dados do usuário
+      return
+    }
+    
+    // Se status é 'unauthenticated', dar tempo para sessão ser estabelecida
+    if (status === 'unauthenticated') {
+      console.log('Dashboard - Status unauthenticated, verificando sessão...')
+      
+      // Dar mais tempo para a sessão ser estabelecida após login
+      const timeoutId = setTimeout(() => {
+        // Verificar novamente se a sessão foi estabelecida
+        if (status === 'unauthenticated' && !session) {
+          console.log('Dashboard - Sessão não estabelecida após timeout, redirecionando para login')
+          router.replace('/admin/login')
+        }
+      }, 5000) // Aumentado para 5 segundos
+      
+      return () => clearTimeout(timeoutId)
+    }
+
+    // Status authenticated mas sem dados do usuário
+    if (status === 'authenticated' && !session?.user) {
       console.error('Dashboard - Status authenticated mas sem dados do usuário')
       router.replace('/admin/login')
     }
