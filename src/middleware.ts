@@ -33,7 +33,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(loginUrl)
       }
       
-      console.log('Middleware: Acesso autorizado para:', token.email, 'na rota:', pathname)
+      console.log('Middleware: Acesso autorizado para:', token.email)
     } catch (error) {
       console.error('Middleware: Erro ao verificar token para:', pathname, error)
       const loginUrl = new URL('/admin/login', request.url)
