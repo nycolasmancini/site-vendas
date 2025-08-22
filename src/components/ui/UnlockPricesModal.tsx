@@ -13,6 +13,7 @@ interface UnlockPricesModalProps {
 export default function UnlockPricesModal({ isOpen, onClose }: UnlockPricesModalProps) {
   const { unlockPrices } = useSession()
   const [whatsapp, setWhatsapp] = useState('')
+  const [isClosing, setIsClosing] = useState(false)
 
   // Aplicar máscara brasileira para telefone
   const applyPhoneMask = (value: string): string => {
@@ -37,6 +38,14 @@ export default function UnlockPricesModal({ isOpen, onClose }: UnlockPricesModal
   };
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const handleClose = () => {
+    setIsClosing(true)
+    setTimeout(() => {
+      setIsClosing(false)
+      onClose()
+    }, 300) // Duração da animação
+  }
 
   if (!isOpen) return null
 
@@ -75,7 +84,7 @@ export default function UnlockPricesModal({ isOpen, onClose }: UnlockPricesModal
         }
       }
       
-      onClose()
+      handleClose()
     } catch (error) {
       console.error('❌ Erro ao liberar preços:', error)
       setError('Erro ao liberar preços. Tente novamente.')
@@ -87,20 +96,22 @@ export default function UnlockPricesModal({ isOpen, onClose }: UnlockPricesModal
 
   return (
     <div 
-      className="fixed inset-0 flex items-center justify-center p-4 z-50 animate-fade-in"
+      className={`fixed inset-0 flex items-center justify-center p-4 z-50 ${
+        isClosing ? '' : 'animate-fade-in'
+      }`}
       style={{ 
         backgroundColor: 'rgba(0, 0, 0, 0.4)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
-        animation: 'fadeIn 0.3s ease-out'
+        animation: isClosing ? 'fadeOut 0.3s ease-out' : 'fadeIn 0.3s ease-out'
       }}
-      onClick={onClose}
+      onClick={handleClose}
     >
       <div 
         className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl transform transition-all duration-300" 
         onClick={(e) => e.stopPropagation()}
         style={{
-          animation: 'modalSlideIn 0.3s ease-out'
+          animation: isClosing ? 'modalSlideOut 0.3s ease-out' : 'modalSlideIn 0.3s ease-out'
         }}
       >
         <div className="text-center mb-6">
@@ -148,7 +159,7 @@ export default function UnlockPricesModal({ isOpen, onClose }: UnlockPricesModal
             
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="w-full py-2 px-4 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition-colors text-sm"
             >
               Agora não, obrigado
