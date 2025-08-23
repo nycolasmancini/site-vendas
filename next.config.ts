@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
     unoptimized: false
   },
   // Configurações de produção para Performance
-  output: 'standalone',
+  // output: 'standalone', // Comentado para resolver erro lambda Vercel
   generateEtags: true,
   compress: true,
   poweredByHeader: false,
