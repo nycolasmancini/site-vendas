@@ -251,14 +251,12 @@ export default function UsuariosPage() {
                   >
                     {user.isActive ? 'Desativar' : 'Ativar'}
                   </button>
-                  {session?.user?.id !== user.id && (
-                    <button
-                      onClick={() => deleteUser(user.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      Deletar
-                    </button>
-                  )}
+                  <button
+                    onClick={() => deleteUser(user.id)}
+                    className="text-red-600 hover:text-red-900"
+                  >
+                    Deletar
+                  </button>
                 </td>
               </tr>
             ))}
