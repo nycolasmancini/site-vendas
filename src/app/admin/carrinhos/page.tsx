@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -73,7 +72,6 @@ interface ApiResponse {
 }
 
 export default function CarrinhosAbandonados() {
-  const { data: session, status } = useSession()
   const router = useRouter()
   const [carts, setCarts] = useState<Cart[]>([])
   const [stats, setStats] = useState<Stats>({ total: 0, active: 0, idle: 0, abandoned: 0, pending: 0, completed: 0 })
@@ -103,21 +101,8 @@ export default function CarrinhosAbandonados() {
   }
 
   useEffect(() => {
-    if (status === 'loading') return
-    
-    if (!session) {
-      router.push('/admin/login')
-      return
-    }
-
-    // Verificar se o usuário tem acesso (ADMIN ou EMPLOYEE)
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'EMPLOYEE') {
-      router.push('/admin/dashboard')
-      return
-    }
-
     fetchCarts()
-  }, [session, status, router])
+  }, [])
 
   useEffect(() => {
     if (!autoRefresh) return

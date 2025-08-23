@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
 interface Customer {
@@ -53,7 +52,6 @@ const statusLabels = {
 }
 
 export default function AdminPedidos() {
-  const { data: session, status } = useSession()
   const router = useRouter()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
@@ -66,21 +64,8 @@ export default function AdminPedidos() {
   const [totalOrders, setTotalOrders] = useState(0)
 
   useEffect(() => {
-    if (status === 'loading') return
-    
-    if (!session) {
-      router.push('/admin/login')
-      return
-    }
-
-    // Verificar se o usuário tem acesso (ADMIN ou EMPLOYEE)
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'EMPLOYEE') {
-      router.push('/admin/dashboard')
-      return
-    }
-
     fetchOrders()
-  }, [session, status, router, currentPage, statusFilter])
+  }, [currentPage, statusFilter])
 
   const fetchOrders = async () => {
     try {
@@ -176,16 +161,12 @@ export default function AdminPedidos() {
     )
   })
 
-  if (status === 'loading' || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-xl">Carregando...</div>
       </div>
     )
-  }
-
-  if (!session) {
-    return null
   }
 
   return (

@@ -1,55 +1,11 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getToken } from 'next-auth/jwt'
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next()
   const pathname = request.nextUrl.pathname
 
-  // Proteção de rotas admin (excluir APIs)
-  if (pathname.startsWith('/admin') && !pathname.startsWith('/api/')) {
-    // Se está tentando acessar /admin/login, permitir
-    if (pathname === '/admin/login') {
-      return response
-    }
-    
-    // Verificar token de autenticação para outras rotas admin
-    try {
-      console.log('Middleware: Tentando obter token para:', pathname)
-      console.log('Middleware: NEXTAUTH_SECRET definido:', !!process.env.NEXTAUTH_SECRET)
-      console.log('Middleware: Cookies disponíveis:', request.cookies.getAll().map(c => c.name))
-      
-      const token = await getToken({ 
-        req: request, 
-        secret: process.env.NEXTAUTH_SECRET,
-        cookieName: process.env.NODE_ENV === 'production' 
-          ? '__Secure-next-auth.session-token' 
-          : 'next-auth.session-token',
-        secureCookie: process.env.NODE_ENV === 'production'
-      })
-      
-      console.log('Middleware: Token resultado:', token ? 'encontrado' : 'não encontrado')
-      
-      if (!token) {
-        console.log('Middleware: Token não encontrado para:', pathname)
-        const loginUrl = new URL('/admin/login', request.url)
-        return NextResponse.redirect(loginUrl)
-      }
-      
-      const role = token.role as string
-      if (role !== 'ADMIN' && role !== 'EMPLOYEE') {
-        console.log('Middleware: Role inválido:', role, 'para:', pathname)
-        const loginUrl = new URL('/admin/login', request.url)
-        return NextResponse.redirect(loginUrl)
-      }
-      
-      console.log('Middleware: Acesso autorizado para:', token.email)
-    } catch (error) {
-      console.error('Middleware: Erro ao verificar token para:', pathname, error)
-      const loginUrl = new URL('/admin/login', request.url)
-      return NextResponse.redirect(loginUrl)
-    }
-  }
+  console.log('Middleware: Acesso livre para:', pathname)
 
   // Headers de compressão para todas as requisições
   const acceptEncoding = request.headers.get('accept-encoding') || ''

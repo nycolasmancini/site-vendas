@@ -1,12 +1,10 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import OptimizedImage from '@/components/ui/OptimizedImage'
 
 export default function Configuracoes() {
-  const { data: session, status } = useSession()
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   
@@ -14,22 +12,6 @@ export default function Configuracoes() {
   const [message, setMessage] = useState('')
   const [previewUrl, setPreviewUrl] = useState('')
 
-  // Verificar se é admin
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p>Carregando...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!session || session.user?.email !== 'admin@pmcell.com.br') {
-    router.push('/admin/login')
-    return null
-  }
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]

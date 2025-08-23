@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
 interface User {
@@ -22,7 +21,6 @@ interface UserFormData {
 }
 
 export default function UsuariosPage() {
-  const { data: session, status } = useSession()
   const router = useRouter()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -38,18 +36,8 @@ export default function UsuariosPage() {
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/admin/login')
-      return
-    }
-
-    if (session?.user?.role !== 'ADMIN') {
-      router.push('/admin/dashboard')
-      return
-    }
-
     loadUsers()
-  }, [session, status, router])
+  }, [])
 
   const loadUsers = async () => {
     try {
