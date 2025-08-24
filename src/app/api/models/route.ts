@@ -37,11 +37,11 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json(model, { status: 201 })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erro ao criar model:', error)
     
     // Verificar se é erro de unique constraint
-    if (error.code === 'P2002') {
+    if (error?.code === 'P2002') {
       return NextResponse.json(
         { error: 'Já existe um modelo com este nome para esta marca' },
         { status: 409 }
