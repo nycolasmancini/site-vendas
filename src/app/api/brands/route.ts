@@ -17,10 +17,8 @@ export async function GET() {
     return NextResponse.json(brands)
   } catch (error) {
     console.error('Erro ao buscar brands:', error)
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    )
+    // Retornar array vazio em caso de erro para evitar problemas no frontend
+    return NextResponse.json([], { status: 200 })
   }
 }
 

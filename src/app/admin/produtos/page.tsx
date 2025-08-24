@@ -142,10 +142,14 @@ export default function AdminProdutos() {
       const response = await fetch('/api/brands')
       if (response.ok) {
         const data = await response.json()
-        setBrands(data)
+        setBrands(Array.isArray(data) ? data : [])
+      } else {
+        console.error('Erro na API de brands:', response.status)
+        setBrands([])
       }
     } catch (error) {
       console.error('Erro ao carregar brands:', error)
+      setBrands([])
     }
   }
 
@@ -772,7 +776,7 @@ export default function AdminProdutos() {
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
                     >
                       <option value="">Selecione uma marca</option>
-                      {brands.map((brand) => (
+                      {Array.isArray(brands) && brands.map((brand) => (
                         <option key={brand.id} value={brand.id}>
                           {brand.name}
                         </option>
@@ -797,11 +801,11 @@ export default function AdminProdutos() {
 
                 {/* Lista de marcas e modelos */}
                 <div className="max-h-96 overflow-y-auto">
-                  {brands.map((brand) => (
+                  {Array.isArray(brands) && brands.map((brand) => (
                     <div key={brand.id} className="mb-4">
                       <h4 className="font-medium text-gray-900 mb-2">{brand.name}</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {brand.models.map((model) => (
+                        {Array.isArray(brand.models) && brand.models.map((model) => (
                           <div key={model.id} className="border rounded-lg p-3">
                             <label className="flex items-center space-x-2">
                               <input
