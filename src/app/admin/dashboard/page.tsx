@@ -97,17 +97,20 @@ export default function AdminDashboard() {
             </div>
           </button>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <button
+            onClick={() => navigateToSection('/admin/produtos')}
+            className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left"
+          >
             <div className="flex items-center">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <span className="text-blue-600 text-xl font-semibold">📦</span>
               </div>
               <div className="ml-4">
                 <h3 className="text-lg font-semibold text-gray-900">Produtos</h3>
-                <p className="text-gray-600">Em desenvolvimento</p>
+                <p className="text-gray-600">Gerencie seu catálogo</p>
               </div>
             </div>
-          </div>
+          </button>
 
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="flex items-center">
