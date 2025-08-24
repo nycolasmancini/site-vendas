@@ -116,10 +116,14 @@ export default function AdminProdutos() {
       const response = await fetch('/api/products')
       if (response.ok) {
         const data = await response.json()
-        setProducts(data)
+        setProducts(Array.isArray(data) ? data : [])
+      } else {
+        console.error('Erro na API de produtos:', response.status)
+        setProducts([])
       }
     } catch (error) {
       console.error('Erro ao carregar produtos:', error)
+      setProducts([])
     } finally {
       setLoading(false)
     }
@@ -942,7 +946,7 @@ export default function AdminProdutos() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {products.map((product) => (
+                  {Array.isArray(products) && products.map((product) => (
                     <tr key={product.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
