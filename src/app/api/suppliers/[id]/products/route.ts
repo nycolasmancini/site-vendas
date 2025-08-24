@@ -36,7 +36,7 @@ export async function GET(
         `, [id])
         
         // Transformar para formato compatível com Prisma
-        const products = result.rows.map(row => ({
+        const products = result.rows.map((row: any) => ({
           id: row.id,
           productId: row.productId,
           supplierId: row.supplierId,
