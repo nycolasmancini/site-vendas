@@ -15,10 +15,24 @@ interface Product {
   cost?: number
   categoryId: string
   isActive: boolean
+  isModalProduct?: boolean
+  quickAddIncrement?: number
   category: {
     name: string
   }
   images: Array<{ id: string; url: string; isMain: boolean }>
+  models?: Array<{
+    id: string
+    price: number
+    superWholesalePrice?: number
+    model?: {
+      id: string
+      name: string
+      brand: { name: string }
+    }
+    brandName?: string
+    modelName?: string
+  }>
   createdAt: string
 }
 
@@ -29,12 +43,37 @@ interface Category {
   order?: number
 }
 
+interface Brand {
+  id: string
+  name: string
+  order: number
+  models: Model[]
+}
+
+interface Model {
+  id: string
+  name: string
+  brandId: string
+  brand?: Brand
+}
+
+interface ProductModel {
+  id: string
+  productId: string
+  modelId: string
+  price?: number
+  superWholesalePrice?: number
+  model?: Model
+}
+
 export default function AdminProdutos() {
   const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
+  const [brands, setBrands] = useState<Brand[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [showModalForm, setShowModalForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [selectedImages, setSelectedImages] = useState<File[]>([])
   
@@ -51,9 +90,25 @@ export default function AdminProdutos() {
     isActive: true
   })
 
+  const [newModalProduct, setNewModalProduct] = useState({
+    name: '',
+    description: '',
+    categoryId: '',
+    price: '',
+    superWholesalePrice: '',
+    quickAddIncrement: '',
+    isActive: true
+  })
+
+  const [selectedModels, setSelectedModels] = useState<{[key: string]: {selected: boolean, price?: string, wholesalePrice?: string}}>({})
+  const [newBrandName, setNewBrandName] = useState('')
+  const [newModelName, setNewModelName] = useState('')
+  const [selectedBrandForNewModel, setSelectedBrandForNewModel] = useState('')
+
   useEffect(() => {
     loadProducts()
     loadCategories()
+    loadBrands()
   }, [])
 
   const loadProducts = async () => {
@@ -79,6 +134,18 @@ export default function AdminProdutos() {
       }
     } catch (error) {
       console.error('Erro ao carregar categorias:', error)
+    }
+  }
+
+  const loadBrands = async () => {
+    try {
+      const response = await fetch('/api/brands')
+      if (response.ok) {
+        const data = await response.json()
+        setBrands(data)
+      }
+    } catch (error) {
+      console.error('Erro ao carregar brands:', error)
     }
   }
 
@@ -139,6 +206,137 @@ export default function AdminProdutos() {
       isActive: true
     })
     setSelectedImages([])
+  }
+
+  const resetModalForm = () => {
+    setNewModalProduct({
+      name: '',
+      description: '',
+      categoryId: '',
+      price: '',
+      superWholesalePrice: '',
+      quickAddIncrement: '',
+      isActive: true
+    })
+    setSelectedModels({})
+    setSelectedImages([])
+  }
+
+  const handleModalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    try {
+      const formData = new FormData()
+      formData.append('name', newModalProduct.name)
+      formData.append('description', newModalProduct.description)
+      formData.append('categoryId', newModalProduct.categoryId)
+      formData.append('price', newModalProduct.price)
+      formData.append('superWholesalePrice', newModalProduct.superWholesalePrice)
+      formData.append('quickAddIncrement', newModalProduct.quickAddIncrement)
+      formData.append('isActive', newModalProduct.isActive.toString())
+      formData.append('isModalProduct', 'true')
+
+      // Adicionar modelos selecionados
+      const selectedModelData = Object.entries(selectedModels)
+        .filter(([_, data]) => data.selected)
+        .map(([modelId, data]) => ({
+          modelId,
+          price: data.price ? parseFloat(data.price) : undefined,
+          superWholesalePrice: data.wholesalePrice ? parseFloat(data.wholesalePrice) : undefined
+        }))
+      
+      formData.append('models', JSON.stringify(selectedModelData))
+
+      selectedImages.forEach((file) => {
+        formData.append('images', file)
+      })
+
+      const response = await fetch('/api/products/modal', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (response.ok) {
+        alert('Produto modal adicionado com sucesso!')
+        setShowModalForm(false)
+        resetModalForm()
+        loadProducts()
+      } else {
+        alert('Erro ao salvar produto modal')
+      }
+    } catch (error) {
+      console.error('Erro ao salvar produto modal:', error)
+      alert('Erro ao salvar produto modal')
+    }
+  }
+
+  const addBrand = async () => {
+    if (!newBrandName.trim()) return
+    
+    try {
+      const response = await fetch('/api/brands', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: newBrandName }),
+      })
+
+      if (response.ok) {
+        setNewBrandName('')
+        loadBrands()
+        alert('Marca adicionada com sucesso!')
+      } else {
+        alert('Erro ao adicionar marca')
+      }
+    } catch (error) {
+      console.error('Erro ao adicionar marca:', error)
+    }
+  }
+
+  const addModel = async () => {
+    if (!newModelName.trim() || !selectedBrandForNewModel) return
+    
+    try {
+      const response = await fetch('/api/models', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: newModelName, brandId: selectedBrandForNewModel }),
+      })
+
+      if (response.ok) {
+        setNewModelName('')
+        setSelectedBrandForNewModel('')
+        loadBrands()
+        alert('Modelo adicionado com sucesso!')
+      } else {
+        alert('Erro ao adicionar modelo')
+      }
+    } catch (error) {
+      console.error('Erro ao adicionar modelo:', error)
+    }
+  }
+
+  const toggleModelSelection = (modelId: string) => {
+    setSelectedModels(prev => ({
+      ...prev,
+      [modelId]: {
+        ...prev[modelId],
+        selected: !prev[modelId]?.selected
+      }
+    }))
+  }
+
+  const updateModelPrice = (modelId: string, field: 'price' | 'wholesalePrice', value: string) => {
+    setSelectedModels(prev => ({
+      ...prev,
+      [modelId]: {
+        ...prev[modelId],
+        [field]: value
+      }
+    }))
   }
 
   const toggleProductStatus = async (product: Product) => {
@@ -226,10 +424,21 @@ export default function AdminProdutos() {
                   resetForm()
                   setEditingProduct(null)
                   setShowAddForm(!showAddForm)
+                  setShowModalForm(false)
                 }}
                 className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
               >
                 {showAddForm ? 'Cancelar' : 'Adicionar Produto'}
+              </button>
+              <button
+                onClick={() => {
+                  resetModalForm()
+                  setShowModalForm(!showModalForm)
+                  setShowAddForm(false)
+                }}
+                className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
+              >
+                {showModalForm ? 'Cancelar' : 'Adicionar Produto Modal'}
               </button>
               <button
                 onClick={() => router.push('/admin/dashboard')}
@@ -428,6 +637,272 @@ export default function AdminProdutos() {
           </div>
         )}
 
+        {/* Formulário de Produto Modal */}
+        {showModalForm && (
+          <div className="bg-white shadow overflow-hidden sm:rounded-md mb-6">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900">
+                Adicionar Produto Modal (Capas/Películas)
+              </h2>
+            </div>
+            <form onSubmit={handleModalSubmit} className="px-6 py-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Nome *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newModalProduct.name}
+                    onChange={(e) => setNewModalProduct({...newModalProduct, name: e.target.value})}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Categoria *
+                  </label>
+                  <select
+                    required
+                    value={newModalProduct.categoryId}
+                    onChange={(e) => setNewModalProduct({...newModalProduct, categoryId: e.target.value})}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  >
+                    <option value="">Selecione uma categoria</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Preço Base *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    value={newModalProduct.price}
+                    onChange={(e) => setNewModalProduct({...newModalProduct, price: e.target.value})}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Preço Atacado
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newModalProduct.superWholesalePrice}
+                    onChange={(e) => setNewModalProduct({...newModalProduct, superWholesalePrice: e.target.value})}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Incremento Adição Rápida
+                  </label>
+                  <select
+                    value={newModalProduct.quickAddIncrement}
+                    onChange={(e) => setNewModalProduct({...newModalProduct, quickAddIncrement: e.target.value})}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  >
+                    <option value="">Selecione</option>
+                    <option value="10">10 unidades</option>
+                    <option value="25">25 unidades</option>
+                    <option value="50">50 unidades</option>
+                    <option value="100">100 unidades</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Descrição *
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  value={newModalProduct.description}
+                  onChange={(e) => setNewModalProduct({...newModalProduct, description: e.target.value})}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                />
+              </div>
+
+              {/* Seção de Modelos */}
+              <div className="mt-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Modelos de Celular</h3>
+                
+                {/* Adicionar nova marca */}
+                <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Adicionar Nova Marca</h4>
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      value={newBrandName}
+                      onChange={(e) => setNewBrandName(e.target.value)}
+                      placeholder="Nome da marca"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={addBrand}
+                      className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
+                    >
+                      Adicionar Marca
+                    </button>
+                  </div>
+                </div>
+
+                {/* Adicionar novo modelo */}
+                <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Adicionar Novo Modelo</h4>
+                  <div className="flex space-x-2">
+                    <select
+                      value={selectedBrandForNewModel}
+                      onChange={(e) => setSelectedBrandForNewModel(e.target.value)}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                    >
+                      <option value="">Selecione uma marca</option>
+                      {brands.map((brand) => (
+                        <option key={brand.id} value={brand.id}>
+                          {brand.name}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      value={newModelName}
+                      onChange={(e) => setNewModelName(e.target.value)}
+                      placeholder="Nome do modelo"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={addModel}
+                      className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
+                    >
+                      Adicionar Modelo
+                    </button>
+                  </div>
+                </div>
+
+                {/* Lista de marcas e modelos */}
+                <div className="max-h-96 overflow-y-auto">
+                  {brands.map((brand) => (
+                    <div key={brand.id} className="mb-4">
+                      <h4 className="font-medium text-gray-900 mb-2">{brand.name}</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {brand.models.map((model) => (
+                          <div key={model.id} className="border rounded-lg p-3">
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={selectedModels[model.id]?.selected || false}
+                                onChange={() => toggleModelSelection(model.id)}
+                                className="rounded border-gray-300 text-purple-600 shadow-sm focus:ring-purple-500"
+                              />
+                              <span className="text-sm font-medium">{model.name}</span>
+                            </label>
+                            
+                            {selectedModels[model.id]?.selected && (
+                              <div className="mt-2 space-y-2">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-700">
+                                    Preço Específico
+                                  </label>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={selectedModels[model.id]?.price || ''}
+                                    onChange={(e) => updateModelPrice(model.id, 'price', e.target.value)}
+                                    className="mt-1 block w-full px-2 py-1 text-sm border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                                    placeholder="Usar preço base"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-700">
+                                    Preço Atacado Específico
+                                  </label>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={selectedModels[model.id]?.wholesalePrice || ''}
+                                    onChange={(e) => updateModelPrice(model.id, 'wholesalePrice', e.target.value)}
+                                    className="mt-1 block w-full px-2 py-1 text-sm border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                                    placeholder="Usar preço atacado base"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Imagens do Produto
+                </label>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleImageSelect}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                />
+                {selectedImages.length > 0 && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    {selectedImages.length} arquivo(s) selecionado(s)
+                  </p>
+                )}
+              </div>
+
+              <div className="mt-4">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={newModalProduct.isActive}
+                    onChange={(e) => setNewModalProduct({...newModalProduct, isActive: e.target.checked})}
+                    className="rounded border-gray-300 text-purple-600 shadow-sm focus:ring-purple-500"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Produto ativo</span>
+                </label>
+              </div>
+
+              <div className="mt-6 flex space-x-3">
+                <button
+                  type="submit"
+                  className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
+                >
+                  Adicionar Produto Modal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowModalForm(false)
+                    resetModalForm()
+                  }}
+                  className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
         {/* Lista de Produtos */}
         <div className="bg-white shadow overflow-hidden sm:rounded-md">
           <div className="px-6 py-4 border-b border-gray-200">
@@ -475,8 +950,20 @@ export default function AdminProdutos() {
                             />
                           )}
                           <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {product.name}
+                            <div className="flex items-center gap-2">
+                              <div className="text-sm font-medium text-gray-900">
+                                {product.name}
+                              </div>
+                              {product.isModalProduct && (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                  📱 Modal
+                                </span>
+                              )}
+                              {product.quickAddIncrement && (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                  +{product.quickAddIncrement}
+                                </span>
+                              )}
                             </div>
                             {product.subname && (
                               <div className="text-sm text-gray-500">
@@ -486,6 +973,11 @@ export default function AdminProdutos() {
                             {product.brand && (
                               <div className="text-xs text-gray-400">
                                 {product.brand}
+                              </div>
+                            )}
+                            {product.isModalProduct && product.models && product.models.length > 0 && (
+                              <div className="text-xs text-green-600 mt-1">
+                                {product.models.length} modelo{product.models.length !== 1 ? 's' : ''}
                               </div>
                             )}
                           </div>

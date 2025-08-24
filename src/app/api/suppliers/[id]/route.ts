@@ -102,19 +102,49 @@ export async function PUT(
       })
 
       try {
+        const updateFields = []
+        const updateValues = [id]
+        let paramCount = 2
+
+        if (data.name !== undefined) {
+          updateFields.push(`name = $${paramCount}`)
+          updateValues.push(data.name)
+          paramCount++
+        }
+        if (data.phone !== undefined) {
+          updateFields.push(`phone = $${paramCount}`)
+          updateValues.push(data.phone || null)
+          paramCount++
+        }
+        if (data.address !== undefined) {
+          updateFields.push(`address = $${paramCount}`)
+          updateValues.push(data.address || null)
+          paramCount++
+        }
+        if (data.email !== undefined) {
+          updateFields.push(`email = $${paramCount}`)
+          updateValues.push(data.email || null)
+          paramCount++
+        }
+        if (data.notes !== undefined) {
+          updateFields.push(`notes = $${paramCount}`)
+          updateValues.push(data.notes || null)
+          paramCount++
+        }
+        if (data.isActive !== undefined) {
+          updateFields.push(`"isActive" = $${paramCount}`)
+          updateValues.push(data.isActive)
+          paramCount++
+        }
+
+        updateFields.push(`"updatedAt" = NOW()`)
+
         const result = await pool.query(`
           UPDATE "Supplier" 
-          SET name = $2, phone = $3, address = $4, email = $5, notes = $6, "updatedAt" = NOW()
-          WHERE id = $1 AND "isActive" = true
+          SET ${updateFields.join(', ')}
+          WHERE id = $1
           RETURNING *
-        `, [
-          id,
-          data.name,
-          data.phone || null,
-          data.address || null,
-          data.email || null,
-          data.notes || null
-        ])
+        `, updateValues)
 
         if (result.rows.length === 0) {
           return NextResponse.json(
@@ -130,17 +160,25 @@ export async function PUT(
     }
 
     // Em desenvolvimento, usar Prisma
+    const updateData: any = {}
+    if (data.name !== undefined) updateData.name = data.name
+    if (data.phone !== undefined) updateData.phone = data.phone || null
+    if (data.address !== undefined) updateData.address = data.address || null
+    if (data.email !== undefined) updateData.email = data.email || null
+    if (data.notes !== undefined) updateData.notes = data.notes || null
+    if (data.isActive !== undefined) updateData.isActive = data.isActive
+
     const supplier = await prisma.supplier.update({
-      where: { 
-        id,
-        isActive: true
-      },
-      data: {
-        name: data.name,
-        phone: data.phone || null,
-        address: data.address || null,
-        email: data.email || null,
-        notes: data.notes || null,
+      where: { id },
+      data: updateData,
+      include: {
+        _count: {
+          select: {
+            products: {
+              where: { isActive: true }
+            }
+          }
+        }
       }
     })
 

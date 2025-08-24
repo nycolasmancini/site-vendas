@@ -28,7 +28,15 @@ export async function GET() {
 
     // Em desenvolvimento, usar Prisma
     const suppliers = await prisma.supplier.findMany({
-      where: { isActive: true },
+      include: {
+        _count: {
+          select: {
+            products: {
+              where: { isActive: true }
+            }
+          }
+        }
+      },
       orderBy: { name: 'asc' }
     })
 
