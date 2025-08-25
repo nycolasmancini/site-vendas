@@ -225,6 +225,14 @@ async function getProductsProduction(
     dbQuery(countQuery, countParams)
   ])
 
+  if (!productsResult || !productsResult.rows) {
+    throw new Error('Failed to fetch products from database')
+  }
+
+  if (!totalResult || !totalResult.rows || totalResult.rows.length === 0) {
+    throw new Error('Failed to fetch products count from database')
+  }
+
   const products = productsResult.rows.map((row: any) => ({
     ...row,
     models: Array.isArray(row.models) ? row.models : [],
