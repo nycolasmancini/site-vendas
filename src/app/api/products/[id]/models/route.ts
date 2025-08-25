@@ -108,10 +108,10 @@ export async function POST(
     }
 
     // Verificar se o produto existe e é um produto modal
-    let product
+    let product: any = null
     if (process.env.NODE_ENV === 'production') {
       const productResult = await dbQuery('SELECT * FROM "Product" WHERE "id" = $1', [productId])
-      product = productResult.rows[0]
+      product = productResult?.rows?.[0]
     } else {
       product = await prisma.product.findUnique({
         where: { id: productId }
@@ -126,7 +126,9 @@ export async function POST(
       return NextResponse.json({ error: 'Apenas produtos modais podem ter modelos adicionados' }, { status: 400 })
     }
 
-    let brand, model, productModel
+    let brand: any = null
+    let model: any = null
+    let productModel: any = null
 
     // Em produção, usar SQL direto para evitar problemas com Prisma Accelerate
     if (process.env.NODE_ENV === 'production') {
