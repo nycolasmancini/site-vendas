@@ -85,6 +85,9 @@ export async function query(text: string, params?: any[], retries = 2) {
 export async function testConnection() {
   try {
     const result = await query('SELECT NOW()')
+    if (!result || !result.rows) {
+      throw new Error('No result returned from database test query')
+    }
     console.log('Database connection test successful:', result.rows[0])
     return true
   } catch (error) {
@@ -156,6 +159,9 @@ export async function createProduct(productData: {
   ]
   
   const result = await query(insertQuery, params)
+  if (!result || !result.rows || result.rows.length === 0) {
+    throw new Error('Failed to create product - no result returned')
+  }
   return result.rows[0]
 }
 
@@ -191,6 +197,9 @@ export async function createProductImage(imageData: {
   ]
   
   const result = await query(insertQuery, params)
+  if (!result || !result.rows || result.rows.length === 0) {
+    throw new Error('Failed to create product image - no result returned')
+  }
   return result.rows[0]
 }
 
@@ -213,6 +222,9 @@ export async function findOrCreateBrand(name: string) {
   `
   const params = [brandId, name, 0, new Date()]
   const result = await query(insertQuery, params)
+  if (!result || !result.rows || result.rows.length === 0) {
+    throw new Error('Failed to create brand - no result returned')
+  }
   return result.rows[0]
 }
 
@@ -235,6 +247,9 @@ export async function findOrCreateModel(name: string, brandId: string) {
   `
   const params = [modelId, name, brandId, new Date()]
   const result = await query(insertQuery, params)
+  if (!result || !result.rows || result.rows.length === 0) {
+    throw new Error('Failed to create model - no result returned')
+  }
   return result.rows[0]
 }
 
@@ -302,5 +317,8 @@ export async function updateProduct(productId: string, data: {
   `
   
   const result = await query(updateQuery, params)
+  if (!result || !result.rows || result.rows.length === 0) {
+    throw new Error('Failed to update product model - no result returned')
+  }
   return result.rows[0]
 }
