@@ -19,6 +19,35 @@ import {
   SmartwatchCustomIcon
 } from "@/components/ui/Icons"
 
+// Função para processar SVGs e garantir atributos corretos
+const processSvgIcon = (svgString: string, size: number, isActive: boolean): string => {
+  let processedSvg = svgString.trim()
+  
+  // Garantir que o SVG tem atributos de tamanho
+  if (!processedSvg.includes('width=')) {
+    processedSvg = processedSvg.replace('<svg', `<svg width="${size}"`)
+  } else {
+    processedSvg = processedSvg.replace(/width="[^"]*"/g, `width="${size}"`)
+  }
+  
+  if (!processedSvg.includes('height=')) {
+    processedSvg = processedSvg.replace('<svg', `<svg height="${size}"`)
+  } else {
+    processedSvg = processedSvg.replace(/height="[^"]*"/g, `height="${size}"`)
+  }
+  
+  // Garantir que o SVG responde a mudanças de cor
+  if (!processedSvg.includes('fill="currentColor"') && !processedSvg.includes('stroke="currentColor"')) {
+    if (processedSvg.includes('fill=')) {
+      processedSvg = processedSvg.replace(/fill="(?!none)[^"]*"/g, 'fill="currentColor"')
+    } else {
+      processedSvg = processedSvg.replace('<svg', '<svg fill="currentColor"')
+    }
+  }
+  
+  return processedSvg
+}
+
 interface Category {
   id: string
   name: string
@@ -37,15 +66,19 @@ const getCategoryIcon = (category: Category, isActive: boolean) => {
     const isSvg = category.icon.trim().toLowerCase().startsWith('<svg')
     
     if (isSvg) {
+      const processedSvg = processSvgIcon(category.icon, iconSize, isActive)
+      
       return (
         <div 
-          className="flex items-center justify-center"
+          className={cn(
+            "flex items-center justify-center flex-shrink-0",
+            isActive ? "text-white" : "text-gray-600"
+          )}
           style={{ 
             width: iconSize, 
-            height: iconSize,
-            color: isActive ? 'currentColor' : 'inherit'
+            height: iconSize
           }}
-          dangerouslySetInnerHTML={{ __html: category.icon }}
+          dangerouslySetInnerHTML={{ __html: processedSvg }}
         />
       )
     }

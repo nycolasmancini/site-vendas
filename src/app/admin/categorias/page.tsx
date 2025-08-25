@@ -230,18 +230,29 @@ export default function AdminCategorias() {
       reader.onload = () => {
         const result = reader.result as string
         if (file.type === 'image/svg+xml') {
-          // For SVG files, use the content directly
-          fetch(result)
-            .then(response => response.text())
-            .then(svgContent => {
-              setNewCategory(prev => ({ ...prev, icon: svgContent }))
-            })
+          // Para arquivos SVG, ler como texto e processar
+          let svgContent = result.trim()
+          
+          // Garantir que o SVG tem atributos essenciais
+          if (!svgContent.includes('fill=')) {
+            svgContent = svgContent.replace('<svg', '<svg fill="currentColor"')
+          }
+          if (!svgContent.includes('width=') || !svgContent.includes('height=')) {
+            svgContent = svgContent.replace('<svg', '<svg width="24" height="24"')
+          }
+          
+          setNewCategory(prev => ({ ...prev, icon: svgContent }))
         } else {
-          // For other image types, use base64
+          // Para outros tipos de imagem, usar base64
           setNewCategory(prev => ({ ...prev, icon: result }))
         }
       }
-      reader.readAsDataURL(file)
+      
+      if (file.type === 'image/svg+xml') {
+        reader.readAsText(file) // Ler SVG como texto
+      } else {
+        reader.readAsDataURL(file) // Ler outros como base64
+      }
     }
   }
 
