@@ -39,13 +39,17 @@ export async function GET(
       const result = await dbQuery(sqlQuery, [productId])
       
       // Transformar dados para o formato esperado pelo frontend
-      models = result.rows.map((row: any) => ({
-        id: row.model_id,
-        brandName: row.brand_name,
-        modelName: row.model_name,
-        price: parseFloat(row.price) || 0,
-        superWholesalePrice: row.superWholesalePrice ? parseFloat(row.superWholesalePrice) : null
-      }))
+      if (result && result.rows) {
+        models = result.rows.map((row: any) => ({
+          id: row.model_id,
+          brandName: row.brand_name,
+          modelName: row.model_name,
+          price: parseFloat(row.price) || 0,
+          superWholesalePrice: row.superWholesalePrice ? parseFloat(row.superWholesalePrice) : null
+        }))
+      } else {
+        models = []
+      }
       
     } else {
       console.log('📊 Using development Prisma query for product models')
