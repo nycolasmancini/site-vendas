@@ -26,7 +26,7 @@ interface ProductModel {
 interface Product {
   id: string
   name: string
-  isModalProduct: boolean
+  isModalProduct?: boolean
 }
 
 interface EditProductModelsModalProps {
