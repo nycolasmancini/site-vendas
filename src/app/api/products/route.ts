@@ -146,8 +146,12 @@ export async function GET(request: NextRequest) {
           firstProductId: productsResult?.rows?.[0]?.id || 'none'
         })
 
-        if (!productsResult.rows) {
+        if (!productsResult || !productsResult.rows) {
           throw new Error('No data returned from products query')
+        }
+
+        if (!totalResult || !totalResult.rows || totalResult.rows.length === 0) {
+          throw new Error('No total count returned from database')
         }
 
         const products = productsResult.rows.map((row: any) => {
