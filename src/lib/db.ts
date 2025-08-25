@@ -270,6 +270,9 @@ export async function createProductModel(data: {
   `
   const params = [productModelId, productId, modelId, price, superWholesalePrice, new Date()]
   const result = await query(insertQuery, params)
+  if (!result || !result.rows || result.rows.length === 0) {
+    throw new Error('Failed to create product model - no result returned')
+  }
   return result.rows[0]
 }
 
