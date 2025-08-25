@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     const { id: productId } = await params
-    let models
+    let models: any[] = []
 
     // Em produção, usar SQL direto para evitar problemas com Prisma Accelerate
     if (process.env.NODE_ENV === 'production') {
