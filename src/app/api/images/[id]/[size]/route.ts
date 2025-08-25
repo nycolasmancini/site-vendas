@@ -57,7 +57,7 @@ export async function GET(
         'SELECT url, "fileName" FROM "ProductImage" WHERE id = $1',
         [id]
       )
-      imageData = result.rows[0]
+      imageData = result?.rows?.[0]
     } else {
       imageData = await prisma.productImage.findUnique({
         where: { id },
