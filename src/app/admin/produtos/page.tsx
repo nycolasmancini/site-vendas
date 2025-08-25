@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import EditProductModelsModal from '@/components/admin/EditProductModelsModal'
 
 interface Product {
   id: string
@@ -76,6 +77,8 @@ export default function AdminProdutos() {
   const [showModalForm, setShowModalForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [selectedImages, setSelectedImages] = useState<File[]>([])
+  const [showEditModelsModal, setShowEditModelsModal] = useState(false)
+  const [editingModelsProduct, setEditingModelsProduct] = useState<Product | null>(null)
   
   const [newProduct, setNewProduct] = useState({
     name: '',
@@ -430,6 +433,16 @@ export default function AdminProdutos() {
     if (e.target.files) {
       setSelectedImages(Array.from(e.target.files))
     }
+  }
+
+  const openEditModelsModal = (product: Product) => {
+    setEditingModelsProduct(product)
+    setShowEditModelsModal(true)
+  }
+
+  const closeEditModelsModal = () => {
+    setShowEditModelsModal(false)
+    setEditingModelsProduct(null)
   }
 
   if (loading) {
@@ -1050,6 +1063,14 @@ export default function AdminProdutos() {
                         >
                           Editar
                         </button>
+                        {product.isModalProduct && (
+                          <button
+                            onClick={() => openEditModelsModal(product)}
+                            className="text-purple-600 hover:text-purple-900"
+                          >
+                            Editar Modelos
+                          </button>
+                        )}
                         <button
                           onClick={() => toggleProductStatus(product)}
                           className={product.isActive ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}
@@ -1070,6 +1091,14 @@ export default function AdminProdutos() {
             </div>
           )}
         </div>
+
+        {/* Modal de Edição de Modelos */}
+        <EditProductModelsModal
+          isOpen={showEditModelsModal}
+          onClose={closeEditModelsModal}
+          product={editingModelsProduct}
+          onUpdate={loadProducts}
+        />
       </main>
     </div>
   )
