@@ -152,7 +152,7 @@ export async function POST(
         [productId, model.id]
       )
       
-      if (existingResult?.rows?.length > 0) {
+      if (existingResult && existingResult.rows && existingResult.rows.length > 0) {
         return NextResponse.json(
           { error: 'Este modelo já está cadastrado para este produto' },
           { status: 400 }
