@@ -209,7 +209,7 @@ export async function findOrCreateBrand(name: string) {
   const findQuery = 'SELECT * FROM "Brand" WHERE "name" = $1'
   const findResult = await query(findQuery, [name])
   
-  if (findResult.rows.length > 0) {
+  if (findResult && findResult.rows && findResult.rows.length > 0) {
     return findResult.rows[0]
   }
   
@@ -234,7 +234,7 @@ export async function findOrCreateModel(name: string, brandId: string) {
   const findQuery = 'SELECT * FROM "Model" WHERE "name" = $1 AND "brandId" = $2'
   const findResult = await query(findQuery, [name, brandId])
   
-  if (findResult.rows.length > 0) {
+  if (findResult && findResult.rows && findResult.rows.length > 0) {
     return findResult.rows[0]
   }
   
