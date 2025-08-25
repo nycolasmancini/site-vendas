@@ -179,7 +179,7 @@ export async function POST(request: Request) {
         const insertResult = await pool.query(`
           INSERT INTO "Category" (id, name, slug, "order", icon, "isActive", "createdAt", "updatedAt") 
           VALUES ($1, $2, $3, $4, $5, true, NOW(), NOW()) 
-          RETURNING id, name, slug, "order", "isActive", "createdAt", "updatedAt"
+          RETURNING id, name, slug, "order", icon, "isActive", "createdAt", "updatedAt"
         `, [categoryId, name, slug, order ? parseInt(order) : 0, icon])
         
         const category = insertResult.rows[0]
