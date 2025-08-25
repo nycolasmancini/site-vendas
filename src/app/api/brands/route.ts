@@ -5,16 +5,36 @@ export async function GET() {
   try {
     console.log('🔍 Tentando buscar brands...')
     
-    // Verificar se estamos em produção e a tabela existe
+    // Verificar se estamos em produção e as tabelas existem
     if (process.env.NODE_ENV === 'production') {
-      // Testar se a tabela Brand existe fazendo uma query simples
       try {
+        // Testar se as tabelas Brand e Model existem
         await prisma.$queryRaw`SELECT 1 FROM "Brand" LIMIT 1`
-        console.log('✅ Tabela Brand encontrada em produção')
+        await prisma.$queryRaw`SELECT 1 FROM "Model" LIMIT 1`
+        console.log('✅ Tabelas Brand e Model encontradas em produção')
       } catch (tableError) {
-        console.error('❌ Tabela Brand não encontrada em produção:', tableError)
-        // Retornar array vazio se a tabela não existir
-        return NextResponse.json([], { status: 200 })
+        console.error('❌ Tabelas Brand/Model não encontradas em produção:', tableError)
+        console.log('🔄 Tentando criar tabelas com db push...')
+        
+        // Tentar fazer o push do schema
+        try {
+          const { exec } = require('child_process')
+          await new Promise((resolve, reject) => {
+            exec('npx prisma db push --accept-data-loss', (error, stdout, stderr) => {
+              if (error) {
+                console.error('Erro ao executar db push:', error)
+                reject(error)
+              } else {
+                console.log('DB Push resultado:', stdout)
+                resolve(stdout)
+              }
+            })
+          })
+          console.log('✅ Schema sincronizado com sucesso')
+        } catch (pushError) {
+          console.error('❌ Erro ao sincronizar schema:', pushError)
+          return NextResponse.json([], { status: 200 })
+        }
       }
     }
 
