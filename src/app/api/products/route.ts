@@ -252,7 +252,7 @@ export async function GET(request: NextRequest) {
             totalPages: 0
           },
           error: 'Database connection failed',
-          errorDetails: process.env.NODE_ENV === 'development' ? error : undefined
+          errorDetails: undefined
         })
       }
     }
@@ -388,7 +388,7 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({ 
       error: 'Failed to fetch products',
-      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+      details: process.env.NODE_ENV !== 'production' ? errorMessage : undefined
     }, { status: 500 })
   }
 }
