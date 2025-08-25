@@ -5,19 +5,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Package, Tag, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { 
-  TodosProdutosIcon,
-  CapasIcon,
-  PeliculaIcon,
-  FonesIcon,
-  FonesBluetoothIcon,
-  CaixasSomIcon,
-  CabosIcon,
-  CarregadoresIcon,
-  SuportesIcon,
-  CarregadoresVeicularIcon,
-  SmartwatchCustomIcon
-} from "@/components/ui/Icons"
 
 
 interface Category {
@@ -27,36 +14,6 @@ interface Category {
   productCount?: number
 }
 
-const getCategoryIcon = (category: Category, isActive: boolean) => {
-  const iconSize = 30
-  const strokeWidth = isActive ? "2" : "1.5"
-  
-  // Usar ícones hardcoded baseados no slug
-  switch (category.slug) {
-    case 'capas':
-      return <CapasIcon size={iconSize} strokeWidth={strokeWidth} />
-    case 'peliculas':
-      return <PeliculaIcon size={iconSize} strokeWidth={strokeWidth} />
-    case 'fones':
-      return <FonesIcon size={iconSize} strokeWidth={strokeWidth} isActive={isActive} />
-    case 'fones-bluetooth':
-      return <FonesBluetoothIcon size={iconSize} strokeWidth={strokeWidth} />
-    case 'caixas-de-som':
-      return <CaixasSomIcon size={iconSize} strokeWidth={strokeWidth} />
-    case 'cabos':
-      return <CabosIcon size={iconSize} strokeWidth={strokeWidth} />
-    case 'carregadores':
-      return <CarregadoresIcon size={iconSize} strokeWidth={strokeWidth} />
-    case 'carregadores-veicular':
-      return <CarregadoresVeicularIcon size={iconSize} strokeWidth={strokeWidth} />
-    case 'suportes':
-      return <SuportesIcon size={iconSize} strokeWidth={strokeWidth} />
-    case 'smartwatch':
-      return <SmartwatchCustomIcon size={iconSize} strokeWidth={strokeWidth} />
-    default:
-      return <Package size={iconSize} />
-  }
-}
 
 export function Sidebar() {
   const [categories, setCategories] = useState<Category[]>([])
@@ -123,7 +80,6 @@ export function Sidebar() {
                 )}
               >
                 <span className="flex items-center">
-                  <Tag className="mr-2 h-4 w-4" />
                   Kits Promocionais
                 </span>
                 <ChevronRight className="h-4 w-4" />
@@ -146,8 +102,7 @@ export function Sidebar() {
                     )}
                   >
                     <span className="flex items-center">
-                      {getCategoryIcon(category, isActive)}
-                      <span className="ml-2">{category.name}</span>
+                      <span>{category.name}</span>
                     </span>
                     {category.productCount && category.productCount > 0 && (
                       <span className={cn(

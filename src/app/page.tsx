@@ -17,66 +17,10 @@ import {
   PhoneIcon, 
   TodosProdutosIcon, 
   BoxIcon, 
-  ShoppingCartIcon,
-  CapasIcon,
-  PeliculaIcon,
-  FonesIcon,
-  FonesBluetoothIcon,
-  CaixasSomIcon,
-  CabosIcon,
-  CarregadoresIcon,
-  SuportesIcon,
-  CarregadoresVeicularIcon,
-  CarChargerIcon,
-  SmartwatchCustomIcon,
-  AdapterIcon
+  ShoppingCartIcon
 } from '@/components/ui/Icons'
 
 // Função para obter o ícone correto para cada categoria
-const getCategoryIcon = (category: any, size: number = 30) => {
-  // Usar a lógica baseada no nome
-  const name = category?.name?.toLowerCase() || ''
-  
-  if (name.includes('capa') || name.includes('case') || name.includes('capinha')) {
-    return <CapasIcon size={size} />
-  }
-  if (name.includes('película') || name.includes('protetor') || name.includes('vidro')) {
-    return <PeliculaIcon size={size} />
-  }
-  if (name.includes('fone') && name.includes('bluetooth')) {
-    return <FonesBluetoothIcon size={size} />
-  }
-  if (name.includes('fone')) {
-    return <FonesIcon size={size} />
-  }
-  if (name.includes('caixa') && name.includes('som')) {
-    return <CaixasSomIcon size={size} />
-  }
-  if (name.includes('cabo') || name.includes('usb')) {
-    return <CabosIcon size={size} />
-  }
-  if (name.includes('carregador') && (name.includes('veicular') || name.includes('carro'))) {
-    return <CarregadoresVeicularIcon size={size} />
-  }
-  if (name.includes('carregador')) {
-    return <CarregadoresIcon size={size} />
-  }
-  if (name.includes('suporte') && (name.includes('veicular') || name.includes('carro'))) {
-    return <CarChargerIcon size={size} />
-  }
-  if (name.includes('suporte')) {
-    return <SuportesIcon size={size} />
-  }
-  if (name.includes('smart') || name.includes('watch') || name.includes('relógio')) {
-    return <SmartwatchCustomIcon size={size} />
-  }
-  if (name.includes('adaptador')) {
-    return <AdapterIcon size={size} />
-  }
-  
-  // Ícone padrão
-  return <BoxIcon size={size} />
-}
 
 export default function Home() {
   const { unlocked } = useSession()
@@ -234,7 +178,6 @@ export default function Home() {
                     }}
                   >
                     <div className="flex items-center gap-3">
-                      {getCategoryIcon(category, 16)}
                       <span>{category.name}</span>
                     </div>
                   </button>
@@ -350,13 +293,6 @@ export default function Home() {
 
               {/* Desktop Layout - Single Line */}
               <div className="hidden lg:flex items-center justify-center gap-4">
-                <div style={{ color: 'var(--orange)' }}>
-                  {selectedCategory ? (
-                    getCategoryIcon(categories.find(c => c.id === selectedCategory), 28)
-                  ) : (
-                    <TodosProdutosIcon size={28} className="text-[#f97316]" />
-                  )}
-                </div>
                 <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
                   {selectedCategory
                     ? categories.find(c => c.id === selectedCategory)?.name
@@ -424,7 +360,6 @@ export default function Home() {
                     className="btn-primary interactive flex items-center gap-2 mx-auto"
                     style={{ background: 'var(--orange)', color: 'var(--surface)' }}
                   >
-                    <TodosProdutosIcon size={16} />
                     Ver Produtos
                   </button>
                 </div>
