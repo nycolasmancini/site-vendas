@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { nanoid } from 'nanoid'
 
 export async function GET() {
   try {
@@ -171,12 +172,15 @@ export async function POST(request: Request) {
           return NextResponse.json({ error: 'A category with this name already exists' }, { status: 400 })
         }
         
+        // Generate unique ID
+        const categoryId = nanoid()
+        
         // Create category
         const insertResult = await pool.query(`
-          INSERT INTO "Category" (name, slug, "order", icon, "isActive", "createdAt", "updatedAt") 
-          VALUES ($1, $2, $3, $4, true, NOW(), NOW()) 
+          INSERT INTO "Category" (id, name, slug, "order", icon, "isActive", "createdAt", "updatedAt") 
+          VALUES ($1, $2, $3, $4, $5, true, NOW(), NOW()) 
           RETURNING id, name, slug, "order", "isActive", "createdAt", "updatedAt"
-        `, [name, slug, order ? parseInt(order) : 0, icon])
+        `, [categoryId, name, slug, order ? parseInt(order) : 0, icon])
         
         const category = insertResult.rows[0]
         return NextResponse.json(category, { status: 201 })
