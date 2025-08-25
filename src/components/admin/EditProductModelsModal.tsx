@@ -48,21 +48,15 @@ export default function EditProductModelsModal({
   const [saving, setSaving] = useState(false)
   
   // Estados para adicionar novo modelo
-  const [selectedBrand, setSelectedBrand] = useState('')
-  const [selectedModel, setSelectedModel] = useState('')
+  const [showAddModelForm, setShowAddModelForm] = useState(false)
+  const [newBrandName, setNewBrandName] = useState('')
+  const [newModelName, setNewModelName] = useState('')
   const [newModelPrice, setNewModelPrice] = useState('')
-  const [newModelWholesalePrice, setNewModelWholesalePrice] = useState('')
+  const [newModelSuperWholesalePrice, setNewModelSuperWholesalePrice] = useState('')
   
   // Estados para edição
   const [editingModel, setEditingModel] = useState<string | null>(null)
   const [editData, setEditData] = useState<{[key: string]: {price: string, wholesalePrice: string}}>({})
-
-  // Estados para criar nova marca/modelo
-  const [showAddBrand, setShowAddBrand] = useState(false)
-  const [showAddModel, setShowAddModel] = useState(false)
-  const [newBrandName, setNewBrandName] = useState('')
-  const [newModelName, setNewModelName] = useState('')
-  const [selectedBrandForNewModel, setSelectedBrandForNewModel] = useState('')
 
   useEffect(() => {
     if (isOpen && product) {
@@ -111,40 +105,32 @@ export default function EditProductModelsModal({
   }
 
   const handleAddModel = async () => {
-    if (!product || !selectedModel || !newModelPrice) {
+    if (!product || !newBrandName || !newModelName || !newModelPrice) {
       alert('Por favor, preencha todos os campos obrigatórios')
       return
     }
 
     setSaving(true)
     try {
-      const selectedModelData = brands
-        .flatMap(b => b.models.map(m => ({ ...m, brandName: b.name })))
-        .find(m => m.id === selectedModel)
-
-      if (!selectedModelData) {
-        alert('Modelo não encontrado')
-        return
-      }
-
       const response = await fetch(`/api/products/${product.id}/models`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          brandName: selectedModelData.brandName,
-          modelName: selectedModelData.name,
+          brandName: newBrandName,
+          modelName: newModelName,
           price: newModelPrice,
-          superWholesalePrice: newModelWholesalePrice || null
+          superWholesalePrice: newModelSuperWholesalePrice || null
         })
       })
 
       if (response.ok) {
-        setSelectedBrand('')
-        setSelectedModel('')
+        setNewBrandName('')
+        setNewModelName('')
         setNewModelPrice('')
-        setNewModelWholesalePrice('')
+        setNewModelSuperWholesalePrice('')
+        setShowAddModelForm(false)
         loadProductModels()
         onUpdate()
       } else {
@@ -224,64 +210,6 @@ export default function EditProductModelsModal({
     }
   }
 
-  const addBrand = async () => {
-    if (!newBrandName.trim()) return
-    
-    setSaving(true)
-    try {
-      const response = await fetch('/api/brands', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name: newBrandName }),
-      })
-
-      if (response.ok) {
-        setNewBrandName('')
-        setShowAddBrand(false)
-        loadBrands()
-        alert('Marca adicionada com sucesso!')
-      } else {
-        alert('Erro ao adicionar marca')
-      }
-    } catch (error) {
-      console.error('Erro ao adicionar marca:', error)
-      alert('Erro ao adicionar marca')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const addModelToBrand = async () => {
-    if (!newModelName.trim() || !selectedBrandForNewModel) return
-    
-    setSaving(true)
-    try {
-      const response = await fetch('/api/models', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name: newModelName, brandId: selectedBrandForNewModel }),
-      })
-
-      if (response.ok) {
-        setNewModelName('')
-        setSelectedBrandForNewModel('')
-        setShowAddModel(false)
-        loadBrands()
-        alert('Modelo adicionado com sucesso!')
-      } else {
-        alert('Erro ao adicionar modelo')
-      }
-    } catch (error) {
-      console.error('Erro ao adicionar modelo:', error)
-      alert('Erro ao adicionar modelo')
-    } finally {
-      setSaving(false)
-    }
-  }
 
   const updateEditData = (modelId: string, field: 'price' | 'wholesalePrice', value: string) => {
     setEditData(prev => ({
@@ -293,16 +221,6 @@ export default function EditProductModelsModal({
     }))
   }
 
-  const getAvailableModels = () => {
-    if (!selectedBrand) return []
-    
-    const brand = brands.find(b => b.id === selectedBrand)
-    if (!brand) return []
-
-    // Filtrar modelos que já estão no produto
-    const existingModelIds = productModels.map(pm => pm.id)
-    return brand.models.filter(model => !existingModelIds.includes(model.id))
-  }
 
   if (!isOpen || !product) return null
 
@@ -345,8 +263,8 @@ export default function EditProductModelsModal({
                         <div className="flex-1">
                           <div className="font-medium">{model.brandName} - {model.modelName}</div>
                           <div className="text-sm text-gray-500">
-                            R$ {model.price.toFixed(2)}
-                            {model.superWholesalePrice && ` | Atacado: R$ ${model.superWholesalePrice.toFixed(2)}`}
+                            Atacado: R$ {model.price.toFixed(2)}
+                            {model.superWholesalePrice && ` | Super Atacado: R$ ${model.superWholesalePrice.toFixed(2)}`}
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -355,18 +273,18 @@ export default function EditProductModelsModal({
                               <input
                                 type="number"
                                 step="0.01"
-                                placeholder="Preço"
+                                placeholder="Atacado"
                                 value={editData[model.id]?.price || ''}
                                 onChange={(e) => updateEditData(model.id, 'price', e.target.value)}
-                                className="w-20 px-2 py-1 text-sm border rounded"
+                                className="w-24 px-2 py-1 text-sm border rounded"
                               />
                               <input
                                 type="number"
                                 step="0.01"
-                                placeholder="Atacado"
+                                placeholder="Super Atacado"
                                 value={editData[model.id]?.wholesalePrice || ''}
                                 onChange={(e) => updateEditData(model.id, 'wholesalePrice', e.target.value)}
-                                className="w-20 px-2 py-1 text-sm border rounded"
+                                className="w-28 px-2 py-1 text-sm border rounded"
                               />
                               <button
                                 onClick={() => handleEditModel(model.id)}
@@ -408,150 +326,97 @@ export default function EditProductModelsModal({
 
               {/* Adicionar novo modelo */}
               <div>
-                <h4 className="text-md font-medium text-gray-900 mb-3">Adicionar Novo Modelo</h4>
-                
-                {/* Botões para adicionar marca/modelo */}
-                <div className="mb-4 flex space-x-2">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-md font-medium text-gray-900">Adicionar Novo Modelo</h4>
                   <button
-                    onClick={() => setShowAddBrand(!showAddBrand)}
-                    className="text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded hover:bg-gray-200"
+                    onClick={() => setShowAddModelForm(!showAddModelForm)}
+                    className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm"
                   >
-                    + Adicionar Marca
-                  </button>
-                  <button
-                    onClick={() => setShowAddModel(!showAddModel)}
-                    className="text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded hover:bg-gray-200"
-                  >
-                    + Adicionar Modelo
+                    {showAddModelForm ? 'Cancelar' : '+ Adicionar Modelo'}
                   </button>
                 </div>
 
-                {/* Form para adicionar marca */}
-                {showAddBrand && (
-                  <div className="mb-4 p-3 bg-gray-50 rounded border">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="text"
-                        value={newBrandName}
-                        onChange={(e) => setNewBrandName(e.target.value)}
-                        placeholder="Nome da nova marca"
-                        className="flex-1 px-3 py-2 border rounded"
-                      />
+                {showAddModelForm && (
+                  <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Marca *
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Ex: Apple, Samsung..."
+                          value={newBrandName}
+                          onChange={(e) => setNewBrandName(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Modelo *
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Ex: iPhone 15, Galaxy S24..."
+                          value={newModelName}
+                          onChange={(e) => setNewModelName(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Preço Atacado *
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={newModelPrice}
+                          onChange={(e) => setNewModelPrice(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Preço Super Atacado
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={newModelSuperWholesalePrice}
+                          onChange={(e) => setNewModelSuperWholesalePrice(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex space-x-3">
                       <button
-                        onClick={addBrand}
-                        disabled={saving || !newBrandName.trim()}
-                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+                        onClick={handleAddModel}
+                        disabled={saving || !newBrandName || !newModelName || !newModelPrice}
+                        className="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700 disabled:opacity-50"
                       >
-                        Adicionar
+                        {saving ? 'Adicionando...' : 'Adicionar Modelo'}
                       </button>
                       <button
-                        onClick={() => setShowAddBrand(false)}
-                        className="text-gray-600 hover:text-gray-800"
+                        onClick={() => {
+                          setShowAddModelForm(false)
+                          setNewBrandName('')
+                          setNewModelName('')
+                          setNewModelPrice('')
+                          setNewModelSuperWholesalePrice('')
+                        }}
+                        className="bg-gray-600 text-white px-6 py-2 rounded hover:bg-gray-700"
                       >
                         Cancelar
                       </button>
                     </div>
                   </div>
                 )}
-
-                {/* Form para adicionar modelo */}
-                {showAddModel && (
-                  <div className="mb-4 p-3 bg-gray-50 rounded border">
-                    <div className="flex items-center space-x-2">
-                      <select
-                        value={selectedBrandForNewModel}
-                        onChange={(e) => setSelectedBrandForNewModel(e.target.value)}
-                        className="flex-1 px-3 py-2 border rounded"
-                      >
-                        <option value="">Selecione uma marca</option>
-                        {brands.map((brand) => (
-                          <option key={brand.id} value={brand.id}>
-                            {brand.name}
-                          </option>
-                        ))}
-                      </select>
-                      <input
-                        type="text"
-                        value={newModelName}
-                        onChange={(e) => setNewModelName(e.target.value)}
-                        placeholder="Nome do novo modelo"
-                        className="flex-1 px-3 py-2 border rounded"
-                      />
-                      <button
-                        onClick={addModelToBrand}
-                        disabled={saving || !newModelName.trim() || !selectedBrandForNewModel}
-                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-                      >
-                        Adicionar
-                      </button>
-                      <button
-                        onClick={() => setShowAddModel(false)}
-                        className="text-gray-600 hover:text-gray-800"
-                      >
-                        Cancelar
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Form para adicionar modelo existente */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                  <select
-                    value={selectedBrand}
-                    onChange={(e) => {
-                      setSelectedBrand(e.target.value)
-                      setSelectedModel('')
-                    }}
-                    className="px-3 py-2 border rounded"
-                  >
-                    <option value="">Selecione uma marca</option>
-                    {brands.map((brand) => (
-                      <option key={brand.id} value={brand.id}>
-                        {brand.name}
-                      </option>
-                    ))}
-                  </select>
-
-                  <select
-                    value={selectedModel}
-                    onChange={(e) => setSelectedModel(e.target.value)}
-                    disabled={!selectedBrand}
-                    className="px-3 py-2 border rounded disabled:bg-gray-100"
-                  >
-                    <option value="">Selecione um modelo</option>
-                    {getAvailableModels().map((model) => (
-                      <option key={model.id} value={model.id}>
-                        {model.name}
-                      </option>
-                    ))}
-                  </select>
-
-                  <input
-                    type="number"
-                    step="0.01"
-                    placeholder="Preço *"
-                    value={newModelPrice}
-                    onChange={(e) => setNewModelPrice(e.target.value)}
-                    className="px-3 py-2 border rounded"
-                  />
-
-                  <input
-                    type="number"
-                    step="0.01"
-                    placeholder="Preço atacado"
-                    value={newModelWholesalePrice}
-                    onChange={(e) => setNewModelWholesalePrice(e.target.value)}
-                    className="px-3 py-2 border rounded"
-                  />
-                </div>
-
-                <button
-                  onClick={handleAddModel}
-                  disabled={saving || !selectedModel || !newModelPrice}
-                  className="mt-3 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50"
-                >
-                  {saving ? 'Adicionando...' : 'Adicionar Modelo'}
-                </button>
               </div>
             </div>
           )}
