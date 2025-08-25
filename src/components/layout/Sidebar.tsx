@@ -24,14 +24,35 @@ interface Category {
   name: string
   slug: string
   productCount?: number
+  icon?: string
 }
 
-const getCategoryIcon = (categorySlug: string, isActive: boolean) => {
+const getCategoryIcon = (category: Category, isActive: boolean) => {
   const iconSize = 30
   const strokeWidth = isActive ? "2" : "1.5"
   
+  // Se a categoria tem um ícone SVG personalizado, use-o
+  if (category.icon && category.icon.trim()) {
+    // Validação básica para garantir que é um SVG
+    const isSvg = category.icon.trim().toLowerCase().startsWith('<svg')
+    
+    if (isSvg) {
+      return (
+        <div 
+          className="flex items-center justify-center"
+          style={{ 
+            width: iconSize, 
+            height: iconSize,
+            color: isActive ? 'currentColor' : 'inherit'
+          }}
+          dangerouslySetInnerHTML={{ __html: category.icon }}
+        />
+      )
+    }
+  }
   
-  switch (categorySlug) {
+  // Fallback para ícones hardcoded baseados no slug
+  switch (category.slug) {
     case 'capas':
       return <CapasIcon size={iconSize} strokeWidth={strokeWidth} />
     case 'peliculas':
@@ -70,7 +91,17 @@ export function Sidebar() {
     try {
       const response = await fetch("/api/categories")
       const data = await response.json()
-      setCategories(data)
+      
+      // Mapear os dados da API para o formato esperado pelo componente
+      const mappedCategories = data.map((category: any) => ({
+        id: category.id,
+        name: category.name,
+        slug: category.slug,
+        icon: category.icon,
+        productCount: category._count?.products || 0
+      }))
+      
+      setCategories(mappedCategories)
     } catch (error) {
       console.error("Erro ao buscar categorias:", error)
     } finally {
@@ -136,7 +167,7 @@ export function Sidebar() {
                     )}
                   >
                     <span className="flex items-center">
-                      {getCategoryIcon(category.slug, isActive)}
+                      {getCategoryIcon(category, isActive)}
                       <span className="ml-2">{category.name}</span>
                     </span>
                     {category.productCount && category.productCount > 0 && (
