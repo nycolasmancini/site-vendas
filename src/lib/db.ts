@@ -15,14 +15,16 @@ export function getPool() {
       ssl: process.env.NODE_ENV === 'production' 
         ? { rejectUnauthorized: false } 
         : undefined,
-      max: 5, // Máximo de conexões no pool
-      idleTimeoutMillis: 10000, // 10 segundos
-      connectionTimeoutMillis: 5000, // 5 segundos
-      statement_timeout: 30000, // 30 segundos timeout para queries
-      query_timeout: 30000,
+      max: 3, // Reduzir máximo de conexões para evitar overload
+      idleTimeoutMillis: 30000, // 30 segundos - aumentar tempo de idle
+      connectionTimeoutMillis: 10000, // 10 segundos - mais tempo para conectar
+      statement_timeout: 20000, // 20 segundos timeout para queries
+      query_timeout: 20000,
       application_name: 'pmcell-vendas',
       keepAlive: true,
-      keepAliveInitialDelayMillis: 10000
+      keepAliveInitialDelayMillis: 30000, // Iniciar keepalive após 30s
+      // Configurações adicionais para estabilidade
+      allowExitOnIdle: false // Não permitir que o pool termine quando idle
     })
     
     // Log de eventos do pool para debug
@@ -42,18 +44,40 @@ export function getPool() {
   return pool
 }
 
-export async function query(text: string, params?: any[]) {
-  const pool = getPool()
+export async function query(text: string, params?: any[], retries = 2) {
   const start = Date.now()
   
-  try {
-    const result = await pool.query(text, params)
-    const duration = Date.now() - start
-    console.log('Executed query', { text: text.substring(0, 50), duration, rows: result.rowCount })
-    return result
-  } catch (error) {
-    console.error('Database query error:', error)
-    throw error
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const currentPool = getPool() // Obter pool a cada tentativa
+      const result = await currentPool.query(text, params)
+      const duration = Date.now() - start
+      console.log('Executed query', { text: text.substring(0, 50), duration, rows: result.rowCount })
+      return result
+    } catch (error: any) {
+      const duration = Date.now() - start
+      console.error(`Database query error (attempt ${attempt + 1}/${retries + 1}):`, error)
+      
+      // Se for erro de conexão e ainda temos tentativas, retry
+      if ((error.code === 'XX000' || error.message?.includes('shutdown') || error.message?.includes('termination')) && attempt < retries) {
+        console.log(`Retrying query in 1 second... (attempt ${attempt + 2}/${retries + 1})`)
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        // Resetar pool para forçar nova conexão
+        if (pool) {
+          try { 
+            await pool.end() 
+            console.log('Pool connection closed for reset')
+          } catch (endError) {
+            console.log('Error closing pool:', endError)
+          }
+          pool = null
+        }
+        continue
+      }
+      
+      // Se não conseguimos após todas as tentativas, lançar erro
+      throw error
+    }
   }
 }
 

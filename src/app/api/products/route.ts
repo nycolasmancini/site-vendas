@@ -5,7 +5,15 @@ import { query as dbQuery, testConnection, createProduct, createProductImage } f
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔍 NODE_ENV:', process.env.NODE_ENV)
+    const searchParams = request.nextUrl.searchParams
+    const admin = searchParams.get('admin')
+    
+    console.log('🔍 Products API called:', {
+      NODE_ENV: process.env.NODE_ENV,
+      admin: admin,
+      url: request.url,
+      userAgent: request.headers.get('user-agent')?.substring(0, 50)
+    })
     
     // Em produção, usar conexão direta por enquanto  
     if (process.env.NODE_ENV === 'production') {
@@ -74,6 +82,7 @@ export async function GET(request: NextRequest) {
             p.cost, p."categoryId", p.featured, p."isModalProduct",
             p."quickAddIncrement",
             p."isActive", p."createdAt",
+            c.name as category_name,
             COALESCE(
               JSON_AGG(
                 CASE WHEN i.id IS NOT NULL THEN
@@ -103,12 +112,13 @@ export async function GET(request: NextRequest) {
               '[]'::json
             ) as models
           FROM "Product" p
+          LEFT JOIN "Category" c ON c.id = p."categoryId"
           LEFT JOIN "ProductImage" i ON i."productId" = p.id
           LEFT JOIN "ProductModel" pm ON pm."productId" = p.id
           LEFT JOIN "Model" m ON m.id = pm."modelId"
           LEFT JOIN "Brand" b ON b.id = m."brandId"
           ${whereClause}
-          GROUP BY p.id
+          GROUP BY p.id, c.name
           ORDER BY p."createdAt" DESC
           LIMIT $${queryParams.length - 1} OFFSET $${queryParams.length}
         `
@@ -121,10 +131,22 @@ export async function GET(request: NextRequest) {
         `
         const countParams = queryParams.slice(0, -2) // Remove limit e offset
 
+        console.log('🎯 Executing queries with params:', {
+          queryParamsLength: queryParams.length,
+          countParamsLength: countParams.length,
+          whereClause: whereClause
+        })
+        
         const [productsResult, totalResult] = await Promise.all([
           dbQuery(productsQuery, queryParams),
           dbQuery(countQuery, countParams)
         ])
+
+        console.log('📊 Query results:', {
+          productsRows: productsResult?.rows?.length || 0,
+          totalRows: totalResult?.rows?.length || 0,
+          firstProductId: productsResult?.rows?.[0]?.id || 'none'
+        })
 
         if (!productsResult.rows) {
           throw new Error('No data returned from products query')
@@ -174,7 +196,7 @@ export async function GET(request: NextRequest) {
             isActive: row.isActive,
             createdAt: row.createdAt,
             // Campos relacionais
-            category: null,
+            category: { name: row.category_name || 'Sem categoria' },
             images: Array.isArray(row.images) ? row.images : [],
             suppliers: [],
             models,
@@ -187,7 +209,7 @@ export async function GET(request: NextRequest) {
 
         const total = parseInt(totalResult.rows[0].total)
 
-        return NextResponse.json({
+        const response = {
           products,
           pagination: {
             page,
@@ -195,9 +217,29 @@ export async function GET(request: NextRequest) {
             total,
             totalPages: Math.ceil(total / limit)
           }
+        }
+
+        console.log('✅ Production API returning:', {
+          productsCount: products.length,
+          total: total,
+          page: page,
+          hasProducts: products.length > 0,
+          firstProductName: products[0]?.name || 'none'
         })
+
+        return NextResponse.json(response)
       } catch (error) {
         console.error('Production query error:', error)
+        
+        // Log detalhado do erro para debug
+        if (error instanceof Error) {
+          console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name
+          })
+        }
+        
         // Retornar resposta vazia em caso de erro ao invés de falhar completamente
         return NextResponse.json({
           products: [],
@@ -207,7 +249,8 @@ export async function GET(request: NextRequest) {
             total: 0,
             totalPages: 0
           },
-          error: 'Database connection failed'
+          error: 'Database connection failed',
+          errorDetails: process.env.NODE_ENV === 'development' ? error : undefined
         })
       }
     }

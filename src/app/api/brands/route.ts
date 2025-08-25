@@ -1,10 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
+    console.log('🔍 Tentando buscar brands...')
+    
+    // Verificar se estamos em produção e a tabela existe
+    if (process.env.NODE_ENV === 'production') {
+      // Testar se a tabela Brand existe fazendo uma query simples
+      try {
+        await prisma.$queryRaw`SELECT 1 FROM "Brand" LIMIT 1`
+        console.log('✅ Tabela Brand encontrada em produção')
+      } catch (tableError) {
+        console.error('❌ Tabela Brand não encontrada em produção:', tableError)
+        // Retornar array vazio se a tabela não existir
+        return NextResponse.json([], { status: 200 })
+      }
+    }
+
     const brands = await prisma.brand.findMany({
       include: {
         models: {
@@ -14,6 +27,7 @@ export async function GET() {
       orderBy: { name: 'asc' }
     })
 
+    console.log(`✅ ${brands.length} brands encontradas`)
     return NextResponse.json(brands)
   } catch (error) {
     console.error('Erro ao buscar brands:', error)

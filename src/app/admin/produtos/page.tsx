@@ -113,16 +113,37 @@ export default function AdminProdutos() {
 
   const loadProducts = async () => {
     try {
-      const response = await fetch('/api/products')
+      console.log('🔍 Buscando produtos...')
+      const response = await fetch('/api/products?admin=true')
+      console.log('📡 Response status:', response.status, 'ok:', response.ok)
+      
       if (response.ok) {
         const data = await response.json()
-        setProducts(Array.isArray(data) ? data : [])
+        console.log('📊 Data received:', {
+          hasProducts: !!data.products,
+          productsLength: data.products?.length || 0,
+          isArray: Array.isArray(data.products),
+          dataKeys: Object.keys(data),
+          firstProduct: data.products?.[0] ? Object.keys(data.products[0]) : 'none'
+        })
+        
+        // A API sempre retorna {products: [], pagination: {}}
+        const productsArray = data.products || []
+        setProducts(Array.isArray(productsArray) ? productsArray : [])
+        console.log('✅ Produtos definidos no estado:', productsArray.length)
+        
+        // Debug adicional se não houver produtos
+        if (productsArray.length === 0) {
+          console.log('⚠️ Nenhum produto encontrado. Data completa:', data)
+        }
       } else {
-        console.error('Erro na API de produtos:', response.status)
+        console.error('❌ Erro na API de produtos:', response.status, response.statusText)
+        const errorText = await response.text()
+        console.error('Error response:', errorText)
         setProducts([])
       }
     } catch (error) {
-      console.error('Erro ao carregar produtos:', error)
+      console.error('❌ Erro ao carregar produtos:', error)
       setProducts([])
     } finally {
       setLoading(false)
@@ -143,10 +164,12 @@ export default function AdminProdutos() {
 
   const loadBrands = async () => {
     try {
+      console.log('🔍 Carregando brands...')
       const response = await fetch('/api/brands')
       if (response.ok) {
         const data = await response.json()
         setBrands(Array.isArray(data) ? data : [])
+        console.log('✅ Brands carregadas:', data.length)
       } else {
         console.error('Erro na API de brands:', response.status)
         setBrands([])
@@ -805,57 +828,65 @@ export default function AdminProdutos() {
 
                 {/* Lista de marcas e modelos */}
                 <div className="max-h-96 overflow-y-auto">
-                  {Array.isArray(brands) && brands.map((brand) => (
-                    <div key={brand.id} className="mb-4">
-                      <h4 className="font-medium text-gray-900 mb-2">{brand.name}</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {Array.isArray(brand.models) && brand.models.map((model) => (
-                          <div key={model.id} className="border rounded-lg p-3">
-                            <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={selectedModels[model.id]?.selected || false}
-                                onChange={() => toggleModelSelection(model.id)}
-                                className="rounded border-gray-300 text-purple-600 shadow-sm focus:ring-purple-500"
-                              />
-                              <span className="text-sm font-medium">{model.name}</span>
-                            </label>
-                            
-                            {selectedModels[model.id]?.selected && (
-                              <div className="mt-2 space-y-2">
-                                <div>
-                                  <label className="block text-xs font-medium text-gray-700">
-                                    Preço Específico
-                                  </label>
-                                  <input
-                                    type="number"
-                                    step="0.01"
-                                    value={selectedModels[model.id]?.price || ''}
-                                    onChange={(e) => updateModelPrice(model.id, 'price', e.target.value)}
-                                    className="mt-1 block w-full px-2 py-1 text-sm border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                                    placeholder="Usar preço base"
-                                  />
+                  {Array.isArray(brands) && brands.length > 0 ? (
+                    brands.map((brand) => (
+                      <div key={brand.id} className="mb-4">
+                        <h4 className="font-medium text-gray-900 mb-2">{brand.name}</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {Array.isArray(brand.models) && brand.models.map((model) => (
+                            <div key={model.id} className="border rounded-lg p-3">
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedModels[model.id]?.selected || false}
+                                  onChange={() => toggleModelSelection(model.id)}
+                                  className="rounded border-gray-300 text-purple-600 shadow-sm focus:ring-purple-500"
+                                />
+                                <span className="text-sm font-medium">{model.name}</span>
+                              </label>
+                              
+                              {selectedModels[model.id]?.selected && (
+                                <div className="mt-2 space-y-2">
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-700">
+                                      Preço Específico
+                                    </label>
+                                    <input
+                                      type="number"
+                                      step="0.01"
+                                      value={selectedModels[model.id]?.price || ''}
+                                      onChange={(e) => updateModelPrice(model.id, 'price', e.target.value)}
+                                      className="mt-1 block w-full px-2 py-1 text-sm border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                                      placeholder="Usar preço base"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-700">
+                                      Preço Atacado Específico
+                                    </label>
+                                    <input
+                                      type="number"
+                                      step="0.01"
+                                      value={selectedModels[model.id]?.wholesalePrice || ''}
+                                      onChange={(e) => updateModelPrice(model.id, 'wholesalePrice', e.target.value)}
+                                      className="mt-1 block w-full px-2 py-1 text-sm border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                                      placeholder="Usar preço atacado base"
+                                    />
+                                  </div>
                                 </div>
-                                <div>
-                                  <label className="block text-xs font-medium text-gray-700">
-                                    Preço Atacado Específico
-                                  </label>
-                                  <input
-                                    type="number"
-                                    step="0.01"
-                                    value={selectedModels[model.id]?.wholesalePrice || ''}
-                                    onChange={(e) => updateModelPrice(model.id, 'wholesalePrice', e.target.value)}
-                                    className="mt-1 block w-full px-2 py-1 text-sm border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                                    placeholder="Usar preço atacado base"
-                                  />
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-sm text-yellow-800">
+                        ⚠️ Nenhuma marca/modelo disponível. Adicione marcas e modelos primeiro para usar produtos modais.
+                      </p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
 
@@ -992,7 +1023,7 @@ export default function AdminProdutos() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {product.category.name}
+                        {product.category?.name || 'Sem categoria'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         <div>R$ {product.price.toFixed(2)}</div>
