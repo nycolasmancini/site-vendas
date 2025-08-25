@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface Category {
@@ -28,11 +28,9 @@ export default function AdminCategorias() {
 
   const [newCategory, setNewCategory] = useState({
     name: '',
-    icon: '',
     order: ''
   })
 
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     loadCategories()
@@ -58,7 +56,6 @@ export default function AdminCategorias() {
     try {
       const formData = new FormData()
       formData.append('name', newCategory.name)
-      formData.append('icon', newCategory.icon)
       formData.append('order', newCategory.order || '0')
 
       const url = editingCategory ? `/api/categories/${editingCategory.id}` : '/api/categories'
@@ -88,7 +85,6 @@ export default function AdminCategorias() {
   const resetForm = () => {
     setNewCategory({
       name: '',
-      icon: '',
       order: ''
     })
   }
@@ -97,7 +93,6 @@ export default function AdminCategorias() {
     setEditingCategory(category)
     setNewCategory({
       name: category.name,
-      icon: category.icon || '',
       order: category.order.toString()
     })
     setShowAddForm(true)
@@ -223,38 +218,6 @@ export default function AdminCategorias() {
     setDragOverItem(null)
   }
 
-  const handleIconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = () => {
-        const result = reader.result as string
-        if (file.type === 'image/svg+xml') {
-          // Para arquivos SVG, ler como texto e processar
-          let svgContent = result.trim()
-          
-          // Garantir que o SVG tem atributos essenciais
-          if (!svgContent.includes('fill=')) {
-            svgContent = svgContent.replace('<svg', '<svg fill="currentColor"')
-          }
-          if (!svgContent.includes('width=') || !svgContent.includes('height=')) {
-            svgContent = svgContent.replace('<svg', '<svg width="24" height="24"')
-          }
-          
-          setNewCategory(prev => ({ ...prev, icon: svgContent }))
-        } else {
-          // Para outros tipos de imagem, usar base64
-          setNewCategory(prev => ({ ...prev, icon: result }))
-        }
-      }
-      
-      if (file.type === 'image/svg+xml') {
-        reader.readAsText(file) // Ler SVG como texto
-      } else {
-        reader.readAsDataURL(file) // Ler outros como base64
-      }
-    }
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -323,38 +286,6 @@ export default function AdminCategorias() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ícone (SVG ou imagem)
-                  </label>
-                  <div className="space-y-2">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*,.svg"
-                      onChange={handleIconUpload}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                    />
-                    <span className="text-xs text-gray-500">
-                      Ou cole o código SVG diretamente:
-                    </span>
-                    <textarea
-                      value={newCategory.icon}
-                      onChange={(e) => setNewCategory({...newCategory, icon: e.target.value})}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 h-20"
-                      placeholder="<svg>...</svg> ou deixe vazio"
-                    />
-                    {newCategory.icon && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600">Preview:</span>
-                        <div 
-                          className="w-6 h-6"
-                          dangerouslySetInnerHTML={{ __html: newCategory.icon }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
 
                 <div className="flex space-x-4">
                   <button
@@ -463,12 +394,6 @@ export default function AdminCategorias() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          {category.icon && (
-                            <div 
-                              className="w-6 h-6 mr-3 text-gray-600"
-                              dangerouslySetInnerHTML={{ __html: category.icon }}
-                            />
-                          )}
                           <div className="text-sm font-medium text-gray-900">
                             {category.name}
                           </div>

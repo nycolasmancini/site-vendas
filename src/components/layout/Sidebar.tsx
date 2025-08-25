@@ -19,72 +19,19 @@ import {
   SmartwatchCustomIcon
 } from "@/components/ui/Icons"
 
-// Função para processar SVGs e garantir atributos corretos
-const processSvgIcon = (svgString: string, size: number, isActive: boolean): string => {
-  let processedSvg = svgString.trim()
-  
-  // Garantir que o SVG tem atributos de tamanho
-  if (!processedSvg.includes('width=')) {
-    processedSvg = processedSvg.replace('<svg', `<svg width="${size}"`)
-  } else {
-    processedSvg = processedSvg.replace(/width="[^"]*"/g, `width="${size}"`)
-  }
-  
-  if (!processedSvg.includes('height=')) {
-    processedSvg = processedSvg.replace('<svg', `<svg height="${size}"`)
-  } else {
-    processedSvg = processedSvg.replace(/height="[^"]*"/g, `height="${size}"`)
-  }
-  
-  // Garantir que o SVG responde a mudanças de cor
-  if (!processedSvg.includes('fill="currentColor"') && !processedSvg.includes('stroke="currentColor"')) {
-    if (processedSvg.includes('fill=')) {
-      processedSvg = processedSvg.replace(/fill="(?!none)[^"]*"/g, 'fill="currentColor"')
-    } else {
-      processedSvg = processedSvg.replace('<svg', '<svg fill="currentColor"')
-    }
-  }
-  
-  return processedSvg
-}
 
 interface Category {
   id: string
   name: string
   slug: string
   productCount?: number
-  icon?: string
 }
 
 const getCategoryIcon = (category: Category, isActive: boolean) => {
   const iconSize = 30
   const strokeWidth = isActive ? "2" : "1.5"
   
-  // Se a categoria tem um ícone SVG personalizado, use-o
-  if (category.icon && category.icon.trim()) {
-    // Validação básica para garantir que é um SVG
-    const isSvg = category.icon.trim().toLowerCase().startsWith('<svg')
-    
-    if (isSvg) {
-      const processedSvg = processSvgIcon(category.icon, iconSize, isActive)
-      
-      return (
-        <div 
-          className={cn(
-            "flex items-center justify-center flex-shrink-0",
-            isActive ? "text-white" : "text-gray-600"
-          )}
-          style={{ 
-            width: iconSize, 
-            height: iconSize
-          }}
-          dangerouslySetInnerHTML={{ __html: processedSvg }}
-        />
-      )
-    }
-  }
-  
-  // Fallback para ícones hardcoded baseados no slug
+  // Usar ícones hardcoded baseados no slug
   switch (category.slug) {
     case 'capas':
       return <CapasIcon size={iconSize} strokeWidth={strokeWidth} />
@@ -130,7 +77,6 @@ export function Sidebar() {
         id: category.id,
         name: category.name,
         slug: category.slug,
-        icon: category.icon,
         productCount: category._count?.products || 0
       }))
       

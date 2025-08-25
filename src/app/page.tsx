@@ -34,41 +34,7 @@ import {
 
 // Função para obter o ícone correto para cada categoria
 const getCategoryIcon = (category: any, size: number = 30) => {
-  // Se a categoria tem um ícone SVG personalizado, usar ele
-  if (category?.icon) {
-    console.log(`Renderizando SVG para categoria: ${category.name}`, category.icon)
-    
-    let processedSvg = category.icon
-    
-    // Atualizar dimensões
-    processedSvg = processedSvg.replace(/width="[^"]*"/g, `width="${size}"`)
-    processedSvg = processedSvg.replace(/height="[^"]*"/g, `height="${size}"`)
-    
-    // Atualizar cores - para SVGs com fill
-    processedSvg = processedSvg.replace(/fill="[^"]*"/g, 'fill="currentColor"')
-    
-    // Atualizar cores - para SVGs com stroke
-    processedSvg = processedSvg.replace(/stroke="[^"]*"/g, 'stroke="currentColor"')
-    processedSvg = processedSvg.replace(/color="[^"]*"/g, 'color="currentColor"')
-    
-    console.log(`SVG processado:`, processedSvg)
-    
-    return (
-      <div 
-        className="flex items-center justify-center flex-shrink-0"
-        style={{ 
-          width: `${size}px`,
-          height: `${size}px`,
-          lineHeight: 0
-        }}
-        dangerouslySetInnerHTML={{ 
-          __html: processedSvg
-        }}
-      />
-    )
-  }
-
-  // Caso contrário, usar a lógica baseada no nome
+  // Usar a lógica baseada no nome
   const name = category?.name?.toLowerCase() || ''
   
   if (name.includes('capa') || name.includes('case') || name.includes('capinha')) {
