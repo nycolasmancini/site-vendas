@@ -20,7 +20,7 @@ export async function GET() {
         try {
           const { exec } = require('child_process')
           await new Promise((resolve, reject) => {
-            exec('npx prisma db push --accept-data-loss', (error, stdout, stderr) => {
+            exec('npx prisma db push --accept-data-loss', (error: Error | null, stdout: string, stderr: string) => {
               if (error) {
                 console.error('Erro ao executar db push:', error)
                 reject(error)
