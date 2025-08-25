@@ -102,6 +102,9 @@ export async function PUT(
         'SELECT * FROM "Product" WHERE "id" = $1', 
         [id]
       )
+      if (!productResult || !productResult.rows) {
+        return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+      }
       existingProduct = productResult.rows[0]
     } else {
       existingProduct = await prisma.product.findUnique({
@@ -228,6 +231,9 @@ export async function PUT(
       ]
       
       const updateResult = await dbQuery(updateQuery, updateParams)
+      if (!updateResult || !updateResult.rows) {
+        return NextResponse.json({ error: 'Failed to update product' }, { status: 500 })
+      }
       updatedProduct = updateResult.rows[0]
       
       // Adicionar novas imagens se houver
@@ -237,6 +243,9 @@ export async function PUT(
           'SELECT COUNT(*) as count FROM "ProductImage" WHERE "productId" = $1',
           [id]
         )
+        if (!countResult || !countResult.rows) {
+          return NextResponse.json({ error: 'Failed to query images' }, { status: 500 })
+        }
         const existingImageCount = parseInt(countResult.rows[0].count)
         
         // Inserir novas imagens
@@ -292,6 +301,9 @@ export async function PUT(
       `
       
       const fullProductResult = await dbQuery(fullProductQuery, [id])
+      if (!fullProductResult || !fullProductResult.rows) {
+        return NextResponse.json({ error: 'Failed to fetch updated product' }, { status: 500 })
+      }
       updatedProduct = fullProductResult.rows[0]
       
     } else {
