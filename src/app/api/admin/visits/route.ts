@@ -140,9 +140,15 @@ async function readVisitsFromDatabase(): Promise<any[]> {
       whatsapp: visit.whatsapp,
       startTime: visit.startTime,
       lastActivity: visit.lastActivity,
-      searchTerms: visit.searchTerms ? JSON.parse(visit.searchTerms) : [],
-      categoriesVisited: visit.categoriesVisited ? JSON.parse(visit.categoriesVisited) : [],
-      productsViewed: visit.productsViewed ? JSON.parse(visit.productsViewed) : [],
+      searchTerms: typeof visit.searchTerms === 'string' 
+        ? JSON.parse(visit.searchTerms) 
+        : visit.searchTerms || [],
+      categoriesVisited: typeof visit.categoriesVisited === 'string'
+        ? JSON.parse(visit.categoriesVisited)
+        : visit.categoriesVisited || [],
+      productsViewed: typeof visit.productsViewed === 'string'
+        ? JSON.parse(visit.productsViewed)
+        : visit.productsViewed || [],
       status: visit.status,
       hasCart: visit.hasCart,
       cartValue: visit.cartValue,
