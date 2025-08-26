@@ -4,6 +4,7 @@ import "./globals.css";
 import { SessionProvider } from "@/contexts/SessionContext";
 import { NextAuthProvider } from "@/components/NextAuthProvider";
 import { CartSidebar } from "@/components/cart/CartSidebar";
+import { AnalyticsProvider } from "@/components/providers/AnalyticsProvider";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -29,8 +30,10 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans`}>
         <NextAuthProvider>
           <SessionProvider>
-            {children}
-            <CartSidebar />
+            <AnalyticsProvider>
+              {children}
+              <CartSidebar />
+            </AnalyticsProvider>
           </SessionProvider>
         </NextAuthProvider>
         <script

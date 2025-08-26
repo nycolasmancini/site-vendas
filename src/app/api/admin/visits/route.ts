@@ -74,6 +74,7 @@ interface CartData {
 }
 
 const CARTS_FILE = path.join(process.cwd(), 'data', 'abandoned-carts.json')
+const VISITS_FILE = path.join(process.cwd(), 'data', 'visits-tracking.json')
 
 // Função para garantir que o diretório existe
 function ensureDataDirectory() {
@@ -98,6 +99,53 @@ function readCartsFromFile(): CartData[] {
   } catch (error) {
     console.error('Erro ao ler arquivo de carrinhos:', error)
     return []
+  }
+}
+
+// Função para ler visitas do arquivo de tracking
+function readVisitsFromFile(): any[] {
+  ensureDataDirectory()
+  
+  if (!fs.existsSync(VISITS_FILE)) {
+    return []
+  }
+  
+  try {
+    const data = fs.readFileSync(VISITS_FILE, 'utf8')
+    const visits = JSON.parse(data)
+    return Array.isArray(visits) ? visits : []
+  } catch (error) {
+    console.error('Erro ao ler arquivo de visitas:', error)
+    return []
+  }
+}
+
+// Função para converter dados de visita do arquivo de tracking
+function convertTrackingToVisit(visit: any): VisitData {
+  const now = Date.now()
+  
+  // Converter timestamps
+  let startTime = visit.startTime ? new Date(visit.startTime) : new Date(visit.createdAt)
+  let lastActivity = visit.lastActivity ? new Date(visit.lastActivity) : new Date(visit.updatedAt)
+  
+  // Calcular duração da sessão
+  const sessionDuration = Math.floor((lastActivity.getTime() - startTime.getTime()) / 1000)
+  
+  return {
+    sessionId: visit.sessionId,
+    whatsapp: visit.whatsapp,
+    startTime: startTime,
+    endTime: visit.status !== 'active' ? lastActivity : undefined,
+    sessionDuration,
+    searchTerms: visit.searchTerms || [],
+    categoriesVisited: visit.categoriesVisited || [],
+    productsViewed: visit.productsViewed || [],
+    status: visit.status || 'active',
+    hasCart: visit.hasCart || false,
+    cartValue: visit.cartValue || 0,
+    cartItems: visit.cartItems || 0,
+    lastActivity: lastActivity,
+    whatsappCollectedAt: visit.whatsappCollectedAt ? new Date(visit.whatsappCollectedAt) : undefined
   }
 }
 
@@ -177,11 +225,19 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = 30 // 30 visitas por página
     
-    // Ler dados dos carrinhos (nossa fonte atual de dados de visita)
+    // Ler dados das visitas tracking (nova fonte prioritária)
+    const trackingVisits = readVisitsFromFile()
     const carts = readCartsFromFile()
     
-    // Converter carrinhos em visitas
-    let visits = carts.map(convertCartToVisit)
+    // Converter ambas as fontes em visitas
+    let trackingConverted = trackingVisits.map(convertTrackingToVisit)
+    let cartsConverted = carts.map(convertCartToVisit)
+    
+    // Mesclar dados - priorizar tracking sobre carrinhos quando sessionId duplicado
+    const sessionIds = new Set(trackingConverted.map(v => v.sessionId))
+    const filteredCarts = cartsConverted.filter(v => !sessionIds.has(v.sessionId))
+    
+    let visits = [...trackingConverted, ...filteredCarts]
     
     // Filtrar por data se fornecido
     if (startDate) {

@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useCartStore } from '@/stores/useCartStore'
 import { useSession } from '@/contexts/SessionContext'
 import { formatPrice } from '@/lib/utils'
+import { useAnalytics } from '@/lib/analytics'
 
 // Lazy load do modal para otimização
 const ProductDetailsModal = lazy(() => import('./ProductDetailsModal'))
@@ -43,6 +44,7 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
   const addItem = useCartStore((state) => state.addItem)
   const cartItems = useCartStore((state) => state.items)
   const { unlocked } = useSession()
+  const analytics = useAnalytics()
   const [quantity, setQuantity] = useState<number | string>(1)
   const [isAnimating, setIsAnimating] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
@@ -150,18 +152,25 @@ export default function ProductCard({ product, onSelectModels, onUnlockPrices }:
   // Obter a URL da imagem principal
   const imageUrl = product.images?.find(img => img.isMain)?.url || product.images?.[0]?.url || product.image
 
+  // Handler para tracking de visualização do produto
+  const handleProductView = () => {
+    // Track product view
+    analytics.trackProductView(product.id, product.name, product.category || 'Produto')
+    setShowDetailsModal(true)
+  }
+
   return (
     <div className="card hover:shadow-lg transition-all duration-300 overflow-hidden group animate-fade-in w-full flex flex-col h-full">
       <div 
         className="aspect-square relative cursor-pointer group/image" 
         style={{ background: 'var(--muted)' }}
-        onClick={() => setShowDetailsModal(true)}
+        onClick={handleProductView}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault()
-            setShowDetailsModal(true)
+            handleProductView()
           }
         }}
         aria-label="Ver detalhes do produto"
