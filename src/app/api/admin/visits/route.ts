@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 // Interfaces para tipagem
 interface VisitData {
@@ -102,7 +105,7 @@ function readCartsFromFile(): CartData[] {
   }
 }
 
-// Função para ler visitas do arquivo de tracking
+// Função para ler visitas do arquivo de tracking (fallback)
 function readVisitsFromFile(): any[] {
   ensureDataDirectory()
   
@@ -116,6 +119,44 @@ function readVisitsFromFile(): any[] {
     return Array.isArray(visits) ? visits : []
   } catch (error) {
     console.error('Erro ao ler arquivo de visitas:', error)
+    return []
+  }
+}
+
+// Função para ler visitas do banco de dados
+async function readVisitsFromDatabase(): Promise<any[]> {
+  try {
+    console.log('🗃️ Lendo visitas do banco de dados...')
+    
+    const visits = await prisma.visit.findMany({
+      orderBy: {
+        startTime: 'desc'
+      }
+    })
+    
+    // Converter dados do banco para formato esperado
+    const formattedVisits = visits.map(visit => ({
+      sessionId: visit.sessionId,
+      whatsapp: visit.whatsapp,
+      startTime: visit.startTime,
+      lastActivity: visit.lastActivity,
+      searchTerms: visit.searchTerms ? JSON.parse(visit.searchTerms) : [],
+      categoriesVisited: visit.categoriesVisited ? JSON.parse(visit.categoriesVisited) : [],
+      productsViewed: visit.productsViewed ? JSON.parse(visit.productsViewed) : [],
+      status: visit.status,
+      hasCart: visit.hasCart,
+      cartValue: visit.cartValue,
+      cartItems: visit.cartItems,
+      whatsappCollectedAt: visit.whatsappCollectedAt,
+      createdAt: visit.createdAt,
+      updatedAt: visit.updatedAt
+    }))
+    
+    console.log(`🗃️ ${formattedVisits.length} visitas encontradas no banco`)
+    return formattedVisits
+    
+  } catch (error) {
+    console.error('❌ Erro ao ler visitas do banco:', error)
     return []
   }
 }
@@ -225,19 +266,24 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = 30 // 30 visitas por página
     
-    // Ler dados das visitas tracking (nova fonte prioritária)
-    const trackingVisits = readVisitsFromFile()
+    // Ler dados das visitas do banco (nova fonte prioritária)
+    const databaseVisits = await readVisitsFromDatabase()
+    const trackingVisits = readVisitsFromFile() // fallback para arquivo
     const carts = readCartsFromFile()
     
-    // Converter ambas as fontes em visitas
+    // Converter todas as fontes em visitas
+    let databaseConverted = databaseVisits.map(convertTrackingToVisit)
     let trackingConverted = trackingVisits.map(convertTrackingToVisit)
     let cartsConverted = carts.map(convertCartToVisit)
     
-    // Mesclar dados - priorizar tracking sobre carrinhos quando sessionId duplicado
-    const sessionIds = new Set(trackingConverted.map(v => v.sessionId))
-    const filteredCarts = cartsConverted.filter(v => !sessionIds.has(v.sessionId))
+    // Mesclar dados - priorizar banco > arquivo > carrinhos quando sessionId duplicado
+    const databaseSessionIds = new Set(databaseConverted.map(v => v.sessionId))
+    const filteredTracking = trackingConverted.filter(v => !databaseSessionIds.has(v.sessionId))
     
-    let visits = [...trackingConverted, ...filteredCarts]
+    const allSessionIds = new Set([...databaseSessionIds, ...filteredTracking.map(v => v.sessionId)])
+    const filteredCarts = cartsConverted.filter(v => !allSessionIds.has(v.sessionId))
+    
+    let visits = [...databaseConverted, ...filteredTracking, ...filteredCarts]
     
     // Filtrar por data se fornecido
     if (startDate) {

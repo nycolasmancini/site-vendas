@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 // Interface para dados de tracking
 interface TrackingData {
@@ -28,66 +29,46 @@ interface TrackingData {
   whatsappCollectedAt?: number | null
 }
 
-const VISITS_FILE = path.join(process.cwd(), 'data', 'visits-tracking.json')
-
-// Função para garantir que o diretório existe
-function ensureDataDirectory() {
-  const dataDir = path.join(process.cwd(), 'data')
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true })
-  }
-}
-
-// Função para ler visitas do arquivo
-function readVisitsFromFile(): any[] {
-  ensureDataDirectory()
-  
-  if (!fs.existsSync(VISITS_FILE)) {
-    return []
-  }
-  
+// Função para salvar visita no banco de dados
+async function saveVisitToDatabase(trackingData: TrackingData): Promise<boolean> {
   try {
-    const data = fs.readFileSync(VISITS_FILE, 'utf8')
-    const visits = JSON.parse(data)
-    return Array.isArray(visits) ? visits : []
-  } catch (error) {
-    console.error('Erro ao ler arquivo de visitas:', error)
-    return []
-  }
-}
-
-// Função para salvar visitas no arquivo
-function saveVisitsToFile(visits: any[]): boolean {
-  ensureDataDirectory()
-  
-  try {
-    console.log(`💾 Tentando salvar ${visits.length} visitas em: ${VISITS_FILE}`)
+    console.log('🗃️ Salvando visita no banco de dados...')
     
-    // Verificar se o diretório existe
-    const dataDir = path.dirname(VISITS_FILE)
-    if (!fs.existsSync(dataDir)) {
-      console.log(`📁 Criando diretório: ${dataDir}`)
-      fs.mkdirSync(dataDir, { recursive: true })
+    const visitData = {
+      sessionId: trackingData.sessionId,
+      whatsapp: trackingData.whatsapp,
+      searchTerms: JSON.stringify(trackingData.searchTerms || []),
+      categoriesVisited: JSON.stringify(trackingData.categoriesVisited || []),
+      productsViewed: JSON.stringify(trackingData.productsViewed || []),
+      status: trackingData.status || 'active',
+      hasCart: trackingData.cartData?.hasCart || false,
+      cartValue: trackingData.cartData?.cartValue || null,
+      cartItems: trackingData.cartData?.cartItems || null,
+      lastActivity: new Date(),
+      whatsappCollectedAt: trackingData.whatsappCollectedAt ? new Date(trackingData.whatsappCollectedAt) : null
     }
     
-    // Verificar permissões de escrita
-    try {
-      fs.accessSync(dataDir, fs.constants.W_OK)
-      console.log('✅ Permissão de escrita OK')
-    } catch (permError) {
-      console.error('❌ Erro de permissão:', permError)
-      throw permError
-    }
+    const result = await prisma.visit.upsert({
+      where: {
+        sessionId: trackingData.sessionId
+      },
+      update: {
+        ...visitData,
+        updatedAt: new Date()
+      },
+      create: {
+        ...visitData,
+        startTime: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    })
     
-    const jsonData = JSON.stringify(visits, null, 2)
-    console.log(`💾 JSON data size: ${jsonData.length} caracteres`)
-    
-    fs.writeFileSync(VISITS_FILE, jsonData)
-    console.log('✅ Arquivo salvo com sucesso!')
-    
+    console.log('✅ Visita salva no banco:', result.id)
     return true
+    
   } catch (error) {
-    console.error('❌ Erro ao salvar arquivo de visitas:', error)
+    console.error('❌ Erro ao salvar visita no banco:', error)
     return false
   }
 }
@@ -113,65 +94,15 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
     
-    // Ler visitas existentes
-    console.log('📂 Lendo visitas existentes...')
-    const visits = readVisitsFromFile()
-    console.log(`📂 ${visits.length} visitas encontradas no arquivo`)
-    
-    // Procurar visita existente
-    const existingVisitIndex = visits.findIndex(v => v.sessionId === trackingData.sessionId)
-    
-    const now = new Date()
-    const visitData = {
-      sessionId: trackingData.sessionId,
-      whatsapp: trackingData.whatsapp || null,
-      searchTerms: trackingData.searchTerms || [],
-      categoriesVisited: trackingData.categoriesVisited || [],
-      productsViewed: trackingData.productsViewed || [],
-      hasCart: trackingData.cartData?.hasCart || false,
-      cartValue: trackingData.cartData?.cartValue || null,
-      cartItems: trackingData.cartData?.cartItems || null,
-      status: trackingData.status || 'active',
-      whatsappCollectedAt: trackingData.whatsappCollectedAt ? new Date(trackingData.whatsappCollectedAt) : null,
-      lastActivity: now,
-      updatedAt: now
-    }
-    
-    if (existingVisitIndex >= 0) {
-      // Atualizar visita existente
-      visits[existingVisitIndex] = {
-        ...visits[existingVisitIndex],
-        ...visitData
-      }
-    } else {
-      // Criar nova visita
-      visits.push({
-        ...visitData,
-        startTime: now,
-        createdAt: now
-      })
-    }
-    
-    // Salvar no arquivo
-    console.log('💾 Salvando no arquivo...')
-    const saveSuccess = saveVisitsToFile(visits)
+    // Salvar visita no banco de dados
+    const saveSuccess = await saveVisitToDatabase(trackingData)
     
     if (!saveSuccess) {
-      console.error('❌ Falha ao salvar arquivo!')
+      console.error('❌ Falha ao salvar no banco!')
       return NextResponse.json({
         success: false,
-        error: 'Erro ao salvar dados de visita'
+        error: 'Erro ao salvar dados de visita no banco'
       }, { status: 500 })
-    }
-    
-    // Verificar se arquivo foi realmente criado
-    const filePath = path.join(process.cwd(), 'data', 'visits-tracking.json')
-    const fileExists = require('fs').existsSync(filePath)
-    console.log(`📁 Arquivo existe após salvamento: ${fileExists}`)
-    
-    if (fileExists) {
-      const fileStats = require('fs').statSync(filePath)
-      console.log(`📁 Tamanho do arquivo: ${fileStats.size} bytes`)
     }
     
     // Log para debug
@@ -211,8 +142,9 @@ export async function GET(request: NextRequest) {
       }, { status: 400 })
     }
     
-    const visits = readVisitsFromFile()
-    const visit = visits.find(v => v.sessionId === sessionId)
+    const visit = await prisma.visit.findUnique({
+      where: { sessionId }
+    })
     
     if (!visit) {
       return NextResponse.json({
