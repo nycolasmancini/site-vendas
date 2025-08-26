@@ -101,9 +101,9 @@ export async function POST(request: NextRequest) {
       sessionId: trackingData.sessionId,
       whatsapp: trackingData.whatsapp,
       status: trackingData.status,
-      hasSearchTerms: trackingData.searchTerms?.length > 0,
-      hasCategoriesVisited: trackingData.categoriesVisited?.length > 0,
-      hasProductsViewed: trackingData.productsViewed?.length > 0
+      hasSearchTerms: !!trackingData.searchTerms?.length,
+      hasCategoriesVisited: !!trackingData.categoriesVisited?.length,
+      hasProductsViewed: !!trackingData.productsViewed?.length
     })
     
     if (!trackingData.sessionId) {
