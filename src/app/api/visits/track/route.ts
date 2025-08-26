@@ -57,19 +57,54 @@ function readVisitsFromFile(): any[] {
 }
 
 // Função para salvar visitas no arquivo
-function saveVisitsToFile(visits: any[]): void {
+function saveVisitsToFile(visits: any[]): boolean {
   ensureDataDirectory()
   
   try {
-    fs.writeFileSync(VISITS_FILE, JSON.stringify(visits, null, 2))
+    console.log(`💾 Tentando salvar ${visits.length} visitas em: ${VISITS_FILE}`)
+    
+    // Verificar se o diretório existe
+    const dataDir = path.dirname(VISITS_FILE)
+    if (!fs.existsSync(dataDir)) {
+      console.log(`📁 Criando diretório: ${dataDir}`)
+      fs.mkdirSync(dataDir, { recursive: true })
+    }
+    
+    // Verificar permissões de escrita
+    try {
+      fs.accessSync(dataDir, fs.constants.W_OK)
+      console.log('✅ Permissão de escrita OK')
+    } catch (permError) {
+      console.error('❌ Erro de permissão:', permError)
+      throw permError
+    }
+    
+    const jsonData = JSON.stringify(visits, null, 2)
+    console.log(`💾 JSON data size: ${jsonData.length} caracteres`)
+    
+    fs.writeFileSync(VISITS_FILE, jsonData)
+    console.log('✅ Arquivo salvo com sucesso!')
+    
+    return true
   } catch (error) {
-    console.error('Erro ao salvar arquivo de visitas:', error)
+    console.error('❌ Erro ao salvar arquivo de visitas:', error)
+    return false
   }
 }
 
 export async function POST(request: NextRequest) {
+  console.log('🔥 API /api/visits/track chamada!')
+  
   try {
     const trackingData: TrackingData = await request.json()
+    console.log('📊 Dados recebidos:', {
+      sessionId: trackingData.sessionId,
+      whatsapp: trackingData.whatsapp,
+      status: trackingData.status,
+      hasSearchTerms: trackingData.searchTerms?.length > 0,
+      hasCategoriesVisited: trackingData.categoriesVisited?.length > 0,
+      hasProductsViewed: trackingData.productsViewed?.length > 0
+    })
     
     if (!trackingData.sessionId) {
       return NextResponse.json({
@@ -79,7 +114,9 @@ export async function POST(request: NextRequest) {
     }
     
     // Ler visitas existentes
+    console.log('📂 Lendo visitas existentes...')
     const visits = readVisitsFromFile()
+    console.log(`📂 ${visits.length} visitas encontradas no arquivo`)
     
     // Procurar visita existente
     const existingVisitIndex = visits.findIndex(v => v.sessionId === trackingData.sessionId)
@@ -116,7 +153,26 @@ export async function POST(request: NextRequest) {
     }
     
     // Salvar no arquivo
-    saveVisitsToFile(visits)
+    console.log('💾 Salvando no arquivo...')
+    const saveSuccess = saveVisitsToFile(visits)
+    
+    if (!saveSuccess) {
+      console.error('❌ Falha ao salvar arquivo!')
+      return NextResponse.json({
+        success: false,
+        error: 'Erro ao salvar dados de visita'
+      }, { status: 500 })
+    }
+    
+    // Verificar se arquivo foi realmente criado
+    const filePath = path.join(process.cwd(), 'data', 'visits-tracking.json')
+    const fileExists = require('fs').existsSync(filePath)
+    console.log(`📁 Arquivo existe após salvamento: ${fileExists}`)
+    
+    if (fileExists) {
+      const fileStats = require('fs').statSync(filePath)
+      console.log(`📁 Tamanho do arquivo: ${fileStats.size} bytes`)
+    }
     
     // Log para debug
     console.log('📊 Visit tracking updated:', {

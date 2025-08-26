@@ -39,6 +39,8 @@ export function AnalyticsProvider({ children }: AnalyticsProviderProps) {
             whatsappCollectedAt: null
           }
           
+          console.log('🚀 AnalyticsProvider: Enviando visita inicial:', initialPayload)
+          
           fetch('/api/visits/track', {
             method: 'POST',
             headers: {
@@ -46,13 +48,19 @@ export function AnalyticsProvider({ children }: AnalyticsProviderProps) {
             },
             body: JSON.stringify(initialPayload)
           })
-          .then(response => {
+          .then(async response => {
+            console.log(`📡 AnalyticsProvider: Response status: ${response.status}`)
+            
             if (response.ok) {
-              console.log('📊 AnalyticsProvider: Visita inicial salva com sucesso')
+              const result = await response.json()
+              console.log('✅ AnalyticsProvider: Visita inicial salva com sucesso:', result)
+            } else {
+              const error = await response.text()
+              console.error('❌ AnalyticsProvider: Erro na resposta:', error)
             }
           })
           .catch(error => {
-            console.warn('📊 AnalyticsProvider: Erro ao salvar visita inicial:', error.message)
+            console.error('❌ AnalyticsProvider: Erro na requisição:', error.message)
           })
         }
       }
@@ -99,6 +107,14 @@ export function AnalyticsProvider({ children }: AnalyticsProviderProps) {
           }
           
           // Salvar no servidor
+          console.log('🔄 AnalyticsProvider: Auto-save executando...', {
+            sessionId: trackingPayload.sessionId,
+            hasWhatsapp: !!trackingPayload.whatsapp,
+            searchTermsCount: trackingPayload.searchTerms.length,
+            categoriesCount: trackingPayload.categoriesVisited.length,
+            productsCount: trackingPayload.productsViewed.length
+          })
+          
           fetch('/api/visits/track', {
             method: 'POST',
             headers: {
@@ -106,13 +122,19 @@ export function AnalyticsProvider({ children }: AnalyticsProviderProps) {
             },
             body: JSON.stringify(trackingPayload)
           })
-          .then(response => {
+          .then(async response => {
+            console.log(`📡 AnalyticsProvider: Auto-save status: ${response.status}`)
+            
             if (response.ok) {
-              console.log('📊 AnalyticsProvider: Auto-save realizado com sucesso')
+              const result = await response.json()
+              console.log('✅ AnalyticsProvider: Auto-save realizado com sucesso:', result)
+            } else {
+              const error = await response.text()
+              console.error('❌ AnalyticsProvider: Erro no auto-save:', error)
             }
           })
           .catch(error => {
-            console.warn('📊 AnalyticsProvider: Erro no auto-save:', error.message)
+            console.error('❌ AnalyticsProvider: Erro na requisição auto-save:', error.message)
           })
         }
       }, 30000) // 30 segundos
