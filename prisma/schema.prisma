@@ -337,6 +337,42 @@ model Session {
   updatedAt    DateTime @updatedAt
 }
 
+// Visitas de clientes (para tracking)
+model Visit {
+  id                String    @id @default(cuid())
+  sessionId         String    @unique
+  whatsapp          String?
+  
+  // Tempo de sessão
+  startTime         DateTime  @default(now())
+  endTime           DateTime?
+  sessionDuration   Int?      // Duração em segundos
+  
+  // Atividade do usuário
+  searchTerms       Json?     // Array de termos buscados
+  categoriesVisited Json?     // Array de categorias visitadas
+  productsViewed    Json?     // Array de produtos visualizados
+  
+  // Status da visita
+  status            String    @default("active") // active, abandoned, completed
+  
+  // Carrinho associado
+  hasCart           Boolean   @default(false)
+  cartValue         Float?    // Valor do carrinho no final da sessão
+  cartItems         Int?      // Quantidade de itens no carrinho
+  
+  // Analytics
+  lastActivity      DateTime  @default(now())
+  whatsappCollectedAt DateTime?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@index([whatsapp])
+  @@index([startTime])
+  @@index([status])
+}
+
 // Transportadoras para frete
 model ShippingCompany {
   id        String   @id @default(cuid())

@@ -305,8 +305,85 @@ class Analytics {
         console.warn('🛒 Analytics: Falha na requisição para salvar carrinho:', error.message)
       })
 
+      // Também salvar dados de visita para tracking
+      this.saveVisitToServer()
+
     } catch (error) {
       console.warn('🛒 Analytics: Erro ao preparar dados para servidor:', error)
+    }
+  }
+
+  // Método para salvar dados de visita no servidor
+  private saveVisitToServer(): void {
+    this.saveVisitToServerWithStatus()
+  }
+
+  // Método para salvar dados de visita no servidor com status específico
+  private saveVisitToServerWithStatus(forceStatus?: 'active' | 'abandoned' | 'completed'): void {
+    if (typeof window === 'undefined') return
+
+    try {
+      // Buscar dados do carrinho para determinar status
+      const cartStore = localStorage.getItem('cart-storage')
+      const cartData = cartStore ? JSON.parse(cartStore) : null
+      const hasCart = cartData?.state?.items?.length > 0 || cartData?.items?.length > 0
+      
+      // Calcular valor do carrinho
+      let cartValue = 0
+      let cartItems = 0
+      
+      if (hasCart) {
+        const items = cartData?.state?.items || cartData?.items || []
+        cartItems = items.length
+        cartValue = items.reduce((total: number, item: any) => {
+          return total + (item.unitPrice || 0) * (item.quantity || 0)
+        }, 0)
+      }
+
+      // Determinar status
+      let status: 'active' | 'abandoned' | 'completed' = 'active'
+      if (forceStatus) {
+        status = forceStatus
+      } else {
+        status = hasCart ? 'active' : 'abandoned'
+      }
+
+      const trackingPayload = {
+        sessionId: this.analytics.sessionId,
+        whatsapp: this.analytics.whatsappCollected,
+        searchTerms: this.analytics.searchTerms.map(s => s.term),
+        categoriesVisited: this.analytics.categoriesVisited,
+        productsViewed: this.analytics.productsViewed,
+        cartData: {
+          hasCart,
+          cartValue,
+          cartItems
+        },
+        status,
+        whatsappCollectedAt: this.analytics.whatsappCollectedAt
+      }
+
+      // Salvar dados de visita
+      fetch('/api/visits/track', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(trackingPayload)
+      })
+      .then(response => {
+        if (response.ok) {
+          console.log(`📊 Analytics: Dados de visita salvos no servidor (status: ${status})`)
+        } else {
+          console.warn('📊 Analytics: Erro ao salvar dados de visita:', response.status)
+        }
+      })
+      .catch(error => {
+        console.warn('📊 Analytics: Falha ao salvar dados de visita:', error.message)
+      })
+
+    } catch (error) {
+      console.warn('📊 Analytics: Erro ao preparar dados de visita:', error)
     }
   }
 
@@ -362,6 +439,9 @@ class Analytics {
     
     console.log('📞 Analytics: Dados salvos, enviando webhook WhatsApp...')
     this.sendWhatsAppCollectedWebhook()
+    
+    // Salvar dados de visita quando WhatsApp for coletado
+    this.saveVisitToServer()
   }
 
   // Finalização de pedido
@@ -387,6 +467,9 @@ class Analytics {
     
     // Marcar carrinho como concluído no servidor
     this.markCartAsCompleted()
+    
+    // Salvar dados de visita como finalizada
+    this.saveVisitToServerWithStatus('completed')
   }
 
   // Função auxiliar para remover imagens dos itens do carrinho (para webhooks mais leves)
