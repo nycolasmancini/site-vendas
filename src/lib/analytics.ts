@@ -46,6 +46,27 @@ class Analytics {
     // Verificar se há carrinho abandonado antes de configurar timer
     this.checkForAbandonedCart()
     this.setupCartAbandonTimer()
+    
+    // Salvar visita inicial no servidor (apenas no primeiro acesso)
+    this.saveInitialVisit()
+  }
+
+  private saveInitialVisit(): void {
+    // Salvar apenas se for uma nova sessão (sem dados salvos anteriormente)
+    if (typeof window !== 'undefined') {
+      const hasVisitBeenSaved = localStorage.getItem(`${this.storageKey}_visit_saved`)
+      
+      if (!hasVisitBeenSaved) {
+        // Marcar como salva para não duplicar
+        localStorage.setItem(`${this.storageKey}_visit_saved`, 'true')
+        
+        // Aguardar um pouco para garantir que tudo foi inicializado
+        setTimeout(() => {
+          this.saveVisitToServer()
+          console.log('📊 Analytics: Visita inicial salva automaticamente')
+        }, 2000)
+      }
+    }
   }
 
   private generateSessionId(): string {
@@ -62,11 +83,17 @@ class Analytics {
       const parsed = JSON.parse(stored)
       // Se a sessão é muito antiga (mais de 24h), criar nova
       if (Date.now() - parsed.lastActivity > 24 * 60 * 60 * 1000) {
+        // Limpar flag de visita salva para nova sessão
+        localStorage.removeItem(`${this.storageKey}_visit_saved`)
         return this.createNewSession()
       }
       return parsed
     }
     
+    // Limpar flag de visita salva para nova sessão
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(`${this.storageKey}_visit_saved`)
+    }
     return this.createNewSession()
   }
 
@@ -185,6 +212,9 @@ class Analytics {
     // Ordenar por número de visitas
     this.analytics.categoriesVisited.sort((a, b) => b.visits - a.visits)
     this.saveAnalytics()
+    
+    // Salvar visita no servidor quando categoria for visitada
+    this.saveVisitToServer()
   }
 
   // Tracking de busca
@@ -209,6 +239,9 @@ class Analytics {
     // Ordenar por frequência
     this.analytics.searchTerms.sort((a, b) => b.count - a.count)
     this.saveAnalytics()
+    
+    // Salvar visita no servidor quando busca for realizada
+    this.saveVisitToServer()
   }
 
   // Tracking de produto visualizado
@@ -233,6 +266,9 @@ class Analytics {
     this.analytics.productsViewed.sort((a, b) => b.visits - a.visits)
     this.analytics.productsViewed = this.analytics.productsViewed.slice(0, 50)
     this.saveAnalytics()
+    
+    // Salvar visita no servidor quando produto for visualizado
+    this.saveVisitToServer()
   }
 
   // Tracking de eventos do carrinho
@@ -344,9 +380,9 @@ class Analytics {
       let status: 'active' | 'abandoned' | 'completed' = 'active'
       if (forceStatus) {
         status = forceStatus
-      } else {
-        status = hasCart ? 'active' : 'abandoned'
       }
+      // Status sempre ativo para tracking em tempo real
+      // Abandonado só quando forçado pelo webhook system
 
       const trackingPayload = {
         sessionId: this.analytics.sessionId,

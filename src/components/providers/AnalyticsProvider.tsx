@@ -18,6 +18,48 @@ export function AnalyticsProvider({ children }: AnalyticsProviderProps) {
     if (analytics) {
       console.log('📊 AnalyticsProvider: Analytics instance criada:', analytics.getSessionId())
       
+      // Salvar visita inicial imediatamente
+      const saveInitialVisit = () => {
+        if (typeof window !== 'undefined') {
+          const sessionId = analytics.getSessionId()
+          const analyticsData = analytics.getAnalytics()
+          
+          const initialPayload = {
+            sessionId,
+            whatsapp: analyticsData.whatsappCollected,
+            searchTerms: [],
+            categoriesVisited: [],
+            productsViewed: [],
+            cartData: {
+              hasCart: false,
+              cartValue: 0,
+              cartItems: 0
+            },
+            status: 'active',
+            whatsappCollectedAt: null
+          }
+          
+          fetch('/api/visits/track', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(initialPayload)
+          })
+          .then(response => {
+            if (response.ok) {
+              console.log('📊 AnalyticsProvider: Visita inicial salva com sucesso')
+            }
+          })
+          .catch(error => {
+            console.warn('📊 AnalyticsProvider: Erro ao salvar visita inicial:', error.message)
+          })
+        }
+      }
+      
+      // Salvar imediatamente
+      setTimeout(saveInitialVisit, 1000) // Aguardar 1 segundo para garantir que tudo foi carregado
+      
       // Auto-save a cada 30 segundos
       saveInterval.current = setInterval(() => {
         // Salvar dados de visita no servidor
@@ -52,7 +94,7 @@ export function AnalyticsProvider({ children }: AnalyticsProviderProps) {
               cartValue,
               cartItems
             },
-            status: hasCart ? 'active' : 'abandoned',
+            status: 'active', // Visitas sempre começam ativas
             whatsappCollectedAt: analyticsData.whatsappCollectedAt
           }
           
