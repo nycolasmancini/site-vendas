@@ -114,14 +114,14 @@ export function Header({
               {logo && (
                 <img 
                   src={logo} 
-                  alt="PMCELL" 
+                  alt="25 de março Store" 
                   className="h-11 w-auto object-contain"
                   onError={() => setLogo(null)}
                 />
               )}
               <div className="flex flex-col justify-center">
-                <span className="text-2xl font-bold text-black leading-none">PMCELL</span>
-                <span className="hidden sm:inline text-sm font-light text-black leading-tight">São Paulo</span>
+                <span className="text-2xl font-bold text-black leading-none">**25 de março**</span>
+                <span className="hidden sm:inline text-sm font-light text-black leading-tight">Store</span>
               </div>
             </Link>
           </div>
