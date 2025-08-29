@@ -120,8 +120,8 @@ export function Header({
                 />
               )}
               <div className="flex flex-col justify-center">
-                <span className="text-2xl font-bold text-black leading-none">**25 de março**</span>
-                <span className="hidden sm:inline text-sm font-light text-black leading-tight">Store</span>
+                <span className="text-2xl font-bold text-black leading-none">25 de março</span>
+                <span className="hidden sm:inline text-sm font-light text-black leading-tight text-right">Store</span>
               </div>
             </Link>
           </div>
