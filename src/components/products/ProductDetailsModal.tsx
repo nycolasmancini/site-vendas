@@ -61,7 +61,7 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
     if (analyticsTracked.has(imageId)) return
     
     try {
-      await fetch(`/api/products/${product.id}/images/${imageId}`, {
+      const response = await fetch(`/api/products/${product.id}/images/${imageId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -69,19 +69,28 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
         body: JSON.stringify({ action: 'view' }),
       })
       
-      setAnalyticsTracked(prev => new Set([...prev, imageId]))
+      // Não falhar se analytics não estiver disponível
+      if (response.ok) {
+        setAnalyticsTracked(prev => new Set([...prev, imageId]))
+      } else {
+        console.warn(`Analytics não disponível para imagem ${imageId}:`, response.status)
+      }
     } catch (error) {
       console.warn('Falha ao registrar visualização:', error)
     }
   }, [product.id, analyticsTracked])
 
-  // Pré-carregar próxima imagem com Cloudinary
+  // Pré-carregar próxima imagem (compatível com base64 e Cloudinary)
   const preloadNextImage = useCallback(() => {
     if (sortedImages.length <= 1 || nextImagePreloaded) return
     
     const nextIndex = (currentImageIndex + 1) % sortedImages.length
     const nextImage = sortedImages[nextIndex]
-    const nextImageUrl = nextImage?.normalUrl || nextImage?.url
+    
+    // Detectar tipo de imagem e usar URL apropriada
+    const nextImageUrl = nextImage?.url.startsWith('data:') 
+      ? nextImage.url  // Base64 - usar URL original
+      : (nextImage?.normalUrl || nextImage?.url)  // Cloudinary - usar normalUrl ou fallback
     
     if (nextImageUrl && !loadedImages.has(nextImage.id) && !preloadRef.current) {
       preloadRef.current = new window.Image()
@@ -89,6 +98,9 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
       preloadRef.current.onload = () => {
         setNextImagePreloaded(true)
         setLoadedImages(prev => new Set([...prev, nextImage.id]))
+      }
+      preloadRef.current.onerror = (error) => {
+        console.warn('Falha no pré-carregamento da imagem:', nextImageUrl, error)
       }
     }
   }, [currentImageIndex, sortedImages, nextImagePreloaded, loadedImages])
@@ -292,29 +304,52 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
                   onTouchEnd={handleTouchEnd}
                 >
                   <div className="relative max-w-full max-h-full aspect-square">
-                    <Image
-                      src={currentImage.normalUrl || currentImage.url}
-                      alt={product.name}
-                      fill
-                      className="object-contain"
-                      sizes="(max-width: 1024px) 100vw, 60vw"
-                      priority={currentImageIndex === 0}
-                      onLoad={() => {
-                        setImageLoaded(true)
-                        setLoadedImages(prev => new Set([...prev, currentImage.id]))
-                        // Registrar analytics após carregamento
-                        trackImageView(currentImage.id)
-                      }}
-                      onError={(e) => {
-                        console.error('Failed to load image:', currentImage.normalUrl || currentImage.url, e)
-                        // Fallback para URL original se normalUrl falhar
-                        if (currentImage.normalUrl && currentImage.url !== currentImage.normalUrl) {
-                          console.log('Tentando fallback para URL original')
-                        }
-                      }}
-                      quality={90}
-                      unoptimized={currentImage.url.startsWith('data:')}
-                    />
+                    {currentImage.url.startsWith('data:') ? (
+                      // Para imagens base64 (sistema antigo), usar img nativa
+                      <img
+                        src={currentImage.url}
+                        alt={product.name}
+                        className="w-full h-full object-contain"
+                        onLoad={() => {
+                          setImageLoaded(true)
+                          setLoadedImages(prev => new Set([...prev, currentImage.id]))
+                          // Registrar analytics após carregamento (com try/catch)
+                          try {
+                            trackImageView(currentImage.id)
+                          } catch (error) {
+                            console.warn('Analytics não disponível para esta imagem:', error)
+                          }
+                        }}
+                        onError={(e) => {
+                          console.error('Failed to load image (base64):', e)
+                        }}
+                      />
+                    ) : (
+                      // Para URLs do Cloudinary (sistema novo)
+                      <Image
+                        src={currentImage.normalUrl || currentImage.url}
+                        alt={product.name}
+                        fill
+                        className="object-contain"
+                        sizes="(max-width: 1024px) 100vw, 60vw"
+                        priority={currentImageIndex === 0}
+                        onLoad={() => {
+                          setImageLoaded(true)
+                          setLoadedImages(prev => new Set([...prev, currentImage.id]))
+                          // Registrar analytics após carregamento (com try/catch)
+                          try {
+                            trackImageView(currentImage.id)
+                          } catch (error) {
+                            console.warn('Analytics não disponível para esta imagem:', error)
+                          }
+                        }}
+                        onError={(e) => {
+                          console.error('Failed to load image:', currentImage.normalUrl || currentImage.url, e)
+                        }}
+                        quality={90}
+                        unoptimized={false}
+                      />
+                    )}
                   </div>
 
                   {/* Setas de navegação */}

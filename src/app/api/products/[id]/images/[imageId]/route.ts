@@ -95,12 +95,16 @@ export async function DELETE(
 
     let cloudinaryDeleted = false
 
-    // Tentar excluir do Cloudinary se houver publicId
-    if (image.cloudinaryPublicId) {
+    // Tentar excluir do Cloudinary se houver publicId (apenas para imagens novas)
+    if (image.cloudinaryPublicId && !image.url.startsWith('data:')) {
       cloudinaryDeleted = await deleteImageFromCloudinary(image.cloudinaryPublicId)
       if (!cloudinaryDeleted) {
         console.warn(`⚠️ Falha ao excluir imagem do Cloudinary: ${image.cloudinaryPublicId}`)
       }
+    } else if (image.url.startsWith('data:')) {
+      // Imagem base64 antiga - apenas excluir do banco
+      cloudinaryDeleted = true // Considerar como sucesso
+      console.log('🗑️ Excluindo imagem base64 (sistema antigo)')
     }
 
     // Excluir do banco de dados
@@ -162,16 +166,41 @@ export async function PATCH(
     const { action } = body
 
     if (action === 'view') {
-      // Incrementar contador de visualização
-      await prisma.productImage.update({
-        where: { id: imageId },
-        data: {
-          viewCount: { increment: 1 },
-          lastViewedAt: new Date()
-        }
-      })
+      try {
+        // Verificar se a imagem existe primeiro
+        const imageExists = await prisma.productImage.findUnique({
+          where: { id: imageId },
+          select: { id: true, viewCount: true }
+        })
 
-      return NextResponse.json({ message: 'Visualização registrada' })
+        if (!imageExists) {
+          console.warn(`Imagem ${imageId} não encontrada para analytics`)
+          return NextResponse.json({ message: 'Imagem não encontrada' }, { status: 404 })
+        }
+
+        // Incrementar contador de visualização apenas se a imagem tem os campos necessários
+        if (imageExists.viewCount !== undefined) {
+          await prisma.productImage.update({
+            where: { id: imageId },
+            data: {
+              viewCount: { increment: 1 },
+              lastViewedAt: new Date()
+            }
+          })
+          console.log(`📊 Analytics: Visualização registrada para imagem ${imageId}`)
+        } else {
+          console.warn(`Imagem ${imageId} não suporta analytics (schema antigo)`)
+        }
+
+        return NextResponse.json({ message: 'Visualização registrada' })
+      } catch (prismaError: any) {
+        // Tratar erro P2021 (tabela não existe) gracefully
+        if (prismaError.code === 'P2021') {
+          console.warn('Schema não suporta analytics ainda, ignorando...')
+          return NextResponse.json({ message: 'Analytics não disponível' })
+        }
+        throw prismaError
+      }
     }
 
     return NextResponse.json({ error: 'Ação inválida' }, { status: 400 })

@@ -1,21 +1,14 @@
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
   engineType = "library"
 }
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")      // Para Prisma Accelerate em produção
-  directUrl = env("DIRECT_URL")        // Para migrations com acesso direto
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-// Tipos de usuário
-enum UserRole {
-  ADMIN      // Acesso completo ao sistema
-  EMPLOYEE   // Acesso limitado (Pedidos e Carrinhos)
-}
-
-// Usuários do sistema (Admins e Funcionários)
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -27,7 +20,6 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
-// Modelo legado - manter por compatibilidade
 model Admin {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -37,34 +29,31 @@ model Admin {
   updatedAt DateTime @updatedAt
 }
 
-// Categorias de produtos
 model Category {
-  id          String    @id @default(cuid())
-  name        String
-  slug        String    @unique
-  icon        String?   @db.Text // SVG icon as text
-  order       Int       @default(0)
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  products    Product[]
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  icon      String?
+  order     Int       @default(0)
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
 }
 
-// Fornecedores (uso interno)
 model Supplier {
-  id           String    @id @default(cuid())
-  name         String
-  phone        String?   // Telefone do fornecedor
-  address      String?
-  email        String?
-  notes        String?
-  isActive     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  products     ProductSupplier[]
+  id        String            @id @default(cuid())
+  name      String
+  phone     String?
+  address   String?
+  email     String?
+  notes     String?
+  isActive  Boolean           @default(true)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  products  ProductSupplier[]
 }
 
-// Marcas para capas e películas
 model Brand {
   id        String   @id @default(cuid())
   name      String   @unique
@@ -73,123 +62,98 @@ model Brand {
   models    Model[]
 }
 
-// Modelos de celular
 model Model {
-  id           String         @id @default(cuid())
-  name         String
-  brandId      String
-  brand        Brand          @relation(fields: [brandId], references: [id])
-  createdAt    DateTime       @default(now())
+  id            String         @id @default(cuid())
+  name          String
+  brandId       String
+  createdAt     DateTime       @default(now())
+  brand         Brand          @relation(fields: [brandId], references: [id])
   productModels ProductModel[]
 
   @@unique([brandId, name])
 }
 
-// Produtos
 model Product {
-  id                String            @id @default(cuid())
-  name              String
-  subname           String?           // Variação ou detalhe (ex: tipo de saída do cabo)
-  description       String?
-  brand             String?           // Marca do produto
-  categoryId        String
-  category          Category          @relation(fields: [categoryId], references: [id])
-  
-  // Tipo de produto
-  isModalProduct    Boolean           @default(false) // Indica se é produto de modal (capas/películas)
-  quickAddIncrement Int?              // Incremento para adição rápida (25, 50, 100, etc.)
-  
-  // Preços
-  price             Float             // Preço atacado normal
-  specialPrice      Float?            // Preço especial para quantidade (mantido)
-  specialQuantity   Int?              // Quantidade mínima para preço especial (mantido)
-  superWholesalePrice Float?          // Preço para super atacado
-  superWholesaleQuantity Int?         // Quantidade mínima para super atacado
-  
-  // Informações internas
-  cost              Float?            // Preço de custo (interno)
-  boxQuantity       Int?              // Quantidade por caixa fechada
-  
-  // Status
-  isActive          Boolean           @default(true)
-  featured          Boolean           @default(false)
-  
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  
-  // Relações
-  images            ProductImage[]    // Múltiplas imagens
-  suppliers         ProductSupplier[]
-  models            ProductModel[]    // Para capas e películas
-  orderItems        OrderItem[]
-  kitProducts       KitProduct[]
+  id                     String            @id @default(cuid())
+  name                   String
+  subname                String?
+  description            String?
+  brand                  String?
+  categoryId             String
+  isModalProduct         Boolean           @default(false)
+  quickAddIncrement      Int?
+  price                  Float
+  specialPrice           Float?
+  specialQuantity        Int?
+  superWholesalePrice    Float?
+  superWholesaleQuantity Int?
+  cost                   Float?
+  boxQuantity            Int?
+  isActive               Boolean           @default(true)
+  featured               Boolean           @default(false)
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+  kitProducts            KitProduct[]
+  orderItems             OrderItem[]
+  category               Category          @relation(fields: [categoryId], references: [id])
+  images                 ProductImage[]
+  models                 ProductModel[]
+  suppliers              ProductSupplier[]
 }
 
-// Imagens do produto
 model ProductImage {
-  id                  String   @id @default(cuid())
-  productId           String
-  product             Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  url                 String   @db.Text // URL principal da imagem no Cloudinary
-  fileName            String?  // Nome original do arquivo
-  order               Int      @default(0) // Ordem de exibição
-  isMain              Boolean  @default(false) // Imagem principal
-  
-  // Cloudinary metadata
-  cloudinaryPublicId  String?  // Public ID no Cloudinary para exclusões
-  thumbnailUrl        String?  @db.Text // URL do thumbnail (150x150)
-  normalUrl           String?  @db.Text // URL da imagem normal (500x500)
-  width               Int?     // Largura original
-  height              Int?     // Altura original
-  fileSize            Int?     // Tamanho do arquivo em bytes
-  
-  // Analytics
-  viewCount           Int      @default(0) // Contador de visualizações
-  lastViewedAt        DateTime? // Última visualização
-  
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @default(now()) @updatedAt
+  id                 String    @id @default(cuid())
+  productId          String
+  url                String
+  fileName           String?
+  order              Int       @default(0)
+  isMain             Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  cloudinaryPublicId String?
+  fileSize           Int?
+  height             Int?
+  lastViewedAt       DateTime?
+  normalUrl          String?
+  thumbnailUrl       String?
+  updatedAt          DateTime  @default(now()) @updatedAt
+  viewCount          Int       @default(0)
+  width              Int?
+  product            Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
-// Relação produto-fornecedor (histórico)
 model ProductSupplier {
-  id         String    @id @default(cuid())
+  id         String   @id @default(cuid())
   productId  String
-  product    Product   @relation(fields: [productId], references: [id])
   supplierId String
-  supplier   Supplier  @relation(fields: [supplierId], references: [id])
-  cost       Float     // Custo neste fornecedor
-  isActive   Boolean   @default(true)
+  cost       Float
+  isActive   Boolean  @default(true)
   notes      String?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  product    Product  @relation(fields: [productId], references: [id])
+  supplier   Supplier @relation(fields: [supplierId], references: [id])
 
   @@unique([productId, supplierId])
 }
 
-// Relação produto-modelo (para capas e películas)
 model ProductModel {
-  id                    String   @id @default(cuid())
-  productId             String
-  product               Product  @relation(fields: [productId], references: [id])
-  modelId               String
-  model                 Model    @relation(fields: [modelId], references: [id])
-  
-  // Preços específicos para este modelo
-  price                 Float?   // Preço atacado para este modelo
-  superWholesalePrice   Float?   // Preço super atacado para este modelo
-  
-  createdAt             DateTime @default(now())
+  id                  String   @id @default(cuid())
+  productId           String
+  modelId             String
+  price               Float?
+  superWholesalePrice Float?
+  createdAt           DateTime @default(now())
+  model               Model    @relation(fields: [modelId], references: [id])
+  product             Product  @relation(fields: [productId], references: [id])
 
   @@unique([productId, modelId])
 }
 
-// Kits pré-definidos
 model Kit {
   id          String       @id @default(cuid())
   name        String       @unique
   description String
-  discount    Float        // Desconto fixo em R$
+  discount    Float
   image       String?
   order       Int          @default(0)
   isActive    Boolean      @default(true)
@@ -198,20 +162,18 @@ model Kit {
   products    KitProduct[]
 }
 
-// Produtos dentro dos kits
 model KitProduct {
   id        String   @id @default(cuid())
   kitId     String
-  kit       Kit      @relation(fields: [kitId], references: [id])
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
   quantity  Int      @default(1)
   createdAt DateTime @default(now())
+  kit       Kit      @relation(fields: [kitId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
 
   @@unique([kitId, productId])
 }
 
-// Clientes
 model Customer {
   id          String   @id @default(cuid())
   name        String
@@ -226,138 +188,114 @@ model Customer {
   orders      Order[]
 }
 
-// Status do pedido
-enum OrderStatus {
-  PENDING    // Aguardando atendimento
-  PROCESSING // Em atendimento
-  CONFIRMED  // Confirmado
-  CANCELLED  // Cancelado
-  COMPLETED  // Finalizado
-}
-
-// Pedidos
 model Order {
-  id             String      @id @default(cuid())
-  orderNumber    String      @unique
+  id             String       @id @default(cuid())
+  orderNumber    String       @unique
   customerId     String
-  customer       Customer    @relation(fields: [customerId], references: [id])
-  
-  // Valores
   subtotal       Float
-  discount       Float       @default(0)
+  discount       Float        @default(0)
   total          Float
-  
-  // Status e atribuição
-  status         OrderStatus @default(PENDING)
-  assignedSeller String?     // Vendedor atribuído via webhook
-  
-  // Observações
+  status         OrderStatus  @default(PENDING)
+  assignedSeller String?
   notes          String?
-  internalNotes  String?     // Notas internas (não visível ao cliente)
-  
-  // Timestamps
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  internalNotes  String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
   confirmedAt    DateTime?
   completedAt    DateTime?
-  
+  customer       Customer     @relation(fields: [customerId], references: [id])
   items          OrderItem[]
   webhookLogs    WebhookLog[]
 }
 
-// Itens do pedido
 model OrderItem {
-  id         String   @id @default(cuid())
-  orderId    String
-  order      Order    @relation(fields: [orderId], references: [id])
-  productId  String
-  product    Product  @relation(fields: [productId], references: [id])
-  
-  // Dados do produto no momento da compra
+  id          String   @id @default(cuid())
+  orderId     String
+  productId   String
   productName String
-  modelName   String?  // Para capas/películas
+  modelName   String?
   quantity    Int
   unitPrice   Float
   totalPrice  Float
-  
   createdAt   DateTime @default(now())
+  order       Order    @relation(fields: [orderId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id])
 }
 
-// Configurações da empresa
 model CompanySettings {
   id            String   @id @default(cuid())
   companyName   String
-  tradeName     String?  // Nome fantasia
+  tradeName     String?
   cnpj          String?
   logo          String?
   primaryColor  String   @default("#FC6D36")
-  
-  // Contato
   phone         String?
   whatsapp      String?
   email         String?
   address       String?
-  
-  // Redes sociais
   instagram     String?
   facebook      String?
-  
-  // Textos legais
   privacyPolicy String?
   termsOfUse    String?
   aboutUs       String?
-  
-  // Configurações de negócio
-  minOrderValue Float?   // Valor mínimo do pedido
-  
+  minOrderValue Float?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
 
-// Tipos de eventos para webhook
-enum WebhookEventType {
-  PRICE_UNLOCK      // Cliente liberou preços
-  ORDER_CREATED     // Pedido criado
-  ORDER_UPDATED     // Pedido atualizado
-  CART_ABANDONED    // Carrinho abandonado
-  PRODUCT_SEARCH    // Busca de produto
-  PRODUCT_VIEW      // Visualização de produto
-  CATEGORY_VIEW     // Navegação em categoria
-}
-
-// Log de webhooks
 model WebhookLog {
-  id          String           @id @default(cuid())
-  eventType   WebhookEventType
-  orderId     String?
-  order       Order?           @relation(fields: [orderId], references: [id])
-  payload     Json
-  response    Json?
-  statusCode  Int?
-  success     Boolean          @default(false)
+  id           String           @id @default(cuid())
+  eventType    WebhookEventType
+  orderId      String?
+  payload      Json
+  response     Json?
+  statusCode   Int?
+  success      Boolean          @default(false)
   errorMessage String?
-  createdAt   DateTime         @default(now())
+  createdAt    DateTime         @default(now())
+  order        Order?           @relation(fields: [orderId], references: [id])
 }
 
-// Sessões de navegação (para tracking)
 model Session {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   whatsapp     String?
-  unlocked     Boolean  @default(false) // Se já liberou preços
+  unlocked     Boolean   @default(false)
   unlockedAt   DateTime?
-  lastActivity DateTime @default(now())
-  cartData     Json?    // Dados do carrinho salvos
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  lastActivity DateTime  @default(now())
+  cartData     Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
-// Transportadoras para frete
 model ShippingCompany {
   id        String   @id @default(cuid())
   name      String   @unique
-  logo      String?  // URL ou base64 da logo
+  logo      String?
   isActive  Boolean  @default(true)
-  order     Int      @default(0) // Ordem de exibição
+  order     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum UserRole {
+  ADMIN
+  EMPLOYEE
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum WebhookEventType {
+  PRICE_UNLOCK
+  ORDER_CREATED
+  ORDER_UPDATED
+  CART_ABANDONED
+  PRODUCT_SEARCH
+  PRODUCT_VIEW
+  CATEGORY_VIEW
 }

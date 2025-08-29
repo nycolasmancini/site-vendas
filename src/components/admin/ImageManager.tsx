@@ -308,14 +308,24 @@ const ImageManager = ({
               className="relative group border border-gray-200 rounded-lg overflow-hidden aspect-square"
             >
               {/* Imagem */}
-              <Image
-                src={image.thumbnailUrl || image.url}
-                alt={image.fileName || `Imagem ${index + 1}`}
-                width={150}
-                height={150}
-                className="w-full h-full object-cover"
-                unoptimized
-              />
+              {image.url.startsWith('data:') ? (
+                // Imagem base64 (sistema antigo)
+                <img
+                  src={image.url}
+                  alt={image.fileName || `Imagem ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                // Imagem Cloudinary (sistema novo)
+                <Image
+                  src={image.thumbnailUrl || image.url}
+                  alt={image.fileName || `Imagem ${index + 1}`}
+                  width={150}
+                  height={150}
+                  className="w-full h-full object-cover"
+                  unoptimized={false}
+                />
+              )}
 
               {/* Badge de Imagem Principal */}
               {image.isMain && (
