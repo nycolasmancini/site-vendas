@@ -261,7 +261,7 @@ export default function Home() {
           {/* Products Grid */}
           <main className="flex-1">
             <div 
-              className="card mb-8 py-2 px-4 lg:py-4 lg:px-6 animate-slide-up cursor-pointer hover:shadow-lg transition-shadow"
+              className="card mb-8 min-h-[100px] flex items-center justify-center py-2 px-4 lg:py-4 lg:px-6 animate-slide-up cursor-pointer hover:shadow-lg transition-shadow"
               onClick={(event) => {
                 const heroCard = event.currentTarget
                 const header = document.querySelector('header')
@@ -274,19 +274,15 @@ export default function Home() {
               }}
             >
               {/* Mobile Layout */}
-              <div className="lg:hidden">
-                <div className="flex justify-center mb-1">
-                  <h1 className="text-xl font-bold text-center" style={{ color: 'var(--foreground)' }}>
-                    {selectedCategory
-                      ? categories.find(c => c.id === selectedCategory)?.name
-                      : 'Produtos'}
-                  </h1>
-                </div>
+              <div className="lg:hidden flex flex-col items-center justify-center text-center w-full">
+                <h1 className="text-xl font-bold" style={{ color: 'var(--foreground)' }}>
+                  {selectedCategory
+                    ? categories.find(c => c.id === selectedCategory)?.name
+                    : 'Produtos'}
+                </h1>
                 {totalCartQuantity < 30 && (
-                  <div className="text-center">
-                    <div className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>
-                      Pedido mínimo: <span className="font-bold" style={{ color: 'var(--orange)' }}>30 peças</span>
-                    </div>
+                  <div className="text-xs font-medium mt-1" style={{ color: 'var(--muted-foreground)' }}>
+                    Pedido mínimo: <span className="font-bold" style={{ color: 'var(--orange)' }}>30 peças</span>
                   </div>
                 )}
               </div>
