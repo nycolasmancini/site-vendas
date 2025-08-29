@@ -89,6 +89,62 @@ class Analytics {
   private saveAnalytics(): void {
     if (typeof window !== 'undefined') {
       localStorage.setItem(this.storageKey, JSON.stringify(this.analytics))
+      
+      // Salvar também no servidor via endpoint /api/analytics/track (com debounce)
+      this.debouncedServerSave()
+    }
+  }
+
+  private saveToServerRetryCount = 0
+  private readonly MAX_SERVER_SAVE_RETRIES = 3
+  private serverSaveTimeout: NodeJS.Timeout | null = null
+
+  private debouncedServerSave(): void {
+    // Limpar timeout anterior
+    if (this.serverSaveTimeout) {
+      clearTimeout(this.serverSaveTimeout)
+    }
+
+    // Debounce de 2 segundos para evitar muitas requisições
+    this.serverSaveTimeout = setTimeout(() => {
+      this.saveAnalyticsToServer()
+    }, 2000)
+  }
+
+  private async saveAnalyticsToServer(): Promise<void> {
+    if (this.saveToServerRetryCount >= this.MAX_SERVER_SAVE_RETRIES) {
+      console.log('📊 Analytics: Limite de tentativas atingido, parando auto-save no servidor')
+      return
+    }
+
+    try {
+      const response = await fetch('/api/analytics/track', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(this.getAnalyticsSnapshot()),
+      })
+
+      if (response.ok) {
+        console.log('📊 Analytics: Dados salvos no servidor com sucesso')
+        this.saveToServerRetryCount = 0 // Reset contador em caso de sucesso
+      } else {
+        throw new Error(`HTTP ${response.status}`)
+      }
+    } catch (error) {
+      this.saveToServerRetryCount++
+      console.warn(`📊 Analytics: Erro ao salvar no servidor (tentativa ${this.saveToServerRetryCount}/${this.MAX_SERVER_SAVE_RETRIES}):`, error)
+      
+      if (this.saveToServerRetryCount < this.MAX_SERVER_SAVE_RETRIES) {
+        // Backoff exponencial: 5s, 10s, 20s
+        const delay = Math.pow(2, this.saveToServerRetryCount) * 2500
+        console.log(`📊 Analytics: Tentando novamente em ${delay/1000}s...`)
+        
+        setTimeout(() => {
+          this.saveAnalyticsToServer()
+        }, delay)
+      }
     }
   }
 
