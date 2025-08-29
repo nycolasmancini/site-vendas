@@ -8,6 +8,10 @@
     "vercel-build": "prisma generate && prisma db push --accept-data-loss && next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:phase": "jest --testPathPattern=",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
@@ -34,7 +38,9 @@
     "autoprefixer": "^10.4.14",
     "axios": "^1.11.0",
     "bcryptjs": "^3.0.2",
+    "browser-image-compression": "^2.0.2",
     "class-variance-authority": "^0.7.1",
+    "cloudinary": "^2.7.0",
     "clsx": "^2.1.1",
     "jose": "^6.0.12",
     "jsonwebtoken": "^9.0.2",
@@ -63,9 +69,14 @@
     "zustand": "^5.0.7"
   },
   "devDependencies": {
+    "@jest/globals": "^30.1.1",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "jest": "^30.1.1",
+    "jest-environment-node": "^30.1.1",
+    "ts-jest": "^29.4.1",
     "tsx": "^4.20.3",
     "typescript": "^5"
   }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import EditProductModelsModal from '@/components/admin/EditProductModelsModal'
+import ImageManager from '@/components/admin/ImageManager'
 
 interface Product {
   id: string
@@ -21,7 +22,17 @@ interface Product {
   category: {
     name: string
   }
-  images: Array<{ id: string; url: string; isMain: boolean }>
+  images: Array<{ 
+    id: string; 
+    url: string; 
+    isMain: boolean; 
+    order: number; 
+    fileName?: string; 
+    thumbnailUrl?: string; 
+    normalUrl?: string;
+    viewCount?: number;
+    cloudinaryPublicId?: string;
+  }>
   models?: Array<{
     id: string
     price: number
@@ -77,6 +88,7 @@ export default function AdminProdutos() {
   const [showModalForm, setShowModalForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [selectedImages, setSelectedImages] = useState<File[]>([])
+  const [editingProductImages, setEditingProductImages] = useState<Product['images']>([])
   const [showEditModelsModal, setShowEditModelsModal] = useState(false)
   const [editingModelsProduct, setEditingModelsProduct] = useState<Product | null>(null)
   
@@ -186,29 +198,35 @@ export default function AdminProdutos() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    // Validar se produto novo tem pelo menos uma imagem
+    if (!editingProduct && editingProductImages.length === 0) {
+      alert('Produto deve ter pelo menos uma imagem. Use o gerenciador de imagens para adicionar.')
+      return
+    }
+    
     try {
-      const formData = new FormData()
-      formData.append('name', newProduct.name)
-      formData.append('subname', newProduct.subname)
-      formData.append('description', newProduct.description)
-      formData.append('brand', newProduct.brand)
-      formData.append('price', newProduct.price)
-      formData.append('superWholesalePrice', newProduct.superWholesalePrice)
-      formData.append('superWholesaleQuantity', newProduct.superWholesaleQuantity)
-      formData.append('cost', newProduct.cost)
-      formData.append('categoryId', newProduct.categoryId)
-      formData.append('isActive', newProduct.isActive.toString())
-
-      selectedImages.forEach((file) => {
-        formData.append('images', file)
-      })
+      const productData = {
+        name: newProduct.name,
+        subname: newProduct.subname || null,
+        description: newProduct.description,
+        brand: newProduct.brand || null,
+        price: parseFloat(newProduct.price),
+        superWholesalePrice: newProduct.superWholesalePrice ? parseFloat(newProduct.superWholesalePrice) : null,
+        superWholesaleQuantity: newProduct.superWholesaleQuantity ? parseInt(newProduct.superWholesaleQuantity) : null,
+        cost: newProduct.cost ? parseFloat(newProduct.cost) : null,
+        categoryId: newProduct.categoryId,
+        isActive: newProduct.isActive
+      }
 
       const url = editingProduct ? `/api/products/${editingProduct.id}` : '/api/products'
       const method = editingProduct ? 'PUT' : 'POST'
 
       const response = await fetch(url, {
         method,
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(productData),
       })
 
       if (response.ok) {
@@ -240,6 +258,7 @@ export default function AdminProdutos() {
       isActive: true
     })
     setSelectedImages([])
+    setEditingProductImages([])
   }
 
   const resetModalForm = () => {
@@ -414,6 +433,7 @@ export default function AdminProdutos() {
 
   const startEdit = (product: Product) => {
     setEditingProduct(product)
+    setEditingProductImages(product.images || [])
     setNewProduct({
       name: product.name,
       subname: product.subname || '',
@@ -628,22 +648,14 @@ export default function AdminProdutos() {
                 />
               </div>
 
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700">
-                  Imagens do Produto
-                </label>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleImageSelect}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+              {/* Gerenciador de Imagens */}
+              <div className="mt-6">
+                <ImageManager
+                  productId={editingProduct?.id || 'new'}
+                  images={editingProduct ? editingProductImages : []}
+                  onImagesChange={setEditingProductImages}
+                  disabled={!editingProduct} // Só permitir edição em produtos existentes
                 />
-                {selectedImages.length > 0 && (
-                  <p className="text-sm text-gray-600 mt-1">
-                    {selectedImages.length} arquivo(s) selecionado(s)
-                  </p>
-                )}
               </div>
 
               <div className="mt-4">

@@ -72,35 +72,20 @@ export async function PUT(
 ) {
   const { id } = await params
   try {
-    const contentType = request.headers.get('content-type')
-    
-    // Suportar tanto JSON quanto FormData
-    let productData: any
-    let imageFiles: File[] = []
-    
-    if (contentType?.includes('application/json')) {
-      // Modo JSON - apenas dados do produto (imagens gerenciadas separadamente)
-      productData = await request.json()
-    } else {
-      // Modo FormData - compatibilidade com código legado
-      const formData = await request.formData()
-      productData = {
-        name: formData.get('name') as string,
-        subname: formData.get('subname') as string,
-        description: formData.get('description') as string,
-        brand: formData.get('brand') as string,
-        price: parseFloat(formData.get('price') as string),
-        superWholesalePrice: formData.get('superWholesalePrice') ? parseFloat(formData.get('superWholesalePrice') as string) : null,
-        superWholesaleQuantity: formData.get('superWholesaleQuantity') ? parseInt(formData.get('superWholesaleQuantity') as string) : null,
-        cost: formData.get('cost') ? parseFloat(formData.get('cost') as string) : null,
-        categoryId: formData.get('categoryId') as string,
-        isActive: formData.get('isActive') === 'true'
-      }
-      imageFiles = formData.getAll('images') as File[]
-    }
+    const formData = await request.formData()
     
     // Debug: Log dados recebidos para edição
-    console.log('🔍 PUT dados recebidos para produto:', id, productData)
+    console.log('🔍 PUT FormData recebido para produto:', id, {
+      name: formData.get('name'),
+      subname: formData.get('subname'),
+      description: formData.get('description'),
+      brand: formData.get('brand'),
+      price: formData.get('price'),
+      superWholesalePrice: formData.get('superWholesalePrice'),
+      superWholesaleQuantity: formData.get('superWholesaleQuantity'),
+      cost: formData.get('cost'),
+      categoryId: formData.get('categoryId')
+    })
     
     // Verificar se o produto existe
     let existingProduct
@@ -135,24 +120,44 @@ export async function PUT(
       return NextResponse.json({ error: 'Produto não encontrado' }, { status: 404 })
     }
 
-    // Usar dados já estruturados do productData
-    const {
+    // Extrair dados do formulário
+    const name = formData.get('name') as string
+    const subname = formData.get('subname') as string
+    const subnameValue = subname && subname.trim() !== '' ? subname : null
+    const description = formData.get('description') as string
+    const brand = formData.get('brand') as string
+    const brandValue = brand && brand.trim() !== '' ? brand : null
+    const price = parseFloat(formData.get('price') as string)
+    
+    const superWholesalePriceStr = formData.get('superWholesalePrice') as string
+    const superWholesalePrice = superWholesalePriceStr && superWholesalePriceStr.trim() !== '' ? 
+      parseFloat(superWholesalePriceStr) : null
+    
+    const superWholesaleQuantityStr = formData.get('superWholesaleQuantity') as string
+    const superWholesaleQuantity = superWholesaleQuantityStr && superWholesaleQuantityStr.trim() !== '' ? 
+      parseInt(superWholesaleQuantityStr) : null
+    
+    const costStr = formData.get('cost') as string
+    const cost = costStr && costStr.trim() !== '' ? parseFloat(costStr) : null
+    const categoryId = formData.get('categoryId') as string
+    const supplierName = formData.get('supplierName') as string || null
+    const supplierPhone = formData.get('supplierPhone') as string || null
+
+    // Debug: Log dados processados para edição
+    console.log('📋 Dados processados para edição:', {
       name,
-      subname,
+      subname: subnameValue,
       description,
-      brand,
+      brand: brandValue,
       price,
       superWholesalePrice,
       superWholesaleQuantity,
       cost,
-      categoryId,
-      isActive
-    } = productData
+      categoryId
+    })
 
-    // Debug: Log dados processados para edição
-    console.log('📋 Dados processados para edição:', productData)
-
-    // Processar novas imagens se houver (apenas em modo FormData)
+    // Processar novas imagens se houver
+    const imageFiles = formData.getAll('images') as File[]
     const uploadedImages: { url: string; fileName: string; isMain: boolean }[] = []
 
     if (imageFiles.length > 0) {
@@ -206,23 +211,21 @@ export async function PUT(
           "superWholesaleQuantity" = $7,
           "cost" = $8,
           "categoryId" = $9,
-          "isActive" = $10,
-          "updatedAt" = $11
-        WHERE "id" = $12
+          "updatedAt" = $10
+        WHERE "id" = $11
         RETURNING *
       `
       
       const updateParams = [
         name,
-        subname,
+        subnameValue,
         description,
-        brand,
+        brandValue,
         price,
         superWholesalePrice,
         superWholesaleQuantity,
         cost,
         categoryId,
-        isActive,
         new Date(),
         id
       ]
@@ -309,15 +312,14 @@ export async function PUT(
         where: { id },
         data: {
           name,
-          subname,
+          subname: subnameValue,
           description,
-          brand,
+          brand: brandValue,
           price,
           superWholesalePrice,
           superWholesaleQuantity,
           cost,
           categoryId,
-          isActive,
           // Adicionar novas imagens se houver
           ...(uploadedImages.length > 0 && {
             images: {
@@ -349,7 +351,47 @@ export async function PUT(
       })
     }
 
-    // TODO: Implementar fornecedor em versão futura se necessário
+    // Atualizar/criar fornecedor se fornecido (apenas em desenvolvimento por simplicidade)
+    if (supplierName && process.env.NODE_ENV !== 'production') {
+      // Procurar fornecedor existente ou criar novo
+      let supplier = await prisma.supplier.findFirst({
+        where: { name: supplierName }
+      })
+
+      if (!supplier) {
+        supplier = await prisma.supplier.create({
+          data: {
+            name: supplierName,
+            phone: supplierPhone
+          }
+        })
+      }
+
+      // Verificar se já existe relação produto-fornecedor
+      const existingProductSupplier = await prisma.productSupplier.findFirst({
+        where: {
+          productId: id,
+          supplierId: supplier.id
+        }
+      })
+
+      if (!existingProductSupplier) {
+        // Criar nova relação
+        await prisma.productSupplier.create({
+          data: {
+            productId: id,
+            supplierId: supplier.id,
+            cost: cost || 0
+          }
+        })
+      } else {
+        // Atualizar custo se necessário
+        await prisma.productSupplier.update({
+          where: { id: existingProductSupplier.id },
+          data: { cost: cost || 0 }
+        })
+      }
+    }
 
     return NextResponse.json(updatedProduct)
   } catch (error) {

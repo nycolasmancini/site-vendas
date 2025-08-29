@@ -38,7 +38,7 @@ export async function GET(
       return new NextResponse(new Uint8Array(cached.buffer), {
         headers: {
           'Content-Type': cached.contentType,
-          'Cache-Control': 'public, max-age=86400, immutable',
+          'Cache-Control': 'public, max-age=604800, immutable', // 7 dias
           'X-Cache': 'HIT'
         }
       })
@@ -96,7 +96,7 @@ export async function GET(
     return new NextResponse(new Uint8Array(processedBuffer), {
       headers: {
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=86400, immutable',
+        'Cache-Control': 'public, max-age=604800, immutable', // 7 dias
         'X-Cache': 'MISS'
       }
     })

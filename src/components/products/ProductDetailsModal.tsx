@@ -9,6 +9,12 @@ interface ProductImage {
   id: string
   url: string
   isMain: boolean
+  order?: number
+  fileName?: string
+  thumbnailUrl?: string
+  normalUrl?: string
+  viewCount?: number
+  cloudinaryPublicId?: string
 }
 
 interface ProductDetailsModalProps {
@@ -33,6 +39,8 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
   const [shouldRender, setShouldRender] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
   const [nextImagePreloaded, setNextImagePreloaded] = useState(false)
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set())
+  const [analyticsTracked, setAnalyticsTracked] = useState<Set<string>>(new Set())
   const modalRef = useRef<HTMLDivElement>(null)
   const preloadRef = useRef<HTMLImageElement | null>(null)
 
@@ -48,19 +56,42 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
   // Ordenar imagens com main primeiro
   const sortedImages = filteredImages.sort((a, b) => (b.isMain ? 1 : 0) - (a.isMain ? 1 : 0))
 
-  // Pré-carregar próxima imagem
+  // Função para registrar visualização de imagem
+  const trackImageView = useCallback(async (imageId: string) => {
+    if (analyticsTracked.has(imageId)) return
+    
+    try {
+      await fetch(`/api/products/${product.id}/images/${imageId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'view' }),
+      })
+      
+      setAnalyticsTracked(prev => new Set([...prev, imageId]))
+    } catch (error) {
+      console.warn('Falha ao registrar visualização:', error)
+    }
+  }, [product.id, analyticsTracked])
+
+  // Pré-carregar próxima imagem com Cloudinary
   const preloadNextImage = useCallback(() => {
     if (sortedImages.length <= 1 || nextImagePreloaded) return
     
     const nextIndex = (currentImageIndex + 1) % sortedImages.length
-    const nextImageUrl = sortedImages[nextIndex]?.url
+    const nextImage = sortedImages[nextIndex]
+    const nextImageUrl = nextImage?.normalUrl || nextImage?.url
     
-    if (nextImageUrl && !preloadRef.current) {
+    if (nextImageUrl && !loadedImages.has(nextImage.id) && !preloadRef.current) {
       preloadRef.current = new window.Image()
       preloadRef.current.src = nextImageUrl
-      preloadRef.current.onload = () => setNextImagePreloaded(true)
+      preloadRef.current.onload = () => {
+        setNextImagePreloaded(true)
+        setLoadedImages(prev => new Set([...prev, nextImage.id]))
+      }
     }
-  }, [currentImageIndex, sortedImages, nextImagePreloaded])
+  }, [currentImageIndex, sortedImages, nextImagePreloaded, loadedImages])
 
   // Controle de renderização do modal
   useEffect(() => {
@@ -69,6 +100,8 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
       setCurrentImageIndex(0)
       setImageLoaded(false)
       setNextImagePreloaded(false)
+      setLoadedImages(new Set())
+      setAnalyticsTracked(new Set())
       // Prevenir scroll do body
       document.body.style.overflow = 'hidden'
       setTimeout(() => setIsVisible(true), 10)
@@ -259,33 +292,29 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
                   onTouchEnd={handleTouchEnd}
                 >
                   <div className="relative max-w-full max-h-full aspect-square">
-                    {currentImage.url.startsWith('data:') ? (
-                      // Para data URLs, usar img nativa
-                      <img
-                        src={currentImage.url}
-                        alt={product.name}
-                        className="w-full h-full object-contain"
-                        onLoad={() => setImageLoaded(true)}
-                        onError={(e) => {
-                          console.error('Failed to load image (data URL):', e)
-                        }}
-                      />
-                    ) : (
-                      // Para URLs normais, usar Next.js Image
-                      <Image
-                        src={currentImage.url}
-                        alt={product.name}
-                        fill
-                        className="object-contain"
-                        sizes="(max-width: 1024px) 100vw, 60vw"
-                        priority={currentImageIndex === 0}
-                        onLoad={() => setImageLoaded(true)}
-                        onError={(e) => {
-                          console.error('Failed to load image:', currentImage.url, e)
-                        }}
-                        quality={85}
-                      />
-                    )}
+                    <Image
+                      src={currentImage.normalUrl || currentImage.url}
+                      alt={product.name}
+                      fill
+                      className="object-contain"
+                      sizes="(max-width: 1024px) 100vw, 60vw"
+                      priority={currentImageIndex === 0}
+                      onLoad={() => {
+                        setImageLoaded(true)
+                        setLoadedImages(prev => new Set([...prev, currentImage.id]))
+                        // Registrar analytics após carregamento
+                        trackImageView(currentImage.id)
+                      }}
+                      onError={(e) => {
+                        console.error('Failed to load image:', currentImage.normalUrl || currentImage.url, e)
+                        // Fallback para URL original se normalUrl falhar
+                        if (currentImage.normalUrl && currentImage.url !== currentImage.normalUrl) {
+                          console.log('Tentando fallback para URL original')
+                        }
+                      }}
+                      quality={90}
+                      unoptimized={currentImage.url.startsWith('data:')}
+                    />
                   </div>
 
                   {/* Setas de navegação */}
@@ -310,21 +339,30 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
                     </>
                   )}
 
-                  {/* Indicadores */}
+                  {/* Indicadores e Contador */}
                   {sortedImages.length > 1 && (
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                      {sortedImages.map((_, index) => (
-                        <button
-                          key={index}
-                          onClick={() => goToImage(index)}
-                          className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
-                            index === currentImageIndex 
-                              ? 'bg-white scale-125' 
-                              : 'bg-white/60 hover:bg-white/80'
-                          }`}
-                          aria-label={`Ir para imagem ${index + 1}`}
-                        />
-                      ))}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+                      {/* Contador de Imagens */}
+                      <div className="bg-black/70 text-white text-xs px-3 py-1 rounded-full mb-2 text-center backdrop-blur-sm">
+                        {currentImageIndex + 1} / {sortedImages.length}
+                      </div>
+                      
+                      {/* Dots Indicadores */}
+                      <div className="flex gap-2 justify-center">
+                        {sortedImages.map((image, index) => (
+                          <button
+                            key={image.id}
+                            onClick={() => goToImage(index)}
+                            className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
+                              index === currentImageIndex 
+                                ? 'bg-white scale-125' 
+                                : 'bg-white/60 hover:bg-white/80'
+                            }`}
+                            aria-label={`Ir para imagem ${index + 1}`}
+                            title={image.fileName || `Imagem ${index + 1}`}
+                          />
+                        ))}
+                      </div>
                     </div>
                   )}
 
