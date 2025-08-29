@@ -17,7 +17,7 @@ interface ProductCardProps {
     subname?: string
     description?: string
     brand?: string
-    category?: string
+    category?: string | { name: string }
     image?: string
     images?: Array<{ id: string; url: string; isMain: boolean }>
     price: number
