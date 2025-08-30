@@ -41,6 +41,9 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
   const [nextImagePreloaded, setNextImagePreloaded] = useState(false)
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set())
   const [analyticsTracked, setAnalyticsTracked] = useState<Set<string>>(new Set())
+  const [isAnimating, setIsAnimating] = useState(false)
+  const [animationDirection, setAnimationDirection] = useState<'left' | 'right'>('right')
+  const [showCurrentImage, setShowCurrentImage] = useState(true)
   const modalRef = useRef<HTMLDivElement>(null)
   const preloadRef = useRef<HTMLImageElement | null>(null)
 
@@ -114,6 +117,9 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
       setNextImagePreloaded(false)
       setLoadedImages(new Set())
       setAnalyticsTracked(new Set())
+      setIsAnimating(false)
+      setAnimationDirection('right')
+      setShowCurrentImage(true)
       // Prevenir scroll do body
       document.body.style.overflow = 'hidden'
       setTimeout(() => setIsVisible(true), 10)
@@ -135,26 +141,69 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
     }
   }, [imageLoaded, preloadNextImage])
 
-  // Navegação de imagens
+  // Navegação de imagens com animação fluida
   const goToNext = useCallback(() => {
-    if (sortedImages.length <= 1) return
-    setCurrentImageIndex((prev) => (prev + 1) % sortedImages.length)
-    setImageLoaded(false)
-    setNextImagePreloaded(false)
-  }, [sortedImages.length])
+    if (sortedImages.length <= 1 || isAnimating) return
+    
+    setIsAnimating(true)
+    setAnimationDirection('right')
+    setShowCurrentImage(false)
+    
+    // Sincronizar com duração da animação de saída (350ms)
+    setTimeout(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % sortedImages.length)
+      setImageLoaded(false)
+      setNextImagePreloaded(false)
+      setShowCurrentImage(true)
+      
+      // Aguardar animação de entrada completar (450ms)
+      setTimeout(() => {
+        setIsAnimating(false)
+      }, 450)
+    }, 350)
+  }, [sortedImages.length, isAnimating])
 
   const goToPrev = useCallback(() => {
-    if (sortedImages.length <= 1) return
-    setCurrentImageIndex((prev) => (prev - 1 + sortedImages.length) % sortedImages.length)
-    setImageLoaded(false)
-    setNextImagePreloaded(false)
-  }, [sortedImages.length])
+    if (sortedImages.length <= 1 || isAnimating) return
+    
+    setIsAnimating(true)
+    setAnimationDirection('left')
+    setShowCurrentImage(false)
+    
+    // Sincronizar com duração da animação de saída (350ms)
+    setTimeout(() => {
+      setCurrentImageIndex((prev) => (prev - 1 + sortedImages.length) % sortedImages.length)
+      setImageLoaded(false)
+      setNextImagePreloaded(false)
+      setShowCurrentImage(true)
+      
+      // Aguardar animação de entrada completar (450ms)
+      setTimeout(() => {
+        setIsAnimating(false)
+      }, 450)
+    }, 350)
+  }, [sortedImages.length, isAnimating])
 
   const goToImage = useCallback((index: number) => {
-    setCurrentImageIndex(index)
-    setImageLoaded(false)
-    setNextImagePreloaded(false)
-  }, [])
+    if (index === currentImageIndex || isAnimating) return
+    
+    setIsAnimating(true)
+    setAnimationDirection(index > currentImageIndex ? 'right' : 'left')
+    setShowCurrentImage(false)
+    
+    // Sincronizar com duração da animação de saída (350ms)
+    setTimeout(() => {
+      setCurrentImageIndex(index)
+      setImageLoaded(false)
+      setNextImagePreloaded(false)
+      setShowCurrentImage(true)
+      
+      // Aguardar animação de entrada completar (450ms)
+      setTimeout(() => {
+        setIsAnimating(false)
+      }, 450)
+    }, 350)
+  }, [currentImageIndex, isAnimating])
 
   // Handlers de eventos
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -295,7 +344,7 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
           {/* Conteúdo */}
           <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
             {/* Galeria de Imagens */}
-            <div className="flex-1 lg:w-2/3 relative bg-gray-50 flex items-center justify-center">
+            <div className="flex-1 lg:w-2/3 relative bg-gray-50 flex items-center justify-center overflow-hidden">
               {currentImage ? (
                 <div 
                   className="relative w-full h-full flex items-center justify-center"
@@ -303,7 +352,11 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
                   onTouchMove={handleTouchMove}
                   onTouchEnd={handleTouchEnd}
                 >
-                  <div className="relative max-w-full max-h-full aspect-square">
+                  <div className={`relative max-w-full max-h-full aspect-square transition-all duration-300 ${
+                    !showCurrentImage 
+                      ? (animationDirection === 'right' ? 'image-slide-out-right' : 'image-slide-out-left')
+                      : (animationDirection === 'right' ? 'image-slide-in-right' : 'image-slide-in-left')
+                  }`}>
                     {currentImage.url.startsWith('data:') ? (
                       // Para imagens base64 (sistema antigo), usar img nativa
                       <img
