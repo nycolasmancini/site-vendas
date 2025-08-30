@@ -39,17 +39,41 @@ export async function POST(request: NextRequest) {
 
     console.log(`🔧 Tabelas ausentes: ${missingTables.join(', ')}`)
 
-    // Tentar criar a tabela ProductImage especificamente
-    if (missingTables.includes('ProductImage')) {
+    // Se há tabelas faltando, tentar sincronizar todo o schema usando prisma db push
+    if (missingTables.length > 0) {
+      console.log('🔄 Executando sincronização completa do schema...')
+      
       try {
-        await createProductImageTableIfNeeded()
-        console.log('✅ Tabela ProductImage criada com sucesso')
-      } catch (createError) {
-        console.error('❌ Erro ao criar tabela ProductImage:', createError)
-        return NextResponse.json({ 
-          error: 'Erro ao criar tabela ProductImage',
-          details: createError instanceof Error ? createError.message : String(createError)
-        }, { status: 500 })
+        const { exec } = require('child_process')
+        const { promisify } = require('util')
+        const execAsync = promisify(exec)
+        
+        // Executar prisma db push para sincronizar schema
+        const { stdout, stderr } = await execAsync('npx prisma db push --accept-data-loss')
+        
+        if (stderr && !stderr.includes('warn')) {
+          console.error('❌ Erro ao sincronizar schema:', stderr)
+          throw new Error(stderr)
+        }
+        
+        console.log('✅ Schema sincronizado:', stdout)
+        
+      } catch (syncError) {
+        console.error('❌ Erro ao sincronizar schema:', syncError)
+        
+        // Fallback: tentar criar a tabela ProductImage manualmente
+        if (missingTables.includes('ProductImage')) {
+          try {
+            await createProductImageTableIfNeeded()
+            console.log('✅ Tabela ProductImage criada com sucesso (fallback)')
+          } catch (createError) {
+            console.error('❌ Erro ao criar tabela ProductImage:', createError)
+            return NextResponse.json({ 
+              error: 'Erro ao sincronizar banco de dados',
+              details: syncError instanceof Error ? syncError.message : String(syncError)
+            }, { status: 500 })
+          }
+        }
       }
     }
 

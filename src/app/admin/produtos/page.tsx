@@ -395,7 +395,7 @@ export default function AdminProdutos() {
   const toggleProductStatus = async (product: Product) => {
     try {
       const response = await fetch(`/api/products/${product.id}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
