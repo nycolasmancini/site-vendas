@@ -146,7 +146,7 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
     if (sortedImages.length <= 1 || isAnimating) return
     
     setIsAnimating(true)
-    setAnimationDirection('right')
+    setAnimationDirection('left') // Corrigido: botão direita → imagem sai pela esquerda
     setShowCurrentImage(false)
     
     // Sincronizar com duração da animação de saída (350ms)
@@ -167,7 +167,7 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
     if (sortedImages.length <= 1 || isAnimating) return
     
     setIsAnimating(true)
-    setAnimationDirection('left')
+    setAnimationDirection('right') // Corrigido: botão esquerda → imagem sai pela direita
     setShowCurrentImage(false)
     
     // Sincronizar com duração da animação de saída (350ms)
@@ -188,7 +188,7 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
     if (index === currentImageIndex || isAnimating) return
     
     setIsAnimating(true)
-    setAnimationDirection(index > currentImageIndex ? 'right' : 'left')
+    setAnimationDirection(index > currentImageIndex ? 'left' : 'right') // Corrigido: invertida a lógica
     setShowCurrentImage(false)
     
     // Sincronizar com duração da animação de saída (350ms)
