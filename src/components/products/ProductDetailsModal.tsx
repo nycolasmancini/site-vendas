@@ -344,7 +344,7 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
           {/* Conteúdo */}
           <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
             {/* Galeria de Imagens */}
-            <div className="flex-1 lg:w-2/3 relative bg-gray-50 flex items-center justify-center overflow-hidden">
+            <div className="flex-1 lg:w-2/3 relative bg-gray-50 flex items-center justify-center overflow-hidden h-[50vh] md:h-auto">
               {currentImage ? (
                 <div 
                   className="relative w-full h-full flex items-center justify-center"
@@ -352,7 +352,7 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
                   onTouchMove={handleTouchMove}
                   onTouchEnd={handleTouchEnd}
                 >
-                  <div className={`relative max-w-full max-h-full aspect-square transition-all duration-300 ${
+                  <div className={`relative w-full h-full max-w-full max-h-full transition-all duration-300 ${
                     !showCurrentImage 
                       ? (animationDirection === 'right' ? 'image-slide-out-right' : 'image-slide-out-left')
                       : (animationDirection === 'right' ? 'image-slide-in-left' : 'image-slide-in-right')
