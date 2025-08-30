@@ -1,7 +1,90 @@
 
-> pmcell-vendas@0.1.0 dev
-> next dev --turbopack
+> pmcell_vendas@0.1.0 dev
+> next dev
 
-/Users/nycolasmancini/Documents/site-vendas/pmcell-vendas/node_modules/.bin/next: line 2: use strict: command not found
-/Users/nycolasmancini/Documents/site-vendas/pmcell-vendas/node_modules/.bin/next: line 3: syntax error near unexpected token `exports,'
-/Users/nycolasmancini/Documents/site-vendas/pmcell-vendas/node_modules/.bin/next: line 3: `Object.defineProperty(exports, "__esModule", {'
+ ⚠ Port 3000 is in use by process 8954, using available port 3001 instead.
+   ▲ Next.js 15.4.6
+   - Local:        http://localhost:3001
+   - Network:      http://192.168.15.35:3001
+   - Environments: .env
+   - Experiments (use with caution):
+     · optimizePackageImports
+
+ ✓ Starting...
+ ✓ Ready in 2.8s
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 1051ms (108 modules)
+Middleware: Acesso livre para: /api/products
+ ○ Compiling /api/products ...
+ ✓ Compiled /api/products in 3s (288 modules)
+🔍 Products API called: {
+  NODE_ENV: 'development',
+  admin: null,
+  url: 'http://localhost:3001/api/products',
+  userAgent: 'curl/8.7.1'
+}
+📊 Using development Prisma query path
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT COUNT(*) AS "_count._all" FROM (SELECT "public"."Product"."id" FROM "public"."Product" WHERE "public"."Product"."isActive" = $1 OFFSET $2) AS "sub"
+prisma:query COMMIT
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."Product"."id", "public"."Product"."name", "public"."Product"."subname", "public"."Product"."description", "public"."Product"."brand", "public"."Product"."categoryId", "public"."Product"."isModalProduct", "public"."Product"."quickAddIncrement", "public"."Product"."price", "public"."Product"."specialPrice", "public"."Product"."specialQuantity", "public"."Product"."superWholesalePrice", "public"."Product"."superWholesaleQuantity", "public"."Product"."cost", "public"."Product"."boxQuantity", "public"."Product"."isActive", "public"."Product"."featured", "public"."Product"."createdAt", "public"."Product"."updatedAt" FROM "public"."Product" WHERE "public"."Product"."isActive" = $1 ORDER BY "public"."Product"."createdAt" DESC LIMIT $2 OFFSET $3
+prisma:query SELECT "public"."Category"."id", "public"."Category"."name", "public"."Category"."slug" FROM "public"."Category" WHERE "public"."Category"."id" IN ($1,$2) OFFSET $3
+prisma:query SELECT "public"."ProductImage"."id", "public"."ProductImage"."url", "public"."ProductImage"."isMain", "public"."ProductImage"."order", "public"."ProductImage"."productId" FROM "public"."ProductImage" WHERE "public"."ProductImage"."productId" IN ($1,$2,$3,$4) ORDER BY "public"."ProductImage"."order" ASC OFFSET $5
+prisma:query SELECT "public"."ProductModel"."id", "public"."ProductModel"."productId", "public"."ProductModel"."modelId", "public"."ProductModel"."price", "public"."ProductModel"."superWholesalePrice", "public"."ProductModel"."createdAt" FROM "public"."ProductModel" WHERE "public"."ProductModel"."productId" IN ($1,$2,$3,$4) OFFSET $5
+prisma:query COMMIT
+ GET /api/products 200 in 5490ms
+Middleware: Acesso livre para: /api/products/cmewrcgc600011m8wrv8rciz3
+ ○ Compiling /api/products/[id] ...
+ ✓ Compiled /api/products/[id] in 1108ms (290 modules)
+prisma:query SELECT 1
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."Product"."id", "public"."Product"."name", "public"."Product"."subname", "public"."Product"."description", "public"."Product"."brand", "public"."Product"."categoryId", "public"."Product"."isModalProduct", "public"."Product"."quickAddIncrement", "public"."Product"."price", "public"."Product"."specialPrice", "public"."Product"."specialQuantity", "public"."Product"."superWholesalePrice", "public"."Product"."superWholesaleQuantity", "public"."Product"."cost", "public"."Product"."boxQuantity", "public"."Product"."isActive", "public"."Product"."featured", "public"."Product"."createdAt", "public"."Product"."updatedAt" FROM "public"."Product" WHERE ("public"."Product"."id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query SELECT "public"."Category"."id", "public"."Category"."name", "public"."Category"."slug", "public"."Category"."order", "public"."Category"."isActive", "public"."Category"."createdAt", "public"."Category"."updatedAt" FROM "public"."Category" WHERE "public"."Category"."id" IN ($1) OFFSET $2
+prisma:query SELECT "public"."ProductImage"."id", "public"."ProductImage"."productId", "public"."ProductImage"."url", "public"."ProductImage"."fileName", "public"."ProductImage"."order", "public"."ProductImage"."isMain", "public"."ProductImage"."createdAt", "public"."ProductImage"."cloudinaryPublicId", "public"."ProductImage"."fileSize", "public"."ProductImage"."height", "public"."ProductImage"."lastViewedAt", "public"."ProductImage"."normalUrl", "public"."ProductImage"."thumbnailUrl", "public"."ProductImage"."updatedAt", "public"."ProductImage"."viewCount", "public"."ProductImage"."width" FROM "public"."ProductImage" WHERE "public"."ProductImage"."productId" IN ($1) ORDER BY "public"."ProductImage"."order" ASC OFFSET $2
+prisma:query SELECT "public"."ProductModel"."id", "public"."ProductModel"."productId", "public"."ProductModel"."modelId", "public"."ProductModel"."price", "public"."ProductModel"."superWholesalePrice", "public"."ProductModel"."createdAt" FROM "public"."ProductModel" WHERE "public"."ProductModel"."productId" IN ($1) OFFSET $2
+prisma:query SELECT "public"."ProductSupplier"."id", "public"."ProductSupplier"."productId", "public"."ProductSupplier"."supplierId", "public"."ProductSupplier"."cost", "public"."ProductSupplier"."isActive", "public"."ProductSupplier"."notes", "public"."ProductSupplier"."createdAt", "public"."ProductSupplier"."updatedAt" FROM "public"."ProductSupplier" WHERE ("public"."ProductSupplier"."isActive" = $1 AND "public"."ProductSupplier"."productId" IN ($2)) OFFSET $3
+prisma:query COMMIT
+📤 Produto retornado para edição: {
+  id: 'cmewrcgc600011m8wrv8rciz3',
+  name: 'Produto JSON Test',
+  subname: 'Teste via JSON',
+  brand: 'PMCELL',
+  price: 29.9,
+  superWholesalePrice: 25,
+  superWholesaleQuantity: 50,
+  cost: 18
+}
+ GET /api/products/cmewrcgc600011m8wrv8rciz3 200 in 3586ms
+Middleware: Acesso livre para: /api/products/cmewrcgc600011m8wrv8rciz3
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."Product"."id", "public"."Product"."name", "public"."Product"."subname", "public"."Product"."description", "public"."Product"."brand", "public"."Product"."categoryId", "public"."Product"."isModalProduct", "public"."Product"."quickAddIncrement", "public"."Product"."price", "public"."Product"."specialPrice", "public"."Product"."specialQuantity", "public"."Product"."superWholesalePrice", "public"."Product"."superWholesaleQuantity", "public"."Product"."cost", "public"."Product"."boxQuantity", "public"."Product"."isActive", "public"."Product"."featured", "public"."Product"."createdAt", "public"."Product"."updatedAt" FROM "public"."Product" WHERE ("public"."Product"."id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query UPDATE "public"."Product" SET "isActive" = $1, "updatedAt" = $2 WHERE ("public"."Product"."id" = $3 AND 1=1) RETURNING "public"."Product"."id", "public"."Product"."name", "public"."Product"."subname", "public"."Product"."description", "public"."Product"."brand", "public"."Product"."categoryId", "public"."Product"."isModalProduct", "public"."Product"."quickAddIncrement", "public"."Product"."price", "public"."Product"."specialPrice", "public"."Product"."specialQuantity", "public"."Product"."superWholesalePrice", "public"."Product"."superWholesaleQuantity", "public"."Product"."cost", "public"."Product"."boxQuantity", "public"."Product"."isActive", "public"."Product"."featured", "public"."Product"."createdAt", "public"."Product"."updatedAt"
+prisma:query SELECT "public"."Product"."id", "public"."Product"."name", "public"."Product"."subname", "public"."Product"."description", "public"."Product"."brand", "public"."Product"."categoryId", "public"."Product"."isModalProduct", "public"."Product"."quickAddIncrement", "public"."Product"."price", "public"."Product"."specialPrice", "public"."Product"."specialQuantity", "public"."Product"."superWholesalePrice", "public"."Product"."superWholesaleQuantity", "public"."Product"."cost", "public"."Product"."boxQuantity", "public"."Product"."isActive", "public"."Product"."featured", "public"."Product"."createdAt", "public"."Product"."updatedAt" FROM "public"."Product" WHERE "public"."Product"."id" = $1 LIMIT $2 OFFSET $3
+prisma:query SELECT "public"."Category"."id", "public"."Category"."name", "public"."Category"."slug", "public"."Category"."order", "public"."Category"."isActive", "public"."Category"."createdAt", "public"."Category"."updatedAt" FROM "public"."Category" WHERE "public"."Category"."id" IN ($1) OFFSET $2
+prisma:query SELECT "public"."ProductImage"."id", "public"."ProductImage"."productId", "public"."ProductImage"."url", "public"."ProductImage"."fileName", "public"."ProductImage"."order", "public"."ProductImage"."isMain", "public"."ProductImage"."createdAt", "public"."ProductImage"."cloudinaryPublicId", "public"."ProductImage"."fileSize", "public"."ProductImage"."height", "public"."ProductImage"."lastViewedAt", "public"."ProductImage"."normalUrl", "public"."ProductImage"."thumbnailUrl", "public"."ProductImage"."updatedAt", "public"."ProductImage"."viewCount", "public"."ProductImage"."width" FROM "public"."ProductImage" WHERE "public"."ProductImage"."productId" IN ($1) ORDER BY "public"."ProductImage"."order" ASC OFFSET $2
+prisma:query SELECT "public"."ProductSupplier"."id", "public"."ProductSupplier"."productId", "public"."ProductSupplier"."supplierId", "public"."ProductSupplier"."cost", "public"."ProductSupplier"."isActive", "public"."ProductSupplier"."notes", "public"."ProductSupplier"."createdAt", "public"."ProductSupplier"."updatedAt" FROM "public"."ProductSupplier" WHERE ("public"."ProductSupplier"."isActive" = $1 AND "public"."ProductSupplier"."productId" IN ($2)) OFFSET $3
+prisma:query COMMIT
+ PATCH /api/products/cmewrcgc600011m8wrv8rciz3 200 in 436ms
+Middleware: Acesso livre para: /api/products/cmewrcgc600011m8wrv8rciz3
+prisma:query SELECT 1
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query SELECT "public"."Product"."id", "public"."Product"."name", "public"."Product"."subname", "public"."Product"."description", "public"."Product"."brand", "public"."Product"."categoryId", "public"."Product"."isModalProduct", "public"."Product"."quickAddIncrement", "public"."Product"."price", "public"."Product"."specialPrice", "public"."Product"."specialQuantity", "public"."Product"."superWholesalePrice", "public"."Product"."superWholesaleQuantity", "public"."Product"."cost", "public"."Product"."boxQuantity", "public"."Product"."isActive", "public"."Product"."featured", "public"."Product"."createdAt", "public"."Product"."updatedAt" FROM "public"."Product" WHERE ("public"."Product"."id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+prisma:query COMMIT
+prisma:query BEGIN
+prisma:query DEALLOCATE ALL
+prisma:query UPDATE "public"."Product" SET "isActive" = $1, "updatedAt" = $2 WHERE ("public"."Product"."id" = $3 AND 1=1) RETURNING "public"."Product"."id", "public"."Product"."name", "public"."Product"."subname", "public"."Product"."description", "public"."Product"."brand", "public"."Product"."categoryId", "public"."Product"."isModalProduct", "public"."Product"."quickAddIncrement", "public"."Product"."price", "public"."Product"."specialPrice", "public"."Product"."specialQuantity", "public"."Product"."superWholesalePrice", "public"."Product"."superWholesaleQuantity", "public"."Product"."cost", "public"."Product"."boxQuantity", "public"."Product"."isActive", "public"."Product"."featured", "public"."Product"."createdAt", "public"."Product"."updatedAt"
+prisma:query SELECT "public"."Product"."id", "public"."Product"."name", "public"."Product"."subname", "public"."Product"."description", "public"."Product"."brand", "public"."Product"."categoryId", "public"."Product"."isModalProduct", "public"."Product"."quickAddIncrement", "public"."Product"."price", "public"."Product"."specialPrice", "public"."Product"."specialQuantity", "public"."Product"."superWholesalePrice", "public"."Product"."superWholesaleQuantity", "public"."Product"."cost", "public"."Product"."boxQuantity", "public"."Product"."isActive", "public"."Product"."featured", "public"."Product"."createdAt", "public"."Product"."updatedAt" FROM "public"."Product" WHERE "public"."Product"."id" = $1 LIMIT $2 OFFSET $3
+prisma:query SELECT "public"."Category"."id", "public"."Category"."name", "public"."Category"."slug", "public"."Category"."order", "public"."Category"."isActive", "public"."Category"."createdAt", "public"."Category"."updatedAt" FROM "public"."Category" WHERE "public"."Category"."id" IN ($1) OFFSET $2
+prisma:query SELECT "public"."ProductImage"."id", "public"."ProductImage"."productId", "public"."ProductImage"."url", "public"."ProductImage"."fileName", "public"."ProductImage"."order", "public"."ProductImage"."isMain", "public"."ProductImage"."createdAt", "public"."ProductImage"."cloudinaryPublicId", "public"."ProductImage"."fileSize", "public"."ProductImage"."height", "public"."ProductImage"."lastViewedAt", "public"."ProductImage"."normalUrl", "public"."ProductImage"."thumbnailUrl", "public"."ProductImage"."updatedAt", "public"."ProductImage"."viewCount", "public"."ProductImage"."width" FROM "public"."ProductImage" WHERE "public"."ProductImage"."productId" IN ($1) ORDER BY "public"."ProductImage"."order" ASC OFFSET $2
+prisma:query SELECT "public"."ProductSupplier"."id", "public"."ProductSupplier"."productId", "public"."ProductSupplier"."supplierId", "public"."ProductSupplier"."cost", "public"."ProductSupplier"."isActive", "public"."ProductSupplier"."notes", "public"."ProductSupplier"."createdAt", "public"."ProductSupplier"."updatedAt" FROM "public"."ProductSupplier" WHERE ("public"."ProductSupplier"."isActive" = $1 AND "public"."ProductSupplier"."productId" IN ($2)) OFFSET $3
+prisma:query COMMIT
+ PATCH /api/products/cmewrcgc600011m8wrv8rciz3 200 in 316ms
