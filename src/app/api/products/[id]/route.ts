@@ -517,7 +517,7 @@ export async function PATCH(
                 [id]
               )
               updatedProduct.images = imagesResult?.rows || []
-            } catch (imageError) {
+            } catch (imageError: any) {
               console.warn('⚠️ Não foi possível buscar imagens:', imageError.message)
               updatedProduct.images = []
             }
@@ -526,7 +526,7 @@ export async function PATCH(
           }
           
           console.log('✅ Status atualizado via SQL direto')
-        } catch (sqlError) {
+        } catch (sqlError: any) {
           console.error('❌ Erro no SQL direto:', sqlError)
           throw new Error(`Falha na atualização SQL: ${sqlError.message}`)
         }
