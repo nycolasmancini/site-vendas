@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { deleteImageFromCloudinary } from '@/lib/cloudinary'
+import { safeProductImageOperation } from '@/lib/prisma-helpers'
 
 export async function PUT(
   request: NextRequest,
@@ -70,35 +71,26 @@ export async function DELETE(
   try {
     const { id: productId, imageId } = await params
 
-    // Verificar se a tabela ProductImage existe
-    try {
-      await prisma.$queryRaw`SELECT 1 FROM "ProductImage" LIMIT 1`
-    } catch (tableError: any) {
-      if (tableError.code === 'P2021') {
-        console.error('❌ Tabela ProductImage não existe no banco de dados')
-        return NextResponse.json({ 
-          error: 'Sistema temporariamente indisponível. Tabela de imagens não encontrada.' 
-        }, { status: 503 })
-      }
-      throw tableError
-    }
-
-    // Buscar a imagem e verificar se existe
-    const image = await prisma.productImage.findFirst({
-      where: { 
-        id: imageId, 
-        productId 
-      }
-    })
+    // Buscar a imagem e verificar se existe usando wrapper seguro
+    const image = await safeProductImageOperation(() =>
+      prisma.productImage.findFirst({
+        where: { 
+          id: imageId, 
+          productId 
+        }
+      })
+    )
 
     if (!image) {
       return NextResponse.json({ error: 'Imagem não encontrada' }, { status: 404 })
     }
 
     // Verificar se não é a última imagem do produto
-    const imageCount = await prisma.productImage.count({
-      where: { productId }
-    })
+    const imageCount = await safeProductImageOperation(() =>
+      prisma.productImage.count({
+        where: { productId }
+      })
+    )
 
     if (imageCount <= 1) {
       return NextResponse.json({ 
@@ -121,38 +113,48 @@ export async function DELETE(
     }
 
     // Excluir do banco de dados
-    await prisma.productImage.delete({
-      where: { id: imageId }
-    })
+    await safeProductImageOperation(() =>
+      prisma.productImage.delete({
+        where: { id: imageId }
+      })
+    )
 
     // Se a imagem excluída era a principal, definir a primeira como principal
     if (image.isMain) {
-      const firstImage = await prisma.productImage.findFirst({
-        where: { productId },
-        orderBy: { order: 'asc' }
-      })
+      const firstImage = await safeProductImageOperation(() =>
+        prisma.productImage.findFirst({
+          where: { productId },
+          orderBy: { order: 'asc' }
+        })
+      )
 
       if (firstImage) {
-        await prisma.productImage.update({
-          where: { id: firstImage.id },
-          data: { isMain: true }
-        })
+        await safeProductImageOperation(() =>
+          prisma.productImage.update({
+            where: { id: firstImage.id },
+            data: { isMain: true }
+          })
+        )
       }
     }
 
     // Reordenar imagens restantes
-    const remainingImages = await prisma.productImage.findMany({
-      where: { productId },
-      orderBy: { order: 'asc' }
-    })
+    const remainingImages = await safeProductImageOperation(() =>
+      prisma.productImage.findMany({
+        where: { productId },
+        orderBy: { order: 'asc' }
+      })
+    )
 
     // Atualizar ordem sequencial
     await Promise.all(
       remainingImages.map((img, index) =>
-        prisma.productImage.update({
-          where: { id: img.id },
-          data: { order: index }
-        })
+        safeProductImageOperation(() =>
+          prisma.productImage.update({
+            where: { id: img.id },
+            data: { order: index }
+          })
+        )
       )
     )
 
