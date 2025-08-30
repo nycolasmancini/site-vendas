@@ -70,6 +70,19 @@ export async function DELETE(
   try {
     const { id: productId, imageId } = await params
 
+    // Verificar se a tabela ProductImage existe
+    try {
+      await prisma.$queryRaw`SELECT 1 FROM "ProductImage" LIMIT 1`
+    } catch (tableError: any) {
+      if (tableError.code === 'P2021') {
+        console.error('❌ Tabela ProductImage não existe no banco de dados')
+        return NextResponse.json({ 
+          error: 'Sistema temporariamente indisponível. Tabela de imagens não encontrada.' 
+        }, { status: 503 })
+      }
+      throw tableError
+    }
+
     // Buscar a imagem e verificar se existe
     const image = await prisma.productImage.findFirst({
       where: { 
@@ -150,9 +163,23 @@ export async function DELETE(
       cloudinaryDeleted 
     })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erro ao excluir imagem:', error)
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
+    
+    // Tratar erro específico de tabela não existente
+    if (error.code === 'P2021') {
+      console.error('❌ Tabela ProductImage não existe. Necessário sincronizar schema.')
+      return NextResponse.json({ 
+        error: 'Sistema temporariamente indisponível. Execute sincronização do banco.',
+        code: 'TABLE_NOT_FOUND',
+        suggestion: 'Acesse /api/db/sync para sincronizar o schema'
+      }, { status: 503 })
+    }
+    
+    return NextResponse.json({ 
+      error: 'Erro interno do servidor',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    }, { status: 500 })
   }
 }
 
