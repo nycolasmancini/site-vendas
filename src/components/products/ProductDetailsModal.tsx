@@ -355,7 +355,7 @@ const ProductDetailsModal = memo(({ isOpen, onClose, product }: ProductDetailsMo
                   <div className={`relative max-w-full max-h-full aspect-square transition-all duration-300 ${
                     !showCurrentImage 
                       ? (animationDirection === 'right' ? 'image-slide-out-right' : 'image-slide-out-left')
-                      : (animationDirection === 'right' ? 'image-slide-in-right' : 'image-slide-in-left')
+                      : (animationDirection === 'right' ? 'image-slide-in-left' : 'image-slide-in-right')
                   }`}>
                     {currentImage.url.startsWith('data:') ? (
                       // Para imagens base64 (sistema antigo), usar img nativa
