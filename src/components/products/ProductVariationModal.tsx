@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react'
 import { useCartStore } from '@/stores/useCartStore'
 import { formatPrice } from '@/lib/utils'
-import { debounce } from '@/utils/debounce'
+import { StableQuantityInput } from './StableQuantityInput'
+import SimpleQuantityInput from './SimpleQuantityInput'
 
 interface ProductModel {
   id: string
@@ -43,26 +44,264 @@ interface ProductVariationModalProps {
   onClose: () => void
 }
 
+// Função de comparação otimizada - ignorar currentQuantity durante edição
+const areModelItemPropsEqual = (
+  prevProps: any,
+  nextProps: any
+): boolean => {
+  // Se estiver editando, ignorar mudanças de quantidade para evitar re-render
+  if (prevProps.isEditing || nextProps.isEditing) {
+    return (
+      prevProps.model.id === nextProps.model.id &&
+      prevProps.isEditing === nextProps.isEditing
+    )
+  }
+  
+  return (
+    prevProps.model.id === nextProps.model.id &&
+    prevProps.currentQuantity === nextProps.currentQuantity &&
+    prevProps.product.quickAddIncrement === nextProps.product.quickAddIncrement &&
+    prevProps.isEditing === nextProps.isEditing
+  )
+}
+
+// Componente para cada item de modelo - simplificado
+const ModelItem = memo(({ 
+  model, 
+  product,
+  currentQuantity,
+  isEditing,
+  onQuantityChange,
+  onEditingChange
+}: {
+  model: ProductModel
+  product: ProductVariationModalProps['product']
+  currentQuantity: number
+  isEditing: boolean
+  onQuantityChange: (modelId: string, quantity: number) => void
+  onEditingChange: (isEditing: boolean) => void
+}) => {
+  
+  return (
+    <div className="model-item relative z-10">
+      {/* Badge verde mobile - canto superior direito */}
+      {currentQuantity > 0 && (
+        <div 
+          className="sm:hidden absolute top-1 right-1 z-20 px-1.5 py-0.5 bg-green-500 text-white rounded-full font-medium text-[10px] flex items-center justify-center shadow-sm"
+          style={{
+            minWidth: currentQuantity >= 100000 ? '3.5rem' : 
+                     currentQuantity >= 10000 ? '3rem' : 
+                     currentQuantity >= 1000 ? '2.5rem' : 
+                     currentQuantity >= 100 ? '2rem' : 
+                     currentQuantity >= 10 ? '1.75rem' : '1.25rem',
+            whiteSpace: 'nowrap',
+            transition: isEditing ? 'none' : 'all 0.2s ease-in-out',
+            minHeight: '18px',
+            lineHeight: '1',
+            textAlign: 'center'
+          }}
+          title={`${currentQuantity} unidades no carrinho`}
+        >
+          {currentQuantity.toLocaleString()}
+        </div>
+      )}
+      
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+            <h4 className="text-sm sm:text-base font-medium text-gray-900">{model.modelName}</h4>
+            {/* Badge verde desktop - ao lado do nome */}
+            {currentQuantity > 0 && (
+              <div 
+                className="hidden sm:flex px-2 py-0.5 bg-green-500 text-white rounded-full font-medium text-xs items-center justify-center shadow-sm"
+                style={{
+                  minWidth: currentQuantity >= 100000 ? '4rem' : 
+                           currentQuantity >= 10000 ? '3.5rem' : 
+                           currentQuantity >= 1000 ? '3rem' : 
+                           currentQuantity >= 100 ? '2.5rem' : 
+                           currentQuantity >= 10 ? '2rem' : '1.5rem',
+                  whiteSpace: 'nowrap',
+                  transition: isEditing ? 'none' : 'all 0.2s ease-in-out',
+                  minHeight: '20px',
+                  lineHeight: '1',
+                  textAlign: 'center'
+                }}
+                title={`${currentQuantity} unidades no carrinho`}
+              >
+                {currentQuantity.toLocaleString()} un.
+              </div>
+            )}
+          </div>
+          <div className="flex flex-col items-start gap-0.5 sm:gap-1">
+            {(() => {
+              // Sempre usar o preço individual do modelo, independente se é modalProduct
+              const increment = product.quickAddIncrement || 1
+              const hasReachedSuperWholesale = model.superWholesalePrice && currentQuantity >= increment
+              const currentPrice = hasReachedSuperWholesale ? (model.superWholesalePrice || 0) : (model.price || 0)
+              
+              return (
+                <div className="flex items-baseline gap-1 sm:gap-2">
+                  <span 
+                    key={`${model.id}-${hasReachedSuperWholesale}`}
+                    className={`text-sm sm:text-lg font-bold text-gray-900 ${
+                      isEditing ? '' : 'transition-all duration-500 ease-in-out animate-price-change'
+                    }`}
+                    style={{
+                      animation: isEditing ? 'none' : 'fadeInPrice 0.5s ease-in-out'
+                    }}
+                  >
+                    {formatPrice(currentPrice)}
+                  </span>
+                  <span className="text-[10px] sm:text-xs text-gray-500">
+                    unidade
+                  </span>
+                </div>
+              )
+            })()}
+            {/* Super wholesale info para todos os modelos que tenham essa informação */}
+            {model.superWholesalePrice && (
+              <div className="text-xs sm:text-sm text-green-600 bg-green-50 px-1.5 sm:px-2 py-0.5 rounded whitespace-nowrap inline-flex items-center gap-1" style={{minHeight: '18px', lineHeight: '1'}}>
+                <span className="font-bold">+{product.quickAddIncrement || 1} un.:</span>
+                <span className="font-normal">{formatPrice(model.superWholesalePrice || 0)}</span>
+              </div>
+            )}
+            
+            {/* Input de quantidade manual para teste */}
+            <div className="mt-2">
+              <div className={`text-xs mb-1 font-medium transition-colors duration-200 ${
+                currentQuantity > 0 ? 'text-green-600' : 'text-gray-500'
+              }`}>
+                Quantidade no carrinho: {currentQuantity > 0 ? `${currentQuantity} un.` : 'vazio'}
+              </div>
+              <SimpleQuantityInput
+                value={currentQuantity}
+                onChange={(value) => onQuantityChange(model.id, value)}
+                placeholder="0"
+                className="w-20"
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Quantity Controls alinhados à direita - COMPONENTE ESTÁVEL */}
+        <StableQuantityInput
+          modelId={model.id}
+          currentQuantity={currentQuantity}
+          onQuantityCommit={onQuantityChange}
+          onEditingChange={onEditingChange}
+          isDisabled={false}
+          className="ml-1 sm:ml-4"
+        />
+      </div>
+    </div>
+  )
+}, areModelItemPropsEqual)
+
+ModelItem.displayName = 'ModelItem'
+
 export default function ProductVariationModal({ product, isOpen, onClose }: ProductVariationModalProps) {
   const [models, setModels] = useState<ProductModel[]>([])
   const [groupedModels, setGroupedModels] = useState<Record<string, ProductModel[]>>({})
   const [expandedBrands, setExpandedBrands] = useState<Record<string, boolean>>({})
   const [loading, setLoading] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
-  // Estado local para valores temporários dos inputs
-  const [tempInputValues, setTempInputValues] = useState<Record<string, string>>({})
+  // Estado para controlar qual modelo está sendo editado
+  const [editingModelId, setEditingModelId] = useState<string | null>(null)
+  // Estado para animação do total
+  const [totalChanged, setTotalChanged] = useState(false)
   const modalRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
   const addItem = useCartStore((state) => state.addItem)
   const updateQuantity = useCartStore((state) => state.updateQuantity)
   const cartItems = useCartStore((state) => state.items)
+  
+
+  // Função para obter quantidade no carrinho por modelId
+  const getCartQuantityByModel = useCallback((modelId: string): number => {
+    const cartItem = cartItems.find(item => 
+      item.productId === product.id && item.modelId === modelId
+    )
+    return cartItem ? cartItem.quantity : 0
+  }, [cartItems, product.id])
+
+  // Função para obter o item do carrinho por modelId
+  const getCartItemByModel = useCallback((modelId: string) => {
+    return cartItems.find(item => 
+      item.productId === product.id && item.modelId === modelId
+    )
+  }, [cartItems, product.id])
+
+  // Memoizar dependências estáveis
+  const stableProductData = useMemo(() => ({
+    id: product.id,
+    name: product.name,
+    quickAddIncrement: product.quickAddIncrement,
+    mainImageUrl: product.images?.find(img => img.isMain)?.url || product.images?.[0]?.url || product.image
+  }), [product.id, product.name, product.quickAddIncrement, product.images, product.image])
+
+  // Callback otimizado - sem estados desnecessários
+  const handleQuantityCommit = useCallback((modelId: string, newQuantity: number) => {
+    const model = models.find(m => m.id === modelId)
+    if (!model) return
+
+    const existingItem = getCartItemByModel(modelId)
+
+    if (newQuantity === 0) {
+      if (existingItem) {
+        updateQuantity(existingItem.id, 0)
+      }
+    } else if (existingItem) {
+      updateQuantity(existingItem.id, newQuantity)
+    } else {
+      addItem({
+        productId: stableProductData.id,
+        name: stableProductData.name,
+        subname: `${model.brandName} ${model.modelName}`,
+        image: stableProductData.mainImageUrl,
+        quantity: newQuantity,
+        unitPrice: model.price,
+        specialPrice: model.superWholesalePrice,
+        specialQuantity: stableProductData.quickAddIncrement,
+        superWholesalePrice: model.superWholesalePrice,
+        superWholesaleQuantity: stableProductData.quickAddIncrement,
+        modelId: model.id,
+        modelName: `${model.brandName} ${model.modelName}`
+      })
+    }
+  }, [models, stableProductData, getCartItemByModel, updateQuantity, addItem])
+
+  // Função para obter quantidade para exibição - apenas do carrinho
+  const getDisplayQuantity = useCallback((modelId: string): number => {
+    return getCartQuantityByModel(modelId)
+  }, [getCartQuantityByModel])
+
+
+  // Callback estável para gerenciar estado de edição
+  const handleEditingChange = useCallback((modelId: string, isEditing: boolean) => {
+    setEditingModelId(isEditing ? modelId : null)
+  }, [])
+
+  // Factory function para criar callback estável por modelo
+  const createEditingChangeHandler = useCallback((modelId: string) => {
+    return (isEditing: boolean) => handleEditingChange(modelId, isEditing)
+  }, [handleEditingChange])
+
+  // Cache de callbacks para evitar recriação desnecessária
+  const editingChangeHandlers = useRef<Map<string, (isEditing: boolean) => void>>(new Map())
+  
+  // Função para obter callback estável para um modelo específico
+  const getEditingChangeHandler = useCallback((modelId: string) => {
+    if (!editingChangeHandlers.current.has(modelId)) {
+      editingChangeHandlers.current.set(modelId, createEditingChangeHandler(modelId))
+    }
+    return editingChangeHandlers.current.get(modelId)!
+  }, [createEditingChangeHandler])
 
   // Handle close with animation
   const handleClose = useCallback(() => {
     if (isAnimating) return
     setIsAnimating(true)
-    // Limpar valores temporários ao fechar
-    setTempInputValues({})
+    
     setTimeout(() => {
       onClose()
       setIsAnimating(false)
@@ -105,10 +344,20 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
       document.addEventListener('keydown', handleTabKeyPress)
       document.body.style.overflow = 'hidden'
       
-      // Focus first interactive element
+      // Focus first interactive element apenas se não há elemento já focado ou sendo editado
       setTimeout(() => {
-        const firstButton = modalRef.current?.querySelector('button')
-        firstButton?.focus()
+        const activeElement = document.activeElement
+        const isInputFocused = activeElement && (
+          activeElement.tagName === 'INPUT' || 
+          activeElement.hasAttribute('data-no-auto-focus')
+        )
+        
+        if (!activeElement || activeElement === document.body || !isInputFocused) {
+          const firstButton = modalRef.current?.querySelector('button')
+          if (firstButton && !document.querySelector('input:focus')) {
+            firstButton.focus()
+          }
+        }
       }, 100)
     } else {
       document.body.style.overflow = 'unset'
@@ -121,31 +370,18 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
     }
   }, [isOpen, handleKeyDown, handleTabKeyPress])
 
-  // Função para obter quantidade no carrinho por modelId
-  const getCartQuantityByModel = (modelId: string): number => {
-    const cartItem = cartItems.find(item => 
-      item.productId === product.id && item.modelId === modelId
-    )
-    return cartItem ? cartItem.quantity : 0
-  }
-
-  // Função para obter o item do carrinho por modelId
-  const getCartItemByModel = (modelId: string) => {
-    return cartItems.find(item => 
-      item.productId === product.id && item.modelId === modelId
-    )
-  }
 
   // Função para calcular total de produtos por marca no carrinho
-  const getTotalQuantityByBrand = (brandName: string): number => {
+  const getTotalQuantityByBrand = useCallback((brandName: string): number => {
     const brandModels = groupedModels[brandName] || []
     return brandModels.reduce((total, model) => {
-      const cartQty = getCartQuantityByModel(model.id)
+      const cartQty = getDisplayQuantity(model.id)
       return total + cartQty
     }, 0)
-  }
+  }, [groupedModels, getDisplayQuantity])
 
 
+  // Effect para buscar modelos quando modal abre
   useEffect(() => {
     if (isOpen) {
       fetchProductModels()
@@ -197,149 +433,21 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
     }))
   }
 
-  const incrementQuantity = (modelId: string, amount: number = 1) => {
-    // Limpar valor temporário se existir
-    setTempInputValues(prev => {
-      const newValues = { ...prev }
-      delete newValues[modelId]
-      return newValues
-    })
-
-    const model = models.find(m => m.id === modelId)
-    if (!model) return
-
-    const existingItem = getCartItemByModel(modelId)
-    const imageUrl = product.images?.find(img => img.isMain)?.url || product.images?.[0]?.url || product.image
-
-    if (existingItem) {
-      // Se já existe no carrinho, atualiza a quantidade
-      updateQuantity(existingItem.id, existingItem.quantity + amount)
-    } else {
-      // Se não existe, adiciona novo item
-      addItem({
-        productId: product.id,
-        name: `${product.name}`,
-        subname: `${model.brandName} ${model.modelName}`,
-        image: imageUrl,
-        quantity: amount,
-        unitPrice: model.price,
-        specialPrice: model.superWholesalePrice,
-        specialQuantity: product.quickAddIncrement,
-        superWholesalePrice: model.superWholesalePrice,
-        superWholesaleQuantity: product.quickAddIncrement,
-        modelId: model.id,
-        modelName: `${model.brandName} ${model.modelName}`
-      })
-    }
-  }
-
-  const decrementQuantity = (modelId: string, amount: number = 1) => {
-    // Limpar valor temporário se existir
-    setTempInputValues(prev => {
-      const newValues = { ...prev }
-      delete newValues[modelId]
-      return newValues
-    })
-
-    const existingItem = getCartItemByModel(modelId)
-    if (!existingItem) return
-
-    const newQuantity = Math.max(0, existingItem.quantity - amount)
-    updateQuantity(existingItem.id, newQuantity)
-  }
-
-  const setQuantityDirectly = (modelId: string, newQuantity: number) => {
-    const model = models.find(m => m.id === modelId)
-    if (!model) return
-
-    const existingItem = getCartItemByModel(modelId)
-    const imageUrl = product.images?.find(img => img.isMain)?.url || product.images?.[0]?.url || product.image
-
-    if (newQuantity === 0) {
-      // Remove do carrinho se quantidade for 0
-      if (existingItem) {
-        updateQuantity(existingItem.id, 0)
-      }
-    } else if (existingItem) {
-      // Atualiza quantidade existente
-      updateQuantity(existingItem.id, newQuantity)
-    } else {
-      // Adiciona novo item
-      addItem({
-        productId: product.id,
-        name: `${product.name}`,
-        subname: `${model.brandName} ${model.modelName}`,
-        image: imageUrl,
-        quantity: newQuantity,
-        unitPrice: model.price,
-        specialPrice: model.superWholesalePrice,
-        specialQuantity: product.quickAddIncrement,
-        superWholesalePrice: model.superWholesalePrice,
-        superWholesaleQuantity: product.quickAddIncrement,
-        modelId: model.id,
-        modelName: `${model.brandName} ${model.modelName}`
-      })
-    }
-  }
-
-  // Função debounced para atualizar carrinho após digitação
-  const debouncedSetQuantity = useCallback(
-    debounce((modelId: string, newQuantity: number) => {
-      setQuantityDirectly(modelId, newQuantity)
-    }, 500), // 500ms de delay após parar de digitar
-    [models, product]
-  )
-
-  // Função para lidar com mudanças no input
-  const handleInputChange = (modelId: string, value: string) => {
-    // Atualizar valor temporário no estado local
-    setTempInputValues(prev => ({
-      ...prev,
-      [modelId]: value
-    }))
-
-    // Aplicar debounce na atualização do carrinho
-    const numValue = parseInt(value) || 0
-    debouncedSetQuantity(modelId, numValue)
-  }
-
-  // Função para lidar com blur (quando o campo perde o foco)
-  const handleInputBlur = (modelId: string) => {
-    const tempValue = tempInputValues[modelId]
-    if (tempValue !== undefined) {
-      const numValue = parseInt(tempValue) || 0
-      setQuantityDirectly(modelId, numValue)
-      // Limpar o valor temporário após aplicar
-      setTempInputValues(prev => {
-        const newValues = { ...prev }
-        delete newValues[modelId]
-        return newValues
-      })
-    }
-  }
-
-  // Função para obter o valor a ser exibido no input
-  const getDisplayValue = (modelId: string): string => {
-    // Se existe valor temporário sendo digitado, usar ele
-    if (tempInputValues[modelId] !== undefined) {
-      return tempInputValues[modelId]
-    }
-    // Caso contrário, usar valor do carrinho
-    return getCartQuantityByModel(modelId).toString()
-  }
+  // Callbacks removidos - agora usando funções inline estáveis através do memo customizado
 
 
 
-  const getTotalItems = () => {
+
+  const getTotalItems = useCallback(() => {
     return models.reduce((total, model) => {
-      const cartQty = getCartQuantityByModel(model.id)
+      const cartQty = getDisplayQuantity(model.id)
       return total + cartQty
     }, 0)
-  }
+  }, [models, getDisplayQuantity])
 
-  const getTotalValue = () => {
-    return models.reduce((total, model) => {
-      const cartQty = getCartQuantityByModel(model.id)
+  const getTotalValue = useCallback(() => {
+    const newTotal = models.reduce((total, model) => {
+      const cartQty = getDisplayQuantity(model.id)
       if (cartQty === 0) return total
       
       // Calcular preço baseado na quantidade específica deste modelo
@@ -349,7 +457,21 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
       
       return total + (priceToUse * cartQty)
     }, 0)
-  }
+    
+    return newTotal
+  }, [models, product.quickAddIncrement, getDisplayQuantity])
+
+  // Efeito para animação do total quando muda
+  const totalValue = getTotalValue()
+  const totalItems = getTotalItems()
+  
+  useEffect(() => {
+    if (totalValue > 0) {
+      setTotalChanged(true)
+      const timer = setTimeout(() => setTotalChanged(false), 500)
+      return () => clearTimeout(timer)
+    }
+  }, [totalValue, totalItems])
 
   if (!isOpen) return null
 
@@ -393,12 +515,16 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
           {/* Resumo do total no header */}
           <div className="flex items-center gap-6">
             {models.length > 0 && (
-              <div className="text-right transform transition-all duration-300 ease-out animate-slide-up">
+              <div className={`text-right transform transition-all duration-300 ease-out animate-slide-up ${
+                totalChanged ? 'scale-105 animate-pulse' : ''
+              }`}>
                 <p className="text-xs sm:text-sm text-gray-600 font-medium">
-                  Total: {getTotalItems()} item{getTotalItems() !== 1 ? 's' : ''}
+                  Total: {totalItems} item{totalItems !== 1 ? 's' : ''}
                 </p>
-                <p className="text-lg sm:text-xl font-bold text-blue-600 bg-blue-50 px-2 sm:px-3 py-1 rounded-lg">
-                  {formatPrice(getTotalValue())}
+                <p className={`text-lg sm:text-xl font-bold text-blue-600 bg-blue-50 px-2 sm:px-3 py-1 rounded-lg transition-all duration-300 ${
+                  totalChanged ? 'bg-blue-100 shadow-lg' : ''
+                }`}>
+                  {formatPrice(totalValue)}
                 </p>
               </div>
             )}
@@ -502,138 +628,17 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
                     }`}>
                       {/* Models container com padding interno para criar recuo */}
                       <div className="models-container models-background relative z-10">
-                        {brandModels.map((model, modelIndex) => {
-                          const currentQuantity = getCartQuantityByModel(model.id)
-                          return (
-                            <div 
-                              key={model.id} 
-                              className="model-item relative z-10"
-                              style={{animationDelay: `${modelIndex * 50}ms`}}
-                            >
-                            {/* Badge verde mobile - canto superior direito */}
-                            {(() => {
-                              const cartQuantity = getCartQuantityByModel(model.id)
-                              if (cartQuantity > 0) {
-                                return (
-                                  <div 
-                                    className="sm:hidden absolute top-1 right-1 z-20 px-1.5 py-0.5 bg-green-500 text-white rounded-full font-medium text-[10px] flex items-center justify-center shadow-sm"
-                                    style={{
-                                      minWidth: cartQuantity >= 100000 ? '3.5rem' : 
-                                               cartQuantity >= 10000 ? '3rem' : 
-                                               cartQuantity >= 1000 ? '2.5rem' : 
-                                               cartQuantity >= 100 ? '2rem' : 
-                                               cartQuantity >= 10 ? '1.75rem' : '1.25rem',
-                                      whiteSpace: 'nowrap',
-                                      transition: 'all 0.2s ease-in-out',
-                                      minHeight: '18px',
-                                      lineHeight: '1',
-                                      textAlign: 'center'
-                                    }}
-                                    title={`${cartQuantity} unidades no carrinho`}
-                                  >
-                                    {cartQuantity.toLocaleString()}
-                                  </div>
-                                )
-                              }
-                              return null
-                            })()}
-                            
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
-                                  <h4 className="text-sm sm:text-base font-medium text-gray-900">{model.modelName}</h4>
-                                  {/* Badge verde desktop - ao lado do nome */}
-                                  {(() => {
-                                    const cartQuantity = getCartQuantityByModel(model.id)
-                                    if (cartQuantity > 0) {
-                                      return (
-                                        <div 
-                                          className="hidden sm:flex px-2 py-0.5 bg-green-500 text-white rounded-full font-medium text-xs items-center justify-center shadow-sm"
-                                          style={{
-                                            minWidth: cartQuantity >= 100000 ? '4rem' : 
-                                                     cartQuantity >= 10000 ? '3.5rem' : 
-                                                     cartQuantity >= 1000 ? '3rem' : 
-                                                     cartQuantity >= 100 ? '2.5rem' : 
-                                                     cartQuantity >= 10 ? '2rem' : '1.5rem',
-                                            whiteSpace: 'nowrap',
-                                            transition: 'all 0.2s ease-in-out',
-                                            minHeight: '20px',
-                                            lineHeight: '1',
-                                            textAlign: 'center'
-                                          }}
-                                          title={`${cartQuantity} unidades no carrinho`}
-                                        >
-                                          {cartQuantity.toLocaleString()} un.
-                                        </div>
-                                      )
-                                    }
-                                    return null
-                                  })()}
-                                </div>
-                                <div className="flex flex-col items-start gap-0.5 sm:gap-1">
-                                  {(() => {
-                                    // Sempre usar o preço individual do modelo, independente se é modalProduct
-                                    const cartQuantity = getCartQuantityByModel(model.id)
-                                    const increment = product.quickAddIncrement || 1
-                                    const hasReachedSuperWholesale = model.superWholesalePrice && cartQuantity >= increment
-                                    const currentPrice = hasReachedSuperWholesale ? (model.superWholesalePrice || 0) : (model.price || 0)
-                                    
-                                    return (
-                                      <div className="flex items-baseline gap-1 sm:gap-2">
-                                        <span 
-                                          key={`${model.id}-${hasReachedSuperWholesale}`}
-                                          className="text-sm sm:text-lg font-bold text-gray-900 transition-all duration-500 ease-in-out animate-price-change"
-                                          style={{
-                                            animation: 'fadeInPrice 0.5s ease-in-out'
-                                          }}
-                                        >
-                                          {formatPrice(currentPrice)}
-                                        </span>
-                                        <span className="text-[10px] sm:text-xs text-gray-500">
-                                          unidade
-                                        </span>
-                                      </div>
-                                    )
-                                  })()}
-                                  {/* Super wholesale info para todos os modelos que tenham essa informação */}
-                                  {model.superWholesalePrice && (
-                                    <div className="text-xs sm:text-sm text-green-600 bg-green-50 px-1.5 sm:px-2 py-0.5 rounded whitespace-nowrap inline-flex items-center gap-1" style={{minHeight: '18px', lineHeight: '1'}}>
-                                      <span className="font-bold">+{product.quickAddIncrement || 1} un.:</span>
-                                      <span className="font-normal">{formatPrice(model.superWholesalePrice || 0)}</span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                              
-                              {/* Quantity Controls alinhados à direita */}
-                              <div className="flex items-center rounded-lg overflow-hidden ml-1 sm:ml-4 shadow-sm border border-gray-200 bg-white">
-                                <button
-                                  onClick={() => decrementQuantity(model.id, 1)}
-                                  disabled={currentQuantity === 0}
-                                  className="px-1.5 sm:px-3 py-1 sm:py-2 hover:bg-red-50 hover:text-red-600 text-gray-500 font-bold transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-300 active:scale-95 text-sm sm:text-base"
-                                >
-                                  −
-                                </button>
-                                <input
-                                  type="number"
-                                  value={getDisplayValue(model.id)}
-                                  onChange={(e) => handleInputChange(model.id, e.target.value)}
-                                  onBlur={() => handleInputBlur(model.id)}
-                                  className="w-10 sm:w-16 text-center py-1 sm:py-2 text-xs sm:text-sm font-semibold border-x border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-200"
-                                  min="0"
-                                  aria-label={`Quantidade para ${model.modelName}`}
-                                />
-                                <button
-                                  onClick={() => incrementQuantity(model.id, 1)}
-                                  className="px-1.5 sm:px-3 py-1 sm:py-2 hover:bg-green-50 hover:text-green-600 text-gray-500 font-bold transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-green-300 active:scale-95 text-sm sm:text-base"
-                                >
-                                  +
-                                </button>
-                              </div>
-                            </div>
-                            </div>
-                          )
-                        })}
+                        {brandModels.map((model) => (
+                          <ModelItem
+                            key={model.id}
+                            model={model}
+                            product={product}
+                            currentQuantity={getDisplayQuantity(model.id)}
+                            isEditing={editingModelId === model.id}
+                            onQuantityChange={handleQuantityCommit}
+                            onEditingChange={getEditingChangeHandler(model.id)}
+                          />
+                        ))}
                       </div>
                     </div>
                   </div>
