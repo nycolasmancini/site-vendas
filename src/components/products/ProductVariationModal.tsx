@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react'
 import { useCartStore } from '@/stores/useCartStore'
 import { formatPrice } from '@/lib/utils'
 import { StableQuantityInput } from './StableQuantityInput'
-import SimpleQuantityInput from './SimpleQuantityInput'
 
 interface ProductModel {
   id: string
@@ -166,20 +165,6 @@ const ModelItem = memo(({
               </div>
             )}
             
-            {/* Input de quantidade manual para teste */}
-            <div className="mt-2">
-              <div className={`text-xs mb-1 font-medium transition-colors duration-200 ${
-                currentQuantity > 0 ? 'text-green-600' : 'text-gray-500'
-              }`}>
-                Quantidade no carrinho: {currentQuantity > 0 ? `${currentQuantity} un.` : 'vazio'}
-              </div>
-              <SimpleQuantityInput
-                value={currentQuantity}
-                onChange={(value) => onQuantityChange(model.id, value)}
-                placeholder="0"
-                className="w-20"
-              />
-            </div>
           </div>
         </div>
         
@@ -503,47 +488,9 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05)'
         }}
       >
-        {/* Header */}
-        <div className="p-3 sm:p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white">
-          <div className="flex-1">
-            <h2 id="modal-title" className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{product.name}</h2>
-            {product.description && (
-              <p className="text-xs sm:text-sm text-gray-600 opacity-80">{product.description}</p>
-            )}
-          </div>
-          
-          {/* Resumo do total no header */}
-          <div className="flex items-center gap-6">
-            {models.length > 0 && (
-              <div className={`text-right transform transition-all duration-300 ease-out animate-slide-up ${
-                totalChanged ? 'scale-105 animate-pulse' : ''
-              }`}>
-                <p className="text-xs sm:text-sm text-gray-600 font-medium">
-                  Total: {totalItems} item{totalItems !== 1 ? 's' : ''}
-                </p>
-                <p className={`text-lg sm:text-xl font-bold text-blue-600 bg-blue-50 px-2 sm:px-3 py-1 rounded-lg transition-all duration-300 ${
-                  totalChanged ? 'bg-blue-100 shadow-lg' : ''
-                }`}>
-                  {formatPrice(totalValue)}
-                </p>
-              </div>
-            )}
-            
-            <button
-              onClick={handleClose}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              aria-label="Fechar modal"
-            >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
         
-        {/* Scrollable Content with Sticky Headers */}
-        <div className="overflow-y-auto max-h-[calc(85vh-150px)] sm:max-h-[calc(90vh-200px)] custom-scrollbar modal-content-scroll relative">
+        {/* Scrollable Content with Sticky Headers - Mais espaço sem header */}
+        <div className="overflow-y-auto max-h-[calc(85vh-80px)] sm:max-h-[calc(90vh-80px)] custom-scrollbar modal-content-scroll relative">
             
           {loading ? (
             <div className="text-center py-12 animate-fade-in">
@@ -646,6 +593,35 @@ export default function ProductVariationModal({ product, isOpen, onClose }: Prod
               ))}
             </div>
           )}
+        </div>
+
+        {/* Footer fino e fixo */}
+        <div 
+          data-testid="modal-footer"
+          className="border-t border-gray-200 p-2 sm:p-3 bg-white flex items-center justify-between"
+        >
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-semibold text-gray-900 truncate">{product.name}</h3>
+          </div>
+          
+          <div className="flex items-center gap-3 sm:gap-4">
+            {totalItems > 0 && (
+              <div className="text-right">
+                <span className="text-xs text-gray-600">{totalItems} {totalItems === 1 ? 'item' : 'itens'}</span>
+                <span className="ml-2 text-sm font-bold text-blue-600">{formatPrice(totalValue)}</span>
+              </div>
+            )}
+            
+            <button 
+              onClick={handleClose}
+              className="p-1.5 hover:bg-gray-100 rounded-full transition-colors duration-200"
+              aria-label="Fechar modal"
+            >
+              <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
       </div>
